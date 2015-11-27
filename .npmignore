@@ -1,0 +1,7 @@
+/src/
+.gitignore
+.eslintrc
+.babelrc
+.travis.yml
+.module-cache
+__tests__
