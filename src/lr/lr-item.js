@@ -15,7 +15,7 @@ export default class LRItem {
   constructor({production, dotPosition = 0, grammar, canonicalCollection}) {
     this._production = production;
     this._dotPosition = dotPosition;
-    this._grammar = grammar;new
+    this._grammar = grammar;
     this._canonicalCollection = canonicalCollection;
     this._closure = null;
     this._gotoPointer = null;
