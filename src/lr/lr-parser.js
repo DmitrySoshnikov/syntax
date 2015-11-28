@@ -8,6 +8,8 @@ import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
 import Tokenizer from '../tokenizer';
 
+const EntryType = LRParsingTable.EntryType;
+
 export default class LRParser {
   constructor({grammar}) {
     this._grammar = grammar instanceof Grammar
@@ -89,7 +91,7 @@ export default class LRParser {
             this._unexpectedToken(token);
           }
 
-          console.log(`Accepted.`);
+          console.log(`Accepted.\n`);
           return true;
       }
 
@@ -97,6 +99,7 @@ export default class LRParser {
   }
 
   _printParseHeader(string) {
+    console.log('');
     console.log(`Parsing: "${string}"`);
     this._grammar.print();
     console.log('');

@@ -79,7 +79,7 @@ export default class CanonicalCollection {
   }
 
   print() {
-    console.log('Canonical collection of LR items:');
+    console.log('\nCanonical collection of LR items:');
     this._grammar.print();
 
     this._states.forEach((state, stateNumber) => {

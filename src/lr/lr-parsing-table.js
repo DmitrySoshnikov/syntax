@@ -108,7 +108,13 @@ export default class LRParsingTable {
   }
 
   print() {
+    console.log('\nLR parsing table:\n');
     console.log(this.get());
+    console.log('');
+  }
+
+  static get EntryType() {
+    return EntryType;
   }
 
   static getEntryType(entry) {

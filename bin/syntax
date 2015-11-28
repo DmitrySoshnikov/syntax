@@ -10,7 +10,7 @@ const options = require('nomnom')
     mode: {
       abbr: 'm',
       help: 'Parser mode: ll, lr0, slr1, lalr1',
-      require: true,
+      required: true,
     },
     grammar: {
       abbr: 'g',
@@ -20,6 +20,11 @@ const options = require('nomnom')
     table: {
       abbr: 't',
       help: 'Generate and output parsing table',
+      flag: true,
+    },
+    collection: {
+      abbr: 'c',
+      help: 'Generate and output canonical collection of LR items',
       flag: true,
     },
     parse: {
@@ -34,29 +39,49 @@ const options = require('nomnom')
  */
 const parsers = {
   lr0(options) {
-    const Grammar = require('../dist/grammar/grammar');
+    const Grammar = require('../dist/grammar/grammar').default;
     const grammar = new Grammar(this._readGrammar(options.grammar));
 
-    if (options.parse) {
-      const LRParser = require('../dist/lr/lr-parser');
+    // Canonical collection or LR items.
+    if (options.collection) {
+      const CanonicalCollection =
+        require('../dist/lr/canonical-collection').default;
 
-      new LRParser({grammar})
-        .parse(options.parse);
+      new CanonicalCollection({grammar})
+        .print();
     }
 
+    // LR parsing table.
     if (options.table) {
-      const CanonicalCollection = require('../dist/lr/canonical-collection');
-      const LRParsingTable = require('../dist/lr/lr-parsing-table');
+      const CanonicalCollection =
+        require('../dist/lr/canonical-collection').default;
+
+      const LRParsingTable = require('../dist/lr/lr-parsing-table').default;
 
       new LRParsingTable({
         grammar,
         canonicalCollection: new CanonicalCollection({grammar}),
       }).print();
     }
+
+    // Parse a string.
+    if (options.parse) {
+      const LRParser = require('../dist/lr/lr-parser').default;
+
+      new LRParser({grammar})
+        .parse(options.parse);
+    }
   },
 
   _readGrammar(grammarFile) {
-    return JSON.parse(fs.readFileSync(grammarFile, 'utf-8'));
+    const grammar = fs.readFileSync(grammarFile, 'utf-8');
+    try {
+      // An object with `lex`, and `bnf`.
+      return JSON.parse(grammar);
+    } catch (e) {
+      // Just a bnf as a string.
+      return grammar;
+    }
   },
 };
 

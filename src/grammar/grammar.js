@@ -4,6 +4,7 @@
  */
 
 import GrammarSymbol from './grammar-symbol';
+import LexRule from './lex-rule';
 import Production from './production';
 
 /**
