@@ -107,6 +107,10 @@ export default class LRParsingTable {
     return this._table;
   }
 
+  print() {
+    console.log(this.get());
+  }
+
   static getEntryType(entry) {
     if (typeof entry === 'number') {
       return EntryType.GOTO;
@@ -160,4 +164,4 @@ export default class LRParsingTable {
       }
     });
   }
-}
+};

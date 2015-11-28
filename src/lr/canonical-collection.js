@@ -3,7 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import Grammar from '../grammar';
+import Grammar from '../grammar/grammar';
 import LRItem from './lr-item';
 
 /**

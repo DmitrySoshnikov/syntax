@@ -45,4 +45,4 @@ export default class GrammarSymbol {
   isSymbol(symbol) {
     return this.getSymbol() === symbol;
   }
-}
+};

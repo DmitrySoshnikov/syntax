@@ -93,4 +93,4 @@ export default class Production {
     this._LHS = LHS;
     this._RHS = RHS;
   }
-}
+};

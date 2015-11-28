@@ -226,4 +226,4 @@ export default class Grammar {
       .split('\n')
       .filter(production => !!production.trim());
   }
-}
+};

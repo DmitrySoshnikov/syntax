@@ -103,4 +103,4 @@ export default class Closure {
       this._build();
     });
   }
-}
+};

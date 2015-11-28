@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const fs = require('fs');
+
+const options = require('nomnom')
+  .script('syntax')
+  .options({
+    mode: {
+      abbr: 'm',
+      help: 'Parser mode: ll, lr0, slr1, lalr1',
+      require: true,
+    },
+    grammar: {
+      abbr: 'g',
+      help: 'File containing LL or LR grammar',
+      required: true,
+    },
+    table: {
+      abbr: 't',
+      help: 'Generate and output parsing table',
+      flag: true,
+    },
+    parse: {
+      abbr: 'p',
+      help: 'Parse a string and checks for acceptance',
+    },
+  })
+  .parse();
+
+/**
+ * Set of parsers.
+ */
+const parsers = {
+  lr0(options) {
+    const Grammar = require('../dist/grammar/grammar');
+    const grammar = new Grammar(this._readGrammar(options.grammar));
+
+    if (options.parse) {
+      const LRParser = require('../dist/lr/lr-parser');
+
+      new LRParser({grammar})
+        .parse(options.parse);
+    }
+
+    if (options.table) {
+      const CanonicalCollection = require('../dist/lr/canonical-collection');
+      const LRParsingTable = require('../dist/lr/lr-parsing-table');
+
+      new LRParsingTable({
+        grammar,
+        canonicalCollection: new CanonicalCollection({grammar}),
+      }).print();
+    }
+  },
+
+  _readGrammar(grammarFile) {
+    return JSON.parse(fs.readFileSync(grammarFile, 'utf-8'));
+  },
+};
+
+function main() {
+  const mode = options.mode;
+
+  if (!parsers.hasOwnProperty(mode)) {
+    console.log(
+      `${mode.toUpperCase()} is not implemented yet. ` +
+      `Available parsers are: ${Object.keys(parsers).join(', ')}.`
+    );
+    return;
+  }
+
+  return parsers[mode](options);
+}
+
+if (require.main === module) {
+    main();
+}
