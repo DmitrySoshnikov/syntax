@@ -4,6 +4,7 @@
  */
 
 import GrammarSymbol from '../grammar/grammar-symbol'
+import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
 
 /**
@@ -26,13 +27,13 @@ import {EOF} from '../special-symbols';
  *
  * State      Action            Goto
  * +---+-----+-----+-----++-----+-----+
- * |   │ "a" │ "b" │  $  ││  A  │  S  │
+ * |   │ "a" │ "b" │  $  ││  S  │  A  │
  * +---+-----+-----+-----++-----+-----+
  * | 0 │ s2  │ s6  │     ││  3  │  1  │
  * +---+-----+-----+-----++-----+-----+
- * | 1 │ s2  │ s6  │     ││  4  │     │
+ * | 1 │ s2  │ s6  │     ││     │  4  │
  * +---+-----+-----+-----++-----+-----+
- * | 2 │ s2  │ s6  │     ││  5  │     │
+ * | 2 │ s2  │ s6  │     ││     │  5  │
  * +---+-----+-----+-----++-----+-----+
  * | 3 │     │     │ acc ││     │     │
  * +---+-----+-----+-----++-----+-----+
@@ -94,6 +95,7 @@ export default class LRParsingTable {
    */
   constructor({canonicalCollection, grammar}) {
     this._canonicalCollection = canonicalCollection;
+    this._grammar = grammar;
 
     this._action = grammar.getTerminals()
       .concat(new GrammarSymbol(EOF));
@@ -108,8 +110,42 @@ export default class LRParsingTable {
   }
 
   print() {
+    this._grammar.print();
+
     console.log('\nLR parsing table:\n');
-    console.log(this.get());
+
+    let terminals = this._grammar
+      .getTerminals()
+      .map(terminal => terminal.getSymbol());
+
+    let nonTerminals = this._grammar
+      .getNonTerminals()
+      .map(nonTerminal => nonTerminal.getSymbol());
+
+    let printer = new TablePrinter({
+      head: [''].concat(terminals, EOF, nonTerminals),
+    });
+
+    Object.keys(this._table).forEach(stateNumber => {
+      let entry = this._table[stateNumber];
+      let stateData = [stateNumber];
+
+      // Action part.
+      terminals.forEach(terminal => {
+        stateData.push(entry[terminal] || '');
+      });
+
+      stateData.push(entry[EOF] || '');
+
+      // Goto part.
+      nonTerminals.forEach(nonTerminal => {
+        stateData.push(entry[nonTerminal] || '');
+      });
+
+      printer.push(stateData);
+    });
+
+    console.log(printer.toString());
     console.log('');
   }
 

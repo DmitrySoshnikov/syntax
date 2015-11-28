@@ -102,14 +102,22 @@ export default class Grammar {
    */
   getNonTerminals() {
     if (!this._nonTerminals) {
-      let nonTerminals = {};
+      this._nonTerminals = [];
 
-      for (let production of this._bnf) {
-        nonTerminals[production.getLHS()] = true;
-      }
+      let nonTerminalsMap = {};
 
-      this._nonTerminals = Object.keys(nonTerminals);
+      this._bnf.forEach(production => {
+        if (production.isAugmented()) {
+          return;
+        }
+        let nonTerminal = production.getLHS();
+        if (!nonTerminalsMap.hasOwnProperty(nonTerminal.getSymbol())) {
+          nonTerminalsMap[nonTerminal.getSymbol()] = true;
+          this._nonTerminals.push(nonTerminal);
+        }
+      });
     }
+
     return this._nonTerminals;
   }
 
@@ -163,6 +171,7 @@ export default class Grammar {
 
     // Augmented production.
     console.log(`    0. ${spaces}${this.getAugmentedProduction().getRaw()}`);
+    console.log(`    --------------`);
 
     // Original productions.
     this._toArray(this._originalBnf).forEach((production, i) => {
