@@ -7,6 +7,7 @@ import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
 import Tokenizer from '../tokenizer';
+import {EOF} from '../special-symbols';
 
 const EntryType = LRParsingTable.EntryType;
 

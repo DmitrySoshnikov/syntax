@@ -63,7 +63,7 @@ export default class CanonicalCollection {
   }
 
   getStates() {
-    return this._allStates;
+    return this._states;
   }
 
   isItemRegistered(itemKey) {
