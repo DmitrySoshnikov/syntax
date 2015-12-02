@@ -38,9 +38,8 @@ const options = require('nomnom')
  * Set of parsers.
  */
 const parsers = {
-  lr0(options) {
-    const Grammar = require('../dist/grammar/grammar').default;
-    const grammar = new Grammar(this._readGrammar(options.grammar));
+  LR0(options) {
+    const grammar = this._getGrammar(options.grammar);
 
     // Canonical collection or LR items.
     if (options.collection) {
@@ -73,26 +72,37 @@ const parsers = {
     }
   },
 
-  _readGrammar(grammarFile) {
-    const grammar = fs.readFileSync(grammarFile, 'utf-8');
+  _getGrammar(grammarFile) {
+    const Grammar = require('../dist/grammar/grammar').default;
+
+    let grammarData = fs.readFileSync(grammarFile, 'utf-8');
+    let grammar;
+
     try {
       // An object with `lex`, and `bnf`.
-      return JSON.parse(grammar);
+      grammar = JSON.parse(grammar);
     } catch (e) {
       // Just a bnf as a string.
-      return grammar;
+      grammar = grammarData;
     }
+
+    return new Grammar(grammar, options.mode);
   },
 };
 
 function main() {
-  const mode = options.mode;
+  const mode = options.mode.toUpperCase();
 
   if (!parsers.hasOwnProperty(mode)) {
+    let availableModes = Object.keys(parsers)
+      .filter(mode => !mode.startsWith('_'))
+      .join(', ');
+
     console.log(
-      `${mode.toUpperCase()} is not implemented yet. ` +
-      `Available parsers are: ${Object.keys(parsers).join(', ')}.`
+      `${mode} is not implemented yet. ` +
+      `Available parsers are: ${availableModes}.`
     );
+
     return;
   }
 

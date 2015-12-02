@@ -7,6 +7,13 @@ import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
 
+const MODES = {
+  LR0: true,
+  SLR1: true,
+  LALR1: true,
+  LL1: true,
+};
+
 /**
  * Class encapsulates operations with a grammar.
  */
@@ -21,9 +28,9 @@ export default class Grammar {
    *   F -> "a"
    * `;
    *
-   * In addition, the grammar may be passed an object with
+   * In addition, the grammar may be passed as an object with
    * `lex` and `bnf` properties. The `lex` part is a set of rules
-   * for the lexer, and `bnf` is actual context-free LL(1) grammar.
+   * for the lexer, and `bnf` is actual context-free grammar.
    *
    * const grammar = {
    *
@@ -31,7 +38,7 @@ export default class Grammar {
    *   // format: <regexp rule>: token
    *   // The token can either be a raw string value, like "foo",
    *   // or a variable (written in ALL_CAPITALIZED notation), which
-   *   // can be used in further in the `bnf` grammar.
+   *   // can be used further in the `bnf` grammar.
    *
    *   lex: `
    *     "a" : "a"
@@ -54,9 +61,10 @@ export default class Grammar {
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
-  constructor(grammar) {
+  constructor(grammar, mode = MODES.LR0) {
     this._originalBnf = grammar;
     this._originalLex = null;
+    this._mode = mode;
 
     // Case when both `lex` and `bnf` are passed.
     if (Object.prototype.toString.call(grammar) === '[object Object]') {
@@ -78,6 +86,13 @@ export default class Grammar {
    */
   getStartSymbol() {
     return this._startSymbol;
+  }
+
+  /**
+   * Returns grammar mode.
+   */
+  getMode() {
+    return this._mode;
   }
 
   /**

@@ -75,7 +75,7 @@ export default class CanonicalCollection {
   }
 
   registerItem(item) {
-    this._allItems[item.serialize()] = item;
+    this._allItems[item.getKey()] = item;
   }
 
   print() {
@@ -88,7 +88,7 @@ export default class CanonicalCollection {
       if (state.isFinal()) {
         stateTags.push('final');
 
-        if (state.getKernel().getProduction().isAugmented()) {
+        if (state.isAccept()) {
           stateTags.push('accept');
         }
       }
@@ -100,6 +100,10 @@ export default class CanonicalCollection {
 
       state.getItems().forEach(item => {
         let itemTags = [];
+
+        if (state.isKernelItem(item)) {
+          itemTags.push('kernel');
+        }
 
         if (item.isShift()) {
           itemTags.push('shift');
@@ -120,7 +124,7 @@ export default class CanonicalCollection {
         }
 
         console.log(
-          `  - ${item.serialize()}` +
+          `  - ${item.getKey()}` +
           (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
         );
       });

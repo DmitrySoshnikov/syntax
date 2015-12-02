@@ -1,5 +1,4 @@
-/**
- * The MIT License (MIT)
+/** * The MIT License (MIT)
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
@@ -63,6 +62,11 @@ export default class Production {
 
   getRHS() {
     return this._RHS;
+  }
+
+  toString() {
+    let RHS = this._RHS.map(symbol => symbol.getSymbol());
+    return `${this._LHS.getSymbol()} -> ${RHS.join(' ')}`
   }
 
   _normalize() {

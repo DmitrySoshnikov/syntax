@@ -57,6 +57,13 @@ export default class LRItem {
   }
 
   /**
+   * Connects this item to the outer closure state.
+   */
+  connect(closure) {
+    this._gotoPointer = closure;
+  }
+
+  /**
    * Returns the closure object for this item.
    */
   getClosure() {
@@ -70,32 +77,69 @@ export default class LRItem {
     if (!this.shouldClosure()) {
       return;
     }
-    this._closure = new Closure({
-      kernelItem: this,
-      grammar: this._grammar,
-      canonicalCollection: this._canonicalCollection,
-    });
+    if (!this._closure) {
+      this._closure = new Closure({
+        initialKernelItem: this,
+        grammar: this._grammar,
+        canonicalCollection: this._canonicalCollection,
+      });
+    }
     return this._closure;
   }
 
   /**
    * Goto operation from this item. The item can be used in
    * different closures, but always goes to the same outer closure.
+   * The state closure from which item goes to an outer one, is passed
+   * as a parameter.
    *
    * Initial item (for the augmented production) builds the whole
    * graph of the canonical collection of LR items.
+   *
+   * Several different items can also go to the same closure if
+   * they do transition on the same symbol from current state.
    */
-  goto() {
+  goto(fromClosure) {
+    // Final items don't go anywhere, and an item can already be connected
+    // from previous calculaion when it was used in other state.
     if (!this.isFinal() && !this.isConnected()) {
-      this._gotoPointer = new Closure({
-        kernelItem: this._advance(),
-        grammar: this._grammar,
-        canonicalCollection: this._canonicalCollection,
-      });
+
+      let transitionSymbol = this.getCurrentSymbol().getSymbol();
+      let advancedItem = this._advance();
+
+      // If some previous kernel item already created the
+      // transition closure, just connect our item to it.
+      if (fromClosure.hasTransitionOnSymbol(transitionSymbol)) {
+
+        let toClosure = fromClosure
+          .getTransitionOnSymbol(transitionSymbol)
+          .closure;
+
+        // Append another item to the transition.
+        fromClosure.addSymbolTransition({item: advancedItem});
+
+        // Connect the item to the outer closure.
+        this.connect(toClosure);
+
+        // And register our item as an additional kernel.
+        toClosure.addKernelItem(advancedItem);
+      } else {
+        this._gotoPointer = new Closure({
+          initialKernelItem: advancedItem,
+          grammar: this._grammar,
+          canonicalCollection: this._canonicalCollection,
+        });
+        // Register item and state.
+        fromClosure.addSymbolTransition({
+          item: this,
+          closure: this._gotoPointer,
+        });
+      }
 
       // And recursively go to the next closure state if needed.
       this._gotoPointer.goto();
     }
+
     return this._gotoPointer;
   }
 
@@ -118,7 +162,7 @@ export default class LRItem {
    * as a key in the global registry of all items that participate
    * in closures. E.g. `A -> • a A`.
    */
-  serialize() {
+  getKey() {
     return LRItem.keyForItem(this._production, this._dotPosition);
   }
 
