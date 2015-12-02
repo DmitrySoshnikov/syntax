@@ -3,6 +3,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
 const GRAMMAR_MODES = require('../dist/grammar/grammar').MODES;
 
@@ -12,18 +13,6 @@ const options = require('nomnom')
     mode: {
       abbr: 'm',
       help: 'Parser mode: ll, lr0, slr1, lalr1',
-      required: true,
-      transform(mode) {
-        return mode.toUpperCase();
-      },
-      callback(mode) {
-        mode = this.transform(mode);
-
-        if (!GRAMMAR_MODES.hasOwnProperty(mode)) {
-          return `\n"${mode}" is not a valid parsing mode. ` +
-            `Valid modes are: ${Object.keys(GRAMMAR_MODES).join(', ')}.\n`;
-        }
-      }
     },
     grammar: {
       abbr: 'g',
@@ -103,8 +92,28 @@ const parsers = {
   },
 };
 
-function main() {
-  const mode = options.mode;
+function extractMode(options) {
+  let mode = options.mode;
+
+  // If no explicit mode is passed, try
+  // infer it from the grammar file extension.
+  if (!mode) {
+    mode = path.extname(options.grammar).slice(1);
+  }
+
+  if (!mode) {
+    console.log(`\n"mode" option is required\n`);
+    return null;
+  }
+
+  mode = mode.toUpperCase();
+
+  if (!GRAMMAR_MODES.hasOwnProperty(mode)) {
+    console.log(`\n"${mode}" is not a valid parsing mode. ` +
+      `Valid modes are: ${Object.keys(GRAMMAR_MODES).join(', ')}.\n`
+    );
+    return null;
+  }
 
   if (!parsers.hasOwnProperty(mode)) {
     let availableModes = Object.keys(parsers)
@@ -115,7 +124,16 @@ function main() {
       `\n"${mode}" is not implemented yet. ` +
       `Available parsers are: ${availableModes}.\n`
     );
+    return null;
+  }
 
+  return mode;
+}
+
+function main() {
+  const mode = extractMode(options);
+
+  if (!mode) {
     return;
   }
 
