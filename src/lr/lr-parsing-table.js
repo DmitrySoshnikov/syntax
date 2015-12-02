@@ -112,7 +112,7 @@ export default class LRParsingTable {
   print() {
     this._grammar.print();
 
-    console.log('\nLR(0) parsing table:\n');
+    console.log(`\n${this._grammar.getStringMode()} parsing table:\n`);
 
     let terminals = this._grammar
       .getTerminals()

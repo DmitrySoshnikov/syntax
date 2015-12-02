@@ -8,10 +8,10 @@ import LexRule from './lex-rule';
 import Production from './production';
 
 const MODES = {
-  LR0: true,
-  SLR1: true,
-  LALR1: true,
-  LL1: true,
+  LR0: 'LR0',
+  SLR1: 'SLR1',
+  LALR1: 'LALR1',
+  LL1: 'LL1',
 };
 
 /**
@@ -93,6 +93,14 @@ export default class Grammar {
    */
   getMode() {
     return this._mode;
+  }
+
+  /**
+   * Returns string representation of a mode.
+   * LR0 -> LR(0)
+   */
+  getStringMode() {
+    return `${this._mode.slice(0, -1)}(${this._mode[this._mode.length - 1]})`;
   }
 
   /**

@@ -11,6 +11,9 @@ const options = require('nomnom')
       abbr: 'm',
       help: 'Parser mode: ll, lr0, slr1, lalr1',
       required: true,
+      transform(mode) {
+        return mode.toUpperCase();
+      },
     },
     grammar: {
       abbr: 'g',
@@ -91,7 +94,7 @@ const parsers = {
 };
 
 function main() {
-  const mode = options.mode.toUpperCase();
+  const mode = options.mode;
 
   if (!parsers.hasOwnProperty(mode)) {
     let availableModes = Object.keys(parsers)
