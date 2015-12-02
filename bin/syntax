@@ -13,6 +13,7 @@ const options = require('nomnom')
     mode: {
       abbr: 'm',
       help: 'Parser mode: ll, lr0, slr1, lalr1',
+      transform: normalizeMode,
     },
     grammar: {
       abbr: 'g',
@@ -92,6 +93,10 @@ const parsers = {
   },
 };
 
+function normalizeMode(mode) {
+  return mode.toUpperCase();
+}
+
 function extractMode(options) {
   let mode = options.mode;
 
@@ -106,7 +111,7 @@ function extractMode(options) {
     return null;
   }
 
-  mode = mode.toUpperCase();
+  mode = normalizeMode(mode);
 
   if (!GRAMMAR_MODES.hasOwnProperty(mode)) {
     console.log(`\n"${mode}" is not a valid parsing mode. ` +
