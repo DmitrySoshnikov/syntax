@@ -19,9 +19,7 @@ import LRItem from './lr-item';
 export default class CanonicalCollection {
 
   constructor({grammar}) {
-    this._grammar = grammar instanceof Grammar
-      ? grammar
-      : new Grammar(grammar);
+    this._grammar = grammar;
 
     // Stores all LR-items that are used in closures.
     // This is to reuse the same LR-item that should "goto"

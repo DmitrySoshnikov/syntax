@@ -13,9 +13,7 @@ const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
   constructor({grammar}) {
-    this._grammar = grammar instanceof Grammar
-      ? grammar
-      : new Grammar(grammar);
+    this._grammar = grammar;
 
     this._canonicalCollection = new CanonicalCollection({
       grammar: this._grammar,

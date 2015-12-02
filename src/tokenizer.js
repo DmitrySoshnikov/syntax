@@ -29,10 +29,15 @@ export default class Tokenizer {
 
   getTokens() {
     if (!this._tokens) {
+      // Rewind to calculate all tokens.
+      let cursor = this._cursor;
+      this._cursor = 0;
       this._tokens = [];
       while (this.hasMoreTokens()) {
         this._tokens.push(this.getNextToken());
       }
+      // And restore back for the `getNextToken`.
+      this._cursor = cursor;
     }
     return this._tokens;
   }
