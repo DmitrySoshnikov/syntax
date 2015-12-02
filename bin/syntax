@@ -4,6 +4,8 @@
 
 const fs = require('fs');
 
+const GRAMMAR_MODES = require('../dist/grammar/grammar').MODES;
+
 const options = require('nomnom')
   .script('syntax')
   .options({
@@ -14,6 +16,14 @@ const options = require('nomnom')
       transform(mode) {
         return mode.toUpperCase();
       },
+      callback(mode) {
+        mode = this.transform(mode);
+
+        if (!GRAMMAR_MODES.hasOwnProperty(mode)) {
+          return `\n"${mode}" is not a valid parsing mode. ` +
+            `Valid modes are: ${Object.keys(GRAMMAR_MODES).join(', ')}.\n`;
+        }
+      }
     },
     grammar: {
       abbr: 'g',
@@ -102,8 +112,8 @@ function main() {
       .join(', ');
 
     console.log(
-      `${mode} is not implemented yet. ` +
-      `Available parsers are: ${availableModes}.`
+      `\n"${mode}" is not implemented yet. ` +
+      `Available parsers are: ${availableModes}.\n`
     );
 
     return;

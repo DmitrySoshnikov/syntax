@@ -7,7 +7,7 @@ import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
 
-const MODES = {
+export const MODES = {
   LR0: 'LR0',
   SLR1: 'SLR1',
   LALR1: 'LALR1',
