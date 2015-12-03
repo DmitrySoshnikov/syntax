@@ -3,16 +3,10 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
-
-export const MODES = {
-  LR0: 'LR0',
-  SLR1: 'SLR1',
-  LALR1: 'LALR1',
-  LL1: 'LL1',
-};
 
 /**
  * Class encapsulates operations with a grammar.
@@ -61,10 +55,10 @@ export default class Grammar {
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
-  constructor(grammar, mode = MODES.LR0) {
+  constructor(grammar, mode) {
     this._originalBnf = grammar;
     this._originalLex = null;
-    this._mode = mode;
+    this._mode = new GrammarMode(mode);
 
     // Case when both `lex` and `bnf` are passed.
     if (Object.prototype.toString.call(grammar) === '[object Object]') {
@@ -93,14 +87,6 @@ export default class Grammar {
    */
   getMode() {
     return this._mode;
-  }
-
-  /**
-   * Returns string representation of a mode.
-   * LR0 -> LR(0)
-   */
-  getStringMode() {
-    return `${this._mode.slice(0, -1)}(${this._mode[this._mode.length - 1]})`;
   }
 
   /**
