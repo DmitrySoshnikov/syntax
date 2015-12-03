@@ -3,7 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-// Tokenizer
+// Tokenizer.
 export {default as Tokenizer} from './tokenizer';
 
 // Grammar classes.
@@ -11,6 +11,9 @@ export {default as Grammar} from './grammar/grammar';
 export {default as GrammarSymbol} from './grammar/grammar-symbol';
 export {default as LexRule} from './grammar/lex-rule';
 export {default as Production} from './grammar/production';
+
+// Sets generator.
+export {default as SetsGenerator} from './sets-generator';
 
 // LR parsing.
 export {default as CanonicalCollection} from './lr/canonical-collection';

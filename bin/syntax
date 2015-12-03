@@ -30,6 +30,10 @@ const options = require('nomnom')
       help: 'Generate and output canonical collection of LR items',
       flag: true,
     },
+    sets: {
+      abbr: 's',
+      help: 'Generate and output parsing sets (all/first/follow/predict)',
+    },
     parse: {
       abbr: 'p',
       help: 'Parse a string and checks for acceptance',
@@ -42,7 +46,7 @@ const options = require('nomnom')
  */
 const parsers = {
   LR0(options) {
-    const grammar = this._getGrammar(options.grammar);
+    const grammar = getGrammar(options.grammar);
 
     // Canonical collection or LR items.
     if (options.collection) {
@@ -74,24 +78,24 @@ const parsers = {
         .parse(options.parse);
     }
   },
-
-  _getGrammar(grammarFile) {
-    const Grammar = require('../dist/grammar/grammar').default;
-
-    let grammarData = fs.readFileSync(grammarFile, 'utf-8');
-    let grammar;
-
-    try {
-      // An object with `lex`, and `bnf`.
-      grammar = JSON.parse(grammar);
-    } catch (e) {
-      // Just a bnf as a string.
-      grammar = grammarData;
-    }
-
-    return new Grammar(grammar, options.mode);
-  },
 };
+
+function getGrammar(grammarFile) {
+  const Grammar = require('../dist/grammar/grammar').default;
+
+  let grammarData = fs.readFileSync(grammarFile, 'utf-8');
+  let grammar;
+
+  try {
+    // An object with `lex`, and `bnf`.
+    grammar = JSON.parse(grammar);
+  } catch (e) {
+    // Just a bnf as a string.
+    grammar = grammarData;
+  }
+
+  return new Grammar(grammar, options.mode);
+}
 
 function normalizeMode(mode) {
   return mode.toUpperCase();
@@ -139,6 +143,25 @@ function extractMode(options) {
   return mode;
 }
 
+function handleSets() {
+  const SetsGenerator = require('../dist/sets-generator').default;
+
+  let sets = options.sets;
+  let sg = new SetsGenerator({grammar: getGrammar(options.grammar)});
+
+  if (sets.indexOf('first') !== -1 || sets === 'all') {
+    sg.printSet(sg.getFirstSets());
+  }
+
+  if (sets.indexOf('follow') !== -1 || sets === 'all') {
+    sg.printSet(sg.getFollowSets());
+  }
+
+  if (sets.indexOf('predict') !== -1 || sets === 'all') {
+    sg.printSet(sg.getPredictSets());
+  }
+}
+
 function main() {
   const mode = extractMode(options);
 
@@ -146,7 +169,12 @@ function main() {
     return;
   }
 
-  return parsers[mode](options);
+  // Sets.
+  if (options.sets) {
+    handleSets();
+  }
+
+  parsers[mode](options);
 }
 
 if (require.main === module) {

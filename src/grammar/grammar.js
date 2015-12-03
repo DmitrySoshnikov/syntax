@@ -136,7 +136,8 @@ export default class Grammar {
   getLexVars() {
     if (!this._lexVars) {
       this._lexVars = this.getLexRules()
-        .filter(lexRule => lexRule.getToken().isNonTerminal());
+        .filter(lexRule => lexRule.getToken().isNonTerminal())
+        .map(lexRule => lexRule.getToken());
     }
     return this._lexVars;
   }
@@ -149,6 +150,16 @@ export default class Grammar {
     return this._lexRules;
   }
 
+  /**
+   * Returns grammar productions.
+   */
+  getProductions() {
+    return this._bnf;
+  }
+
+  /**
+   * Returns productions for a specific non-terminal.
+   */
   getProductionsForSymbol(symbol) {
     if (symbol instanceof GrammarSymbol) {
       symbol = symbol.getSymbol();
@@ -159,28 +170,71 @@ export default class Grammar {
     });
   }
 
+  /**
+   * Returns productions where a non-terminal is used (appears on RHS).
+   */
+  getProductionsWithSymbol(symbol) {
+    if (symbol instanceof GrammarSymbol) {
+      symbol = symbol.getSymbol();
+    }
+
+    return this._bnf.filter(production => {
+      return production.getRHS().some(s => s.getSymbol() === symbol);
+    });
+  }
+
+  /**
+   * Gets a production by number.
+   */
   getProduction(number) {
     return this._bnf[number];
   }
 
+  /**
+   * Returns an augmented production (used in LR parsers),
+   * which is built during normalization process. The augmented
+   * production is always the first one.
+   */
   getAugmentedProduction() {
-    // The augmented production which is built during normalization.
+    if (!this._mode.isLR()) {
+      throw new TypeError(
+        `Augmented production is built only for LR grammars`
+      );
+    }
     return this._bnf[0];
   }
 
+  /**
+   * Tokens are either raw text values like "foo", or
+   * one of the variables from the lexical grammar.
+   */
+  isTokenSymbol(symbol) {
+    if (!(symbol instanceof GrammarSymbol)) {
+      symbol = new GrammarSymbol(symbol);
+    }
+
+    return symbol.isTerminal() ||
+      this.getLexVars().some(lexVar => lexVar === symbol.getSymbol());
+  }
+
+  /**
+   * Pretty prints the grammar.
+   */
   print() {
     console.log('\nGrammar:\n');
 
     let productions = this._toArray(this._originalBnf);
 
-    // How many spaces to print for the augmented production
-    // based on the first production in the grammar.
-    let spacesMatch = productions[0].match(/^\s+/);
-    let spaces = Array(spacesMatch ? spacesMatch[0].length + 1 : 0).join(' ');
+    if (this._mode.isLR()) {
+      // How many spaces to print for the augmented production
+      // based on the first production in the grammar.
+      let spacesMatch = productions[0].match(/^\s+/);
+      let spaces = Array(spacesMatch ? spacesMatch[0].length + 1 : 0).join(' ');
 
-    // Augmented production.
-    console.log(`    0. ${spaces}${this.getAugmentedProduction().getRaw()}`);
-    console.log(`    --------------`);
+      // Augmented production.
+      console.log(`    0. ${spaces}${this.getAugmentedProduction().getRaw()}`);
+      console.log(`    --------------`);
+    }
 
     // Original productions.
     this._toArray(this._originalBnf).forEach((production, i) => {
@@ -223,11 +277,13 @@ export default class Grammar {
       if (k === 0) {
         this._startSymbol = production.getLHS().getSymbol();
 
-        // Augmented rule, S' -> S.
-        let augmentedProduction = new Production(
-          `${this._startSymbol}' -> ${this._startSymbol}`, 0
-        );
-        normalizedBnf[0] = augmentedProduction;
+        if (this._mode.isLR()) {
+          // Augmented rule, S' -> S.
+          let augmentedProduction = new Production(
+            `${this._startSymbol}' -> ${this._startSymbol}`, 0
+          );
+          normalizedBnf[0] = augmentedProduction;
+        }
       }
 
       normalizedBnf.push(production);
