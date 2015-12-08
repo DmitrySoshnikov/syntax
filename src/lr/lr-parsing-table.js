@@ -29,19 +29,19 @@ import {EOF} from '../special-symbols';
  * +---+-----+-----+-----++-----+-----+
  * |   │ "a" │ "b" │  $  ││  S  │  A  │
  * +---+-----+-----+-----++-----+-----+
- * | 0 │ s2  │ s6  │     ││  3  │  1  │
+ * | 0 │ s2  │ s4  │     ││  3  │  1  │
  * +---+-----+-----+-----++-----+-----+
- * | 1 │ s2  │ s6  │     ││     │  4  │
+ * | 1 │ s2  │ s4  │     ││     │  5  │
  * +---+-----+-----+-----++-----+-----+
- * | 2 │ s2  │ s6  │     ││     │  5  │
+ * | 2 │ s2  │ s4  │     ││     │  6  │
  * +---+-----+-----+-----++-----+-----+
  * | 3 │     │     │ acc ││     │     │
  * +---+-----+-----+-----++-----+-----+
- * | 4 │ r1  │ r1  │ r1  ││     │     │
+ * | 4 │ r3  │ r3  │ r3  ││     │     │
  * +---+-----+-----+-----++-----+-----+
- * | 5 │ r2  │ r2  │ r2  ││     │     │
+ * | 5 │ r1  │ r1  │ r1  ││     │     │
  * +---+-----+-----+-----++-----+-----+
- * | 6 │ r3  │ r3  │ r3  ││     │     │
+ * | 6 │ r2  │ r2  │ r2  ││     │     │
  * +---+-----+-----+-----++-----+-----+
  *
  *   - State: number of a state (closure) in the graph
@@ -184,7 +184,11 @@ export default class LRParsingTable {
         } else {
           // Otherwise, reduce.
           this._action.forEach(terminal => {
-            row[terminal.getSymbol()] = `r${production.getNumber()}`;
+            this._putActionEntry(
+              row,
+              terminal.getSymbol(),
+              `r${production.getNumber()}`
+            );
           });
         }
 
@@ -195,9 +199,15 @@ export default class LRParsingTable {
 
         // Other terminals do "shift" action and go to the next state,
         // and non-terminals just go to the next
-        row[rawSymbol] = transitionSymbol.isTerminal()
-          ? `s${nextState}`
-          : nextState;
+        if (transitionSymbol.isNonTerminal()) {
+          row[transitionSymbol.getSymbol()] = nextState;
+        } else {
+          this._putActionEntry(
+            row,
+            transitionSymbol.getSymbol(),
+            `s${nextState}`
+          );
+        }
 
         // If we haven't visit the next state yet, go recursively to it.
         if (!this._table.hasOwnProperty(nextState)) {
@@ -205,5 +215,21 @@ export default class LRParsingTable {
         }
       }
     });
+  }
+
+  _putActionEntry(row, column, entry) {
+    let previousEntry = row[column];
+
+    // In case we have a transtion on the same
+    // symbol, and an action was already registered.
+    if (previousEntry === entry) {
+      return;
+    }
+
+    // Register an entry handling possible "shift-reduce" (s/r)
+    // or "reduce-reduce" (r/r) conflicts.
+    row[column] = previousEntry
+      ? `${previousEntry}/${entry}`
+      : entry;
   }
 };

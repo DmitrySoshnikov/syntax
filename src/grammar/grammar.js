@@ -96,10 +96,16 @@ export default class Grammar {
     if (!this._terminals) {
       this._terminals = [];
 
+      let terminals = {};
+
       this._bnf.forEach(production => {
-        this._terminals = this._terminals.concat(
-          production.getRHS().filter(symbol => symbol.isTerminal())
-        );
+        production.getRHS().forEach(symbol => {
+          if (symbol.isTerminal() &&
+              !terminals.hasOwnProperty(symbol.getSymbol())) {
+            terminals[symbol.getSymbol()] = true;
+            this._terminals.push(symbol);
+          }
+        });
       });
     }
 

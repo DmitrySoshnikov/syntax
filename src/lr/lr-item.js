@@ -50,6 +50,13 @@ export default class LRItem {
   }
 
   /**
+   * Whether this item should go to an outer closure state.
+   */
+  shouldConnect() {
+    return !this.isFinal() && !this.isConnected();
+  }
+
+  /**
    * Whether this item is already connected to a closure.
    */
   isConnected() {
@@ -102,7 +109,7 @@ export default class LRItem {
   goto(fromClosure) {
     // Final items don't go anywhere, and an item can already be connected
     // from previous calculaion when it was used in other state.
-    if (!this.isFinal() && !this.isConnected()) {
+    if (this.shouldConnect()) {
 
       let transitionSymbol = this.getCurrentSymbol().getSymbol();
       let advancedItem = this._advance();
@@ -116,7 +123,7 @@ export default class LRItem {
           .closure;
 
         // Append another item to the transition.
-        fromClosure.addSymbolTransition({item: advancedItem});
+        fromClosure.addSymbolTransition({item: this});
 
         // Connect the item to the outer closure.
         this.connect(toClosure);
@@ -137,7 +144,7 @@ export default class LRItem {
       }
 
       // And recursively go to the next closure state if needed.
-      this._gotoPointer.goto();
+      //this._gotoPointer.goto();
     }
 
     return this._gotoPointer;

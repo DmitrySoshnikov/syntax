@@ -22,9 +22,6 @@ import LRItem from './lr-item';
  *
  * S' -> S •
  * S  -> S • "a"
- *
- * NOTE: for LR(0) parser the state above is a "shift-reduce" conflict,
- * however it may not be a conflict for other parser type, e.g. SLR(1).
  */
 export default class Closure {
 
@@ -132,7 +129,12 @@ export default class Closure {
    *
    */
   goto() {
-    this._items.forEach(item => item.goto(this));
+    // First all items in this state, then go to outer states.
+    // This is needed since some kernel items that does transition
+    // on the same symbol can go to the same state.
+    this._items
+      .map(item => item.shouldConnect() && item.goto(this))
+      .forEach(outerState => outerState && outerState.goto());
   }
 
   addKernelItem(kernelItem) {

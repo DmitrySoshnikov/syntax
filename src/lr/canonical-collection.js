@@ -96,37 +96,41 @@ export default class CanonicalCollection {
         (stateTags.length > 0 ? ` (${stateTags.join(', ')})` : '')
       );
 
-      state.getItems().forEach(item => {
-        let itemTags = [];
-
-        if (state.isKernelItem(item)) {
-          itemTags.push('kernel');
-        }
-
-        if (item.isShift()) {
-          itemTags.push('shift');
-        }
-
-        if (item.isReduce()) {
-          itemTags.push(
-            `reduce by production ${item.getProduction().getNumber()}`
-          );
-        }
-
-        if (item.isFinal() && !item.isReduce()) {
-          itemTags.push('accept');
-        }
-
-        if (item.goto()) {
-          itemTags.push(`goes to state ${item.goto().getNumber()}`);
-        }
-
-        console.log(
-          `  - ${item.getKey()}` +
-          (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
-        );
-      });
+      state
+        .getItems()
+        .forEach(item => this._printItem(item, state));
     });
+  }
+
+  _printItem(item, state) {
+    let itemTags = [];
+
+    if (state.isKernelItem(item)) {
+      itemTags.push('kernel');
+    }
+
+    if (item.isShift()) {
+      itemTags.push('shift');
+    }
+
+    if (item.isReduce()) {
+      itemTags.push(
+        `reduce by production ${item.getProduction().getNumber()}`
+      );
+    }
+
+    if (item.isFinal() && !item.isReduce()) {
+      itemTags.push('accept');
+    }
+
+    if (item.goto()) {
+      itemTags.push(`goes to state ${item.goto().getNumber()}`);
+    }
+
+    console.log(
+      `  - ${item.getKey()}` +
+      (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
+    );
   }
 
   getRoot() {
