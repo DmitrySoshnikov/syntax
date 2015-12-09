@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const GRAMMAR_MODES = require('../dist/grammar/grammar-mode').MODES;
+const GRAMMAR_MODE = require('../dist/grammar/grammar-mode').MODES;
 
 const options = require('nomnom')
   .script('syntax')
@@ -46,7 +46,17 @@ const options = require('nomnom')
  */
 const parsers = {
   LR0(options) {
-    const grammar = getGrammar(options.grammar);
+    return this._genericLR(GRAMMAR_MODE.LR0, options);
+  },
+
+  SLR1(options) {
+    return this._genericLR(GRAMMAR_MODE.SLR1, options);
+  },
+
+  _genericLR(mode, options) {
+    console.log(`Parsing mode: ${mode}.`);
+
+    const grammar = getGrammar(options.grammar, mode);
 
     // Canonical collection or LR items.
     if (options.collection) {
@@ -80,7 +90,7 @@ const parsers = {
   },
 };
 
-function getGrammar(grammarFile) {
+function getGrammar(grammarFile, mode) {
   const Grammar = require('../dist/grammar/grammar').default;
 
   let grammarData = fs.readFileSync(grammarFile, 'utf-8');
@@ -94,7 +104,7 @@ function getGrammar(grammarFile) {
     grammar = grammarData;
   }
 
-  return new Grammar(grammar, options.mode);
+  return new Grammar(grammar, mode);
 }
 
 function normalizeMode(mode) {
@@ -102,7 +112,7 @@ function normalizeMode(mode) {
 }
 
 function getModesList() {
-  return Object.keys(GRAMMAR_MODES).join(', ');
+  return Object.keys(GRAMMAR_MODE).join(', ');
 }
 
 function extractMode(options) {
@@ -121,7 +131,7 @@ function extractMode(options) {
 
   mode = normalizeMode(mode);
 
-  if (!GRAMMAR_MODES.hasOwnProperty(mode)) {
+  if (!GRAMMAR_MODE.hasOwnProperty(mode)) {
     console.log(`\n"${mode}" is not a valid parsing mode. ` +
       `Valid modes are: ${getModesList()}.\n`
     );

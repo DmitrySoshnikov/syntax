@@ -3,7 +3,9 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import GrammarSymbol from '../grammar/grammar-symbol'
+import {MODES as GRAMMAR_MODE} from '../grammar/grammar-mode';
+import GrammarSymbol from '../grammar/grammar-symbol';
+import SetsGenerator from '../sets-generator';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
 
@@ -98,6 +100,7 @@ export default class LRParsingTable {
   constructor({canonicalCollection, grammar}) {
     this._canonicalCollection = canonicalCollection;
     this._grammar = grammar;
+    this._setsGenerator = new SetsGenerator({grammar});
 
     this._action = grammar.getTerminals()
       .concat(new GrammarSymbol(EOF));
@@ -187,7 +190,8 @@ export default class LRParsingTable {
     currentState.getItems().forEach(item => {
 
       // For final item we should "reduce". In LR(0) type we
-      // reduce unconditionally for every terminal.
+      // reduce unconditionally for every terminal, in other types
+      // e.g. SLR(1) consider lookahead (follow) sets.
       if (item.isFinal()) {
         let production = item.getProduction();
 
@@ -198,11 +202,13 @@ export default class LRParsingTable {
         } else {
           // Otherwise, reduce.
           this._action.forEach(terminal => {
-            this._putActionEntry(
-              row,
-              terminal.getSymbol(),
-              `r${production.getNumber()}`
-            );
+            if (this._shouldReduce(production, terminal)) {
+              this._putActionEntry(
+                row,
+                terminal.getSymbol(),
+                `r${production.getNumber()}`
+              );
+            }
           });
         }
 
@@ -229,6 +235,22 @@ export default class LRParsingTable {
         }
       }
     });
+  }
+
+  _shouldReduce(production, terminal) {
+    let mode = this._grammar.getMode().getRaw();
+    switch (mode) {
+      case GRAMMAR_MODE.LR0:
+        // LR0 reduces for all actions without a lookahead.
+        return true;
+      case GRAMMAR_MODE.SLR1:
+        // SLR1 considers where the action is in the Follow(LHS).
+        return this._setsGenerator
+          .followOf(production.getLHS())
+          .hasOwnProperty(terminal.getSymbol());
+      default:
+        throw new Error(`Unsupported grammar type: ${mode}.`);
+    }
   }
 
   _putActionEntry(row, column, entry) {
