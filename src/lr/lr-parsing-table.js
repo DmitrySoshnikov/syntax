@@ -8,6 +8,7 @@ import GrammarSymbol from '../grammar/grammar-symbol';
 import SetsGenerator from '../sets-generator';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
+import colors from 'colors';
 
 /**
  * The LR parsing table is built by traversing the graph of the
@@ -132,22 +133,28 @@ export default class LRParsingTable {
     });
 
     Object.keys(this._table).forEach(stateNumber => {
-      let entry = this._table[stateNumber];
-      let stateData = [stateNumber];
+      let tableRow = this._table[stateNumber];
+      let row = {[stateNumber]: []};
 
       // Action part.
       terminals.forEach(terminal => {
-        stateData.push(entry[terminal] || '');
+        let entry = tableRow[terminal] || '';
+
+        if (this._hasConflict(entry)) {
+          entry = colors.red(entry);
+        }
+
+        row[stateNumber].push(entry);
       });
 
-      stateData.push(entry[EOF] || '');
+      row[stateNumber].push(tableRow[EOF] || '');
 
       // Goto part.
       nonTerminals.forEach(nonTerminal => {
-        stateData.push(entry[nonTerminal] || '');
+        row[stateNumber].push(tableRow[nonTerminal] || '');
       });
 
-      printer.push(stateData);
+      printer.push(row);
     });
 
     console.log(printer.toString());
@@ -181,6 +188,12 @@ export default class LRParsingTable {
     }
 
     return EntryType.ERROR;
+  }
+
+  _hasConflict(entry) {
+    let entryType = LRParsingTable.getEntryType(entry);
+    return entryType === EntryType.RR_CONFLICT ||
+      entryType === EntryType.SR_CONFLICT;
   }
 
   _build(currentState) {

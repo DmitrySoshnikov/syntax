@@ -54,7 +54,7 @@ const parsers = {
   },
 
   _genericLR(mode, options) {
-    console.log(`Parsing mode: ${mode}.`);
+    console.log(`\nParsing mode: ${mode}.`);
 
     const grammar = getGrammar(options.grammar, mode);
 

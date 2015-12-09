@@ -32,7 +32,8 @@
     "babel-preset-es2015": "^6.1.18",
     "babel-preset-stage-2": "^6.1.18",
     "nomnom": "^1.8.1",
-    "cli-table2": "^0.1.9"
+    "cli-table2": "^0.1.9",
+    "colors": "^1.1.2"
   },
   "devDependencies": {
     "babel": "^6.2.0",
