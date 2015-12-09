@@ -110,7 +110,6 @@ export default class LRItem {
     // Final items don't go anywhere, and an item can already be connected
     // from previous calculaion when it was used in other state.
     if (this.shouldConnect()) {
-
       let transitionSymbol = this.getCurrentSymbol().getSymbol();
       let advancedItem = this._advance();
 
@@ -142,9 +141,6 @@ export default class LRItem {
           closure: this._gotoPointer,
         });
       }
-
-      // And recursively go to the next closure state if needed.
-      //this._gotoPointer.goto();
     }
 
     return this._gotoPointer;

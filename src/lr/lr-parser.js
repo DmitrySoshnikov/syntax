@@ -47,8 +47,6 @@ export default class LRParser {
       grammar: this._grammar,
     });
 
-    let table = this._table.get();
-
     let startingState = this._canonicalCollection
       .getStartingState()
       .getNumber();
@@ -60,11 +58,12 @@ export default class LRParser {
 
     do {
       if (!token) {
-        this._unexpectedEndOfSource();
+        this._unexpectedEndOfInput();
       }
 
       let state = this._peek();
-      let entry = this._table.get()[state][token.type];
+      let column = token.type;
+      let entry = this._table.get()[state][column];
 
       if (!entry) {
         this._unexpectedToken(token);
@@ -79,6 +78,11 @@ export default class LRParser {
           this._reduce(entry);
           // Don't advance tokens on reduce.
           break;
+        case EntryType.SR_CONFLICT:
+          this._conflictError('shift-reduce', state, column);
+          break;
+        case EntryType.RR_CONFLICT:
+          this._conflictError('reduce-reduce', state, column);
         case EntryType.ACCEPT:
           // Pop starting production and its state number.
           this._stack.pop();
@@ -104,20 +108,27 @@ export default class LRParser {
     console.log('');
   }
 
-  _unexpectedEndOfSource() {
-    this._parseError(`Unexpected end of source`);
+  _unexpectedEndOfInput() {
+    this._parseError(`Unexpected end of input.`);
   }
 
   _unexpectedToken(token) {
     if (token.value === EOF) {
-      this._unexpectedEndOfSource();
+      this._unexpectedEndOfInput();
     }
 
-    this._parseError(`Unexpected token: ${token.value}`);
+    this._parseError(`Unexpected token: ${token.value}.`);
   }
 
   _parseError(message) {
-    throw new Error(`Parse error: ${message}.`);
+    throw new Error(`Parse error: ${message}`);
+  }
+
+  _conflictError(conflictType, state, column) {
+    this._parseError(
+      `Found "${conflictType}" conflict ` +
+      `at state ${state}, terminal ${column}.`
+    );
   }
 
   _peek() {

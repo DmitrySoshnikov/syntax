@@ -77,11 +77,13 @@ import {EOF} from '../special-symbols';
  * Type of an entry in the parsing table.
  */
 const EntryType = {
-  UNKNOWN : 0,
-  GOTO    : 1,
-  SHIFT   : 2,
-  REDUCE  : 3,
-  ACCEPT  : 4,
+  ERROR       : 0,
+  GOTO        : 1,
+  SHIFT       : 2,
+  REDUCE      : 3,
+  ACCEPT      : 4,
+  SR_CONFLICT : 5,
+  RR_CONFLICT : 6,
 };
 
 /**
@@ -156,6 +158,17 @@ export default class LRParsingTable {
   static getEntryType(entry) {
     if (typeof entry === 'number') {
       return EntryType.GOTO;
+    } else if (entry.indexOf('/') !== -1) {
+
+      let entryTypes = entry.split('/')
+        .map(e => LRParsingTable.getEntryType(e));
+
+      if (entryTypes.every(type => type === EntryType.REDUCE)) {
+        return EntryType.RR_CONFLICT;
+      }
+
+      return EntryType.SR_CONFLICT;
+
     } else if (entry[0] === 's') {
       return EntryType.SHIFT;
     } else if (entry[0] === 'r') {
@@ -163,7 +176,8 @@ export default class LRParsingTable {
     } else if (entry === 'acc') {
       return EntryType.ACCEPT;
     }
-    return EntryType.UNKNOWN;
+
+    return EntryType.ERROR;
   }
 
   _build(currentState) {
