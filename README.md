@@ -29,5 +29,5 @@ In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conf
 ./bin/syntax --grammar examples/example1.slr1 --table --mode lr0
 ```
 
-![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png) &nbsp; &nbsp; 
+![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png) 
 ![sl1-grammar-lr0-m](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_6530197571.png)
