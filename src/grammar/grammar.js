@@ -64,6 +64,7 @@ export default class Grammar {
     if (Object.prototype.toString.call(grammar) === '[object Object]') {
       this._originalBnf = grammar.bnf;
       this._originalLex = grammar.lex;
+      this._startSymbol = grammar.start;
     }
 
     this._terminals = null;
@@ -220,7 +221,9 @@ export default class Grammar {
     }
 
     return symbol.isTerminal() ||
-      this.getLexVars().some(lexVar => lexVar === symbol.getSymbol());
+      this.getLexVars().some(lexVar => {
+        return lexVar.getSymbol() === symbol.getSymbol();
+      });
   }
 
   /**
@@ -279,9 +282,12 @@ export default class Grammar {
 
       currentNonTerminal = production.getLHS().getSymbol();
 
-      // LHS of the first rule is considered as "Start symbol".
+      // LHS of the first rule is considered as "Start symbol", unless
+      // it's passed as the `start` property in the grammar.
       if (k === 0) {
-        this._startSymbol = production.getLHS().getSymbol();
+        if (!this._startSymbol) {
+          this._startSymbol = production.getLHS().getSymbol();
+        }
 
         if (this._mode.isLR()) {
           // Augmented rule, S' -> S.

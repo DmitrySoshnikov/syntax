@@ -40,7 +40,7 @@ export default class LRParser {
   }
 
   parse(string) {
-    this._printParseHeader(string);
+    console.log(`\nParsing: ${string}\n`);
 
     let tokenizer = new Tokenizer({
       string,
@@ -99,13 +99,6 @@ export default class LRParser {
       }
 
     } while (tokenizer.hasMoreTokens() || this._stack.length > 1);
-  }
-
-  _printParseHeader(string) {
-    console.log('');
-    console.log(`Parsing: "${string}"`);
-    this._grammar.print();
-    console.log('');
   }
 
   _unexpectedEndOfInput() {

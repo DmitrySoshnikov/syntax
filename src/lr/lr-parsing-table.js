@@ -104,7 +104,7 @@ export default class LRParsingTable {
     this._setsGenerator = new SetsGenerator({grammar});
 
     this._action = grammar.getTerminals()
-      .concat(new GrammarSymbol(EOF));
+      .concat(grammar.getLexVars(), new GrammarSymbol(EOF));
 
     this._goto = grammar.getNonTerminals();
     this._table = {};
@@ -120,16 +120,15 @@ export default class LRParsingTable {
 
     console.log(`\n${this._grammar.getMode().toString()} parsing table:\n`);
 
-    let terminals = this._grammar
-      .getTerminals()
-      .map(terminal => terminal.getSymbol());
+    let actionSymbols = this._action
+      .map(actionSymbol => actionSymbol.getSymbol());
 
     let nonTerminals = this._grammar
       .getNonTerminals()
       .map(nonTerminal => nonTerminal.getSymbol());
 
     let printer = new TablePrinter({
-      head: [''].concat(terminals, EOF, nonTerminals),
+      head: [''].concat(actionSymbols, nonTerminals),
     });
 
     Object.keys(this._table).forEach(stateNumber => {
@@ -137,8 +136,8 @@ export default class LRParsingTable {
       let row = {[stateNumber]: []};
 
       // Action part.
-      terminals.forEach(terminal => {
-        let entry = tableRow[terminal] || '';
+      actionSymbols.forEach(actionSymbol => {
+        let entry = tableRow[actionSymbol] || '';
 
         if (this._hasConflict(entry)) {
           entry = colors.red(entry);
@@ -146,8 +145,6 @@ export default class LRParsingTable {
 
         row[stateNumber].push(entry);
       });
-
-      row[stateNumber].push(tableRow[EOF] || '');
 
       // Goto part.
       nonTerminals.forEach(nonTerminal => {
@@ -232,14 +229,14 @@ export default class LRParsingTable {
 
         // Other terminals do "shift" action and go to the next state,
         // and non-terminals just go to the next
-        if (transitionSymbol.isNonTerminal()) {
-          row[transitionSymbol.getSymbol()] = nextState;
-        } else {
+        if (this._grammar.isTokenSymbol(transitionSymbol)) {
           this._putActionEntry(
             row,
             transitionSymbol.getSymbol(),
             `s${nextState}`
           );
+        } else {
+          row[transitionSymbol.getSymbol()] = nextState;
         }
 
         // If we haven't visit the next state yet, go recursively to it.
