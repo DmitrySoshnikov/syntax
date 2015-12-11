@@ -234,21 +234,38 @@ export default class Grammar {
 
     let productions = this._toArray(this._originalBnf);
 
-    if (this._mode.isLR()) {
-      // How many spaces to print for the augmented production
-      // based on the first production in the grammar.
-      let spacesMatch = productions[0].match(/^\s+/);
-      let spaces = Array(spacesMatch ? spacesMatch[0].length + 1 : 0).join(' ');
+    // How many spaces to print for the augmented production
+    // based on the first production in the grammar.
+    let spacesMatch = productions[0].match(/^\s+/);
+    let stripSpaces = spacesMatch ? spacesMatch[0].length : 0;
 
-      // Augmented production.
-      console.log(`    0. ${spaces}${this.getAugmentedProduction().getRaw()}`);
-      console.log(`    --------------`);
+    let pad = '    ';
+    let numberPad = productions.length.toString().length;
+
+    // Append augmented production for LR parsers.
+    if (this._mode.isLR()) {
+
+      let augmentedProduction = `${pad}${this._padLeft('0', numberPad)}. ` +
+        this.getAugmentedProduction().getRaw();
+
+      let splitter = Array(augmentedProduction.length - 2).join('-');
+
+      console.log(augmentedProduction);
+      console.log(`${pad}${splitter}`);
     }
 
     // Original productions.
     this._toArray(this._originalBnf).forEach((production, i) => {
-      console.log(`    ${i + 1}. ${production}`);
+      console.log(`${pad}${this._padLeft(i + 1, numberPad)}. ` +
+        production.slice(stripSpaces)
+      );
     });
+  }
+
+  _padLeft(value, times) {
+    value = value.toString();
+    let spaces = Array(times - value.length + 1).join(' ');
+    return spaces + value;
   }
 
   _normalizeLex(lex) {

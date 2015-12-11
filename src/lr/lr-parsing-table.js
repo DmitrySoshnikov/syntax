@@ -254,7 +254,7 @@ export default class LRParsingTable {
         // LR0 reduces for all actions without a lookahead.
         return true;
       case GRAMMAR_MODE.SLR1:
-        // SLR1 considers where the action is in the Follow(LHS).
+        // SLR1 considers whether the action symbol is in the Follow(LHS).
         return this._setsGenerator
           .followOf(production.getLHS())
           .hasOwnProperty(terminal.getSymbol());
