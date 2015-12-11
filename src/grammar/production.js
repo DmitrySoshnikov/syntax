@@ -19,6 +19,7 @@ export default class Production {
     this._raw = production;
     this._number = number;
     this._isAugmented = number === 0;
+    this._isShort = false;
     this._normalize();
   }
 
@@ -92,6 +93,10 @@ export default class Production {
           RHS.push(new GrammarSymbol(rhsProd[i]));
         }
       }
+    }
+
+    if (!LHS.getSymbol()) {
+      this._isShort = true;
     }
 
     this._LHS = LHS;
