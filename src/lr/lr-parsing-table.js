@@ -104,7 +104,7 @@ export default class LRParsingTable {
     this._setsGenerator = new SetsGenerator({grammar});
 
     this._action = grammar.getTerminals()
-      .concat(grammar.getLexVars(), new GrammarSymbol(EOF));
+      .concat(grammar.getTokens(), new GrammarSymbol(EOF));
 
     this._goto = grammar.getNonTerminals();
     this._table = {};

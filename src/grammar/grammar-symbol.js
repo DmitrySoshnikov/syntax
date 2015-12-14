@@ -29,11 +29,6 @@ export default class GrammarSymbol {
     return !this.isTerminal();
   }
 
-  isSkip() {
-    // "" or ''.
-    return this.isTerminal() && this._symbol.length === 2;
-  }
-
   isEpsilon() {
     return this._symbol === EPSILON;
   }

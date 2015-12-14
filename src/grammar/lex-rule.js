@@ -22,9 +22,9 @@ export default class LexRule {
    *
    *   [0-9]+(\.[0-9]+)? : NUMBER
    */
-  constructor(lexRule) {
-    this._raw = lexRule;
-    this._build();
+  constructor({matcher, tokenHandler}) {
+    this._matcher = new RegExp(`^${matcher}`);
+    this._handler = new Function(tokenHandler);
   }
 
   getMatcher() {
@@ -32,22 +32,6 @@ export default class LexRule {
   }
 
   getToken() {
-    return this._token;
-  }
-
-  getRaw() {
-    return this._raw;
-  }
-
-  _build() {
-    let lastColonIdx = this._raw.lastIndexOf('•');
-
-    let matcherString = this._raw.slice(0, lastColonIdx).trim();
-
-    this._token = new GrammarSymbol(
-      this._raw.slice(lastColonIdx + 1).trim()
-    );
-
-    this._matcher = new RegExp(`^${matcherString}`);
+    return this._handler();
   }
 };

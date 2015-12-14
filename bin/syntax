@@ -111,7 +111,9 @@ function getGrammar(grammarFile, mode) {
     }
   }
 
-  return new Grammar(grammar, mode);
+  grammar.mode = mode;
+
+  return new Grammar(grammar);
 }
 
 function normalizeMode(mode) {

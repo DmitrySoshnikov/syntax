@@ -14,17 +14,10 @@ import Production from './production';
 export default class Grammar {
 
   /**
-   * Basic grammar example:
-   *
-   * const grammar = `
-   *   S -> F
-   *      | "(" S "+" F ")"
-   *   F -> "a"
-   * `;
-   *
-   * In addition, the grammar may be passed as an object with
-   * `lex` and `bnf` properties. The `lex` part is a set of rules
-   * for the lexer, and `bnf` is actual context-free grammar.
+   * A grammar may be passed as an object with `lex` and `bnf` properties.
+   * The `lex` part is a set of rules for the lexer, and `bnf` is actual
+   * context-free grammar. If `start` property is passed, it's used as the
+   * start symbol, otherwise it's infered from the first production.
    *
    * const grammar = {
    *
@@ -34,42 +27,46 @@ export default class Grammar {
    *   // or a variable (written in ALL_CAPITALIZED notation), which
    *   // can be used further in the `bnf` grammar.
    *
-   *   lex: `
-   *     "a" : "a"
-   *     "(" : "("
-   *     ")" : ")"
-   *     "+" : "+"
-   *     [0-9]+("."[0-9]+)?\b : NUMBER
-   *   `,
+   *   "lex": {
+   *     "rules": {
+   *       "a"   : "return 'a';",
+   *       "\\(" : "return '(';",
+   *       "\\)" : "return ')';",
+   *       "\\+" : "return '+';",
+   *       "[0-9]+(\\.[0-9]+)?\\b" : "return 'NUMBER';"
+   *    }
+   *   },
+   *
+   *   "tokens": "a ( ) + NUMBER",
+   *
+   *   "start": "S",
    *
    *   // BNF grammar
    *
-   *   bnf: `
-   *     S -> F
-   *        | "(" S "+" F ")"
-   *     F -> "a"
-   *        | NUMBER
-   *   `
+   *   bnf: {
+   *     "S": [ "F",
+   *            "( S + F )" ],
+   *     "F": [ "a",
+   *            "NUMBER" ]
    * };
    *
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
-  constructor(grammar, mode) {
-    this._originalBnf = grammar;
-    this._originalLex = null;
-    this._mode = new GrammarMode(mode);
+  constructor({lex = null, tokens, bnf, start = null, mode}) {
+    this._originalBnf = bnf;
+    this._originalLex = lex.rules;
+    this._startSymbol = start;
 
-    // Case when both `lex` and `bnf` are passed.
-    if (Object.prototype.toString.call(grammar) === '[object Object]') {
-      this._originalBnf = grammar.bnf;
-      this._originalLex = grammar.lex;
-      this._startSymbol = grammar.start;
+    if (!Array.isArray(tokens)) {
+      tokens = tokens.split(/\s+/);
     }
 
-    this._terminals = null;
+    this._tokens = tokens.map(token => new GrammarSymbol(token));
+
+    this._mode = new GrammarMode(mode);
+
     this._nonTerminals = null;
-    this._lexVars = null;
 
     this._bnf = this._normalizeBnf(this._originalBnf);
     this._lexRules = this._normalizeLex(this._originalLex);
@@ -138,15 +135,10 @@ export default class Grammar {
   }
 
   /**
-   * Returns token variables.
+   * Returns tokens.
    */
-  getLexVars() {
-    if (!this._lexVars) {
-      this._lexVars = this.getLexRules()
-        .filter(lexRule => lexRule.getToken().isNonTerminal())
-        .map(lexRule => lexRule.getToken());
-    }
-    return this._lexVars;
+  getTokens() {
+    return this._tokens;
   }
 
   /**
@@ -221,8 +213,8 @@ export default class Grammar {
     }
 
     return symbol.isTerminal() ||
-      this.getLexVars().some(lexVar => {
-        return lexVar.getSymbol() === symbol.getSymbol();
+      this.getTokens().some(token => {
+        return token.getSymbol() === symbol.getSymbol();
       });
   }
 
@@ -232,33 +224,21 @@ export default class Grammar {
   print() {
     console.log('\nGrammar:\n');
 
-    let productions = this._toArray(this._originalBnf);
-
-    // How many spaces to print for the augmented production
-    // based on the first production in the grammar.
-    let spacesMatch = productions[0].match(/^\s+/);
-    let stripSpaces = spacesMatch ? spacesMatch[0].length : 0;
-
     let pad = '    ';
+    let productions = this.getProductions();
     let numberPad = productions.length.toString().length;
 
-    // Append augmented production for LR parsers.
-    if (this._mode.isLR()) {
+    productions.forEach(production => {
+      let productionOutput =
+        `${pad}${this._padLeft(production.getNumber(), numberPad)}. ` +
+        production.toString();
 
-      let augmentedProduction = `${pad}${this._padLeft('0', numberPad)}. ` +
-        this.getAugmentedProduction().getRaw();
+      console.log(productionOutput);
 
-      let splitter = Array(augmentedProduction.length - 2).join('-');
-
-      console.log(augmentedProduction);
-      console.log(`${pad}${splitter}`);
-    }
-
-    // Original productions.
-    this._toArray(this._originalBnf).forEach((production, i) => {
-      console.log(`${pad}${this._padLeft(i + 1, numberPad)}. ` +
-        production.slice(stripSpaces)
-      );
+      if (production.isAugmented()) {
+        let splitter = Array(productionOutput.length - 2).join('-');
+        console.log(`${pad}${splitter}`);
+      }
     });
   }
 
@@ -271,63 +251,62 @@ export default class Grammar {
   _normalizeLex(lex) {
     // If lexical grammar was provided, normalize and return.
     if (lex) {
-      return this._toArray(lex)
-        .map(lexRule => new LexRule(lexRule));
+      let normalizedLex = [];
+      for (let matcher in lex) {
+        normalizedLex.push(new LexRule({matcher, tokenHandler: lex[matcher]}));
+      }
+      return normalizedLex;
     }
 
     // Otherwise, calculate from the set of terminals: "a" : "a".
     return this.getTerminals()
-      .map(terminal => new LexRule(
-        `${terminal.getSymbol()} : ${terminal.getSymbol()}`
-      ));
+      .map(terminal => new LexRule({
+        matcher: terminal.getSymbol(),
+        tokensHandler: `return ${terminal.getSymbol()}`,
+      }));
   }
 
   _normalizeBnf(originalBnf) {
     let normalizedBnf = [];
+    let nonTerminals = Object.keys(originalBnf);
     let currentNonTerminal;
+    let number = 0;
 
-    this._toArray(originalBnf).forEach((rawProduction, k) => {
-      let productionNumber = k + 1;
+    if (!this._startSymbol) {
+      this._startSymbol = nonTerminals[0];
+    }
 
-      let production = new Production(rawProduction, productionNumber);
+    if (this._mode.isLR()) {
+      // Augmented rule, S' -> S.
+      let augmentedProduction = new Production({
+        LHS: `${this._startSymbol}'`,
+        RHS: this._startSymbol,
+        number: number++,
+        grammar: this,
+      });
+      normalizedBnf[0] = augmentedProduction;
+    }
 
-      // For a shorthand production that doesn't use explicit LHS,
-      // take it from previous rule.
-      if (!production.getLHS().getSymbol()) {
-        production.setLHS(currentNonTerminal);
-      }
+    nonTerminals.forEach(LHS => {
+      originalBnf[LHS].forEach((RHS, k) => {
+        let handler = null;
 
-      currentNonTerminal = production.getLHS().getSymbol();
-
-      // LHS of the first rule is considered as "Start symbol", unless
-      // it's passed as the `start` property in the grammar.
-      if (k === 0) {
-        if (!this._startSymbol) {
-          this._startSymbol = production.getLHS().getSymbol();
+        if (Array.isArray(RHS)) {
+          handler = RHS[1];
+          RHS = RHS[0];
         }
 
-        if (this._mode.isLR()) {
-          // Augmented rule, S' -> S.
-          let augmentedProduction = new Production(
-            `${this._startSymbol}' -> ${this._startSymbol}`, 0
-          );
-          normalizedBnf[0] = augmentedProduction;
-        }
-      }
-
-      normalizedBnf.push(production);
+        normalizedBnf.push(new Production({
+          LHS,
+          RHS,
+          handler,
+          number: number++,
+          isShort: k > 0,
+          grammar: this,
+        }));
+      });
     });
 
     return normalizedBnf;
-  }
-
-  _toArray(grammar) {
-    if (Array.isArray(grammar)) {
-      return grammar;
-    }
-
-    return grammar
-      .split('\n')
-      .filter(production => !!production.trim());
   }
 };

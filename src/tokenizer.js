@@ -3,6 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import GrammarSymbol from './grammar/grammar-symbol';
 import {EOF} from './special-symbols';
 
 /**
@@ -63,12 +64,14 @@ export default class Tokenizer {
     for (let lexRule of this._grammar.getLexRules()) {
       let matched = this._match(string, lexRule.getMatcher());
       if (matched) {
-        let token = lexRule.getToken();
+        let rawToken = lexRule.getToken();
 
         // Usually whitespaces, etc.
-        if (token.isSkip()) {
+        if (!rawToken) {
           return this.getNextToken();
         }
+
+        let token = new GrammarSymbol(rawToken);
 
         return {
           type: token.getSymbol(),

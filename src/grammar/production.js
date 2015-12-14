@@ -15,16 +15,15 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor(production, number) {
-    this._raw = production;
+  constructor({LHS, RHS, handler, number, isShort, grammar}) {
+    this._rawLHS = LHS;
+    this._rawRHS = RHS;
     this._number = number;
+    this._handler = handler;
+    this._grammar = grammar;
     this._isAugmented = number === 0;
-    this._isShort = false;
+    this._isShort = isShort;
     this._normalize();
-  }
-
-  getRaw() {
-    return this._raw;
   }
 
   /**
@@ -42,21 +41,6 @@ export default class Production {
     return this._isAugmented;
   }
 
-  /**
-   * For cases like:
-   *
-   *   A -> aA
-   *      | b
-   *
-   * For the second alternative, grammar will call setLHS('A').
-   */
-  setLHS(LHS) {
-    if (!(LHS instanceof GrammarSymbol)) {
-      LHS = new GrammarSymbol(LHS);
-    }
-    this._LHS = LHS;
-  }
-
   getLHS() {
     return this._LHS;
   }
@@ -66,25 +50,50 @@ export default class Production {
   }
 
   toString() {
-    let RHS = this._RHS.map(symbol => symbol.getSymbol());
-    return `${this._LHS.getSymbol()} -> ${RHS.join(' ')}`
+    let LHS = this._LHS.getSymbol();
+
+    let RHS = this._RHS
+      .map(symbol => symbol.getSymbol())
+      .join(' ');
+
+    let pad = Array(LHS.length + '->'.length).join(' ');
+
+    return this._isShort
+      ? `${pad} | ${RHS}`
+      : `${LHS} -> ${RHS}`
+  }
+
+  static fromString(production, number, optionalLHS) {
+    let splitter = production.indexOf('->') !== -1 ? '->' : '|';
+    let splitted = production.split(splitter);
+
+    let LHS = splitted[0].trim();
+    let RHS = splitted[1].trim();
+    let isShort = false;
+
+    if (!LHS) {
+      LHS = optionalLHS;
+      isShort = true;
+    }
+
+    return new Production({
+      LHS,
+      RHS,
+      number,
+    });
   }
 
   _normalize() {
-    let splitter = this._raw.indexOf('->') !== -1 ? '->' : '|';
-    let splitted = this._raw.split(splitter);
-    let LHS = new GrammarSymbol(splitted[0].trim());
-    let rhsStr = splitted[1].trim();
-
+    let LHS = new GrammarSymbol(this._rawLHS);
     let RHS = [];
 
     // If no RHS provided, assume it's ε. We support
     // both formats, explicit: F -> ε, and implicit: F ->
 
-    if (!rhsStr) {
+    if (!this._rawRHS) {
       RHS.push(new GrammarSymbol(EPSILON));
     } else {
-      let rhsProd = rhsStr.split(/\s+/);
+      let rhsProd = this._rawRHS.split(/\s+/);
       for (let i = 0; i < rhsProd.length; i++) {
         if (rhsProd[i] === '"' && rhsProd[i + 1] === '"') {
           RHS.push(new GrammarSymbol('" "'));
@@ -93,10 +102,6 @@ export default class Production {
           RHS.push(new GrammarSymbol(rhsProd[i]));
         }
       }
-    }
-
-    if (!LHS.getSymbol()) {
-      this._isShort = true;
     }
 
     this._LHS = LHS;
