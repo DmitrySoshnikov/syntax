@@ -1,3 +1,13 @@
+/**
+ * How to run:
+ *
+ * ./bin/syntax examples/json.grammar \
+ *     --mode slr1 \
+ *     --collection \
+ *     --table \
+ *     --parse '{"x": 10, "y": {"z": [1, 2, 3]}}'
+ */
+
 {
     "_info": "Based on: https://github.com/zaach/jison/blob/master/examples/json.js",
 
