@@ -1,11 +1,12 @@
 /**
  * How to run:
  *
- * ./bin/syntax examples/json.grammar \
- *     --mode slr1 \
- *     --collection \
- *     --table \
- *     --parse '{"x": 10, "y": {"z": [1, 2, 3]}}'
+ *   ./bin/syntax \
+ *      --grammar examples/json.grammar.js \
+ *      --mode slr1 \
+ *      --collection \
+ *      --table \
+ *      --parse '{"x": 10, "y": {"z": [1, 2, 3]}}'
  */
 
 {
