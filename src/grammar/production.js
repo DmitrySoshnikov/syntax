@@ -63,26 +63,6 @@ export default class Production {
       : `${LHS} -> ${RHS}`
   }
 
-  static fromString(production, number, optionalLHS) {
-    let splitter = production.indexOf('->') !== -1 ? '->' : '|';
-    let splitted = production.split(splitter);
-
-    let LHS = splitted[0].trim();
-    let RHS = splitted[1].trim();
-    let isShort = false;
-
-    if (!LHS) {
-      LHS = optionalLHS;
-      isShort = true;
-    }
-
-    return new Production({
-      LHS,
-      RHS,
-      number,
-    });
-  }
-
   _normalize() {
     let LHS = new GrammarSymbol(this._rawLHS);
     let RHS = [];

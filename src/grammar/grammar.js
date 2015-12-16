@@ -28,13 +28,17 @@ export default class Grammar {
    *   // can be used further in the `bnf` grammar.
    *
    *   "lex": {
-   *     "rules": {
-   *       "a"   : "return 'a';",
-   *       "\\(" : "return '(';",
-   *       "\\)" : "return ')';",
-   *       "\\+" : "return '+';",
-   *       "[0-9]+(\\.[0-9]+)?\\b" : "return 'NUMBER';"
-   *    }
+   *     "macros": {
+   *       "digit": "[0-9]",
+   *     },
+   *
+   *     "rules": [
+   *       ["a", "return 'a';"],
+   *       ["\\(", "return '(';"],
+   *       ["\\)", "return ')';"],
+   *       ["\\+", "return '+';"],
+   *       ["{digit}+(\\.{digit}+)?\\b", "return 'NUMBER';"],
+   *     ]
    *   },
    *
    *   "tokens": "a ( ) + NUMBER",
@@ -47,22 +51,49 @@ export default class Grammar {
    *     "S": [ "F",
    *            "( S + F )" ],
    *     "F": [ "a",
-   *            "NUMBER" ]
+   *            "NUMBER" ],
+   *   }
    * };
+   *
+   * Note: the "bnf" can also be passed as a string:
+   *
+   *   bnf: `
+   *     S -> F
+   *        | ( S + F )
+   *
+   *     F -> a
+   *        | NUMBER
+   *   `
    *
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
   constructor({lex = null, tokens, bnf, start = null, mode}) {
-    this._originalBnf = bnf;
-    this._originalLex = lex.rules;
-    this._startSymbol = start;
+    // For simple use-cases when it's more convenient to
+    // write a grammar directly as a string.
+    if (typeof bnf === 'string') {
+      bnf = Grammar.bnfFomString(bnf);
+    }
 
-    if (!Array.isArray(tokens)) {
+    this._originalBnf = bnf;
+    this._originalLex = null;
+
+    if (lex) {
+      this._originalLex = lex.rules;
+      if (lex.macros) {
+        this._extractLexMacros(lex.macros, this._originalLex);
+      }
+    }
+    this._startSymbol = start;
+    this._tokens = [];
+
+    if (typeof tokens === 'string') {
       tokens = tokens.split(/\s+/);
     }
 
-    this._tokens = tokens.map(token => new GrammarSymbol(token));
+    if (Array.isArray(tokens)) {
+      this._tokens = tokens.map(token => new GrammarSymbol(token));
+    }
 
     this._mode = new GrammarMode(mode);
 
@@ -248,28 +279,76 @@ export default class Grammar {
     return spaces + value;
   }
 
+  /**
+   * If lexical grammar provides "macros" property, and has e.g entry:
+   * "digit": "[0-9]", with later usage of {digit} in the lex rules,
+   * this functions expands it to [0-9].
+   */
+  _extractLexMacros(macros, lex) {
+    lex.forEach(lexData => {
+      Object.keys(macros).forEach(macro => {
+        if (lexData[0].indexOf(`{${macro}}`) !== -1) {
+          lexData[0] = lexData[0].replace(
+            new RegExp(`\\{${macro}\\}`, 'g'),
+            macros[macro],
+          );
+        }
+      })
+    });
+  }
+
   _normalizeLex(lex) {
     // If lexical grammar was provided, normalize and return.
     if (lex) {
-      let normalizedLex = [];
-      for (let matcher in lex) {
-        normalizedLex.push(new LexRule({matcher, tokenHandler: lex[matcher]}));
-      }
-      return normalizedLex;
+      return lex
+        .map(([matcher, tokenHandler]) => new LexRule({
+          matcher,
+          tokenHandler,
+        }));
     }
 
     // Otherwise, calculate from the set of terminals: "a" : "a".
     return this.getTerminals()
       .map(terminal => new LexRule({
-        matcher: terminal.getSymbol(),
-        tokensHandler: `return ${terminal.getSymbol()}`,
+        matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
+        tokenHandler: `return '${terminal.getSymbol()}';`,
       }));
+  }
+
+  static bnfFomString(originalBnf) {
+    let objectBnf = {};
+    let currentNonTerminal = null;
+
+    originalBnf
+      .split('\n')
+      .filter(line => !!line)
+      .forEach(productionLine => {
+        let splitter = productionLine.indexOf('->') !== -1 ? '->' : '|';
+        let splitted = productionLine.split(splitter);
+
+        let LHS = splitted[0].trim();
+
+        if (LHS) {
+          currentNonTerminal = LHS;
+        } else {
+          LHS = currentNonTerminal;
+        }
+
+        if (!objectBnf[LHS]) {
+          objectBnf[LHS] = [];
+        }
+
+        let RHS = splitted[1].trim();
+
+        objectBnf[LHS].push(RHS);
+      });
+
+    return objectBnf;
   }
 
   _normalizeBnf(originalBnf) {
     let normalizedBnf = [];
     let nonTerminals = Object.keys(originalBnf);
-    let currentNonTerminal;
     let number = 0;
 
     if (!this._startSymbol) {

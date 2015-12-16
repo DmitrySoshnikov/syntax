@@ -107,7 +107,9 @@ function getGrammar(grammarFile, mode) {
       grammar = vm.runInNewContext(`(${grammarData})`);
     } catch (e) {
       // Just a bnf as a string.
-      grammar = grammarData;
+      grammar = {
+        bnf: grammarData,
+      };
     }
   }
 

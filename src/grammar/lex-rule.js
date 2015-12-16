@@ -34,4 +34,10 @@ export default class LexRule {
   getToken() {
     return this._handler();
   }
+
+  static matcherFromTerminal(terminal) {
+    return terminal
+      .slice(1, terminal.length - 1)
+      .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+  }
 };
