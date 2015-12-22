@@ -311,7 +311,7 @@ export default class Grammar {
     return this.getTerminals()
       .map(terminal => new LexRule({
         matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
-        tokenHandler: `return '${terminal.getTerminalValue()}';`,
+        tokenHandler: `return ${terminal.quotedTerminal()};`,
       }));
   }
 

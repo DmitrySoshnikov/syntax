@@ -29,10 +29,22 @@ export default class GrammarSymbol {
    * Returns raw terminal value (between quotes)
    */
   getTerminalValue() {
-    if (!this.isTerminal()) {
-      throw new TypeError(`Symbol ${this._symbol} is not terminal.`);
-    }
+    this._checkTerminal();
     return this._symbol.slice(1, this._symbol.length - 1);
+  }
+
+  /**
+   * Returns a terminal quoted into single or double-quotes,
+   * depending on which quotes it's already wrapped itself.
+   */
+  quotedTerminal() {
+    this._checkTerminal();
+    let isSingleQuoted = this._symbol[0] === "'";
+
+    let leftQuote = isSingleQuoted ? `"'` : `'"`;
+    let rightQuote = isSingleQuoted ? `'"` : `"'`;
+
+    return `${leftQuote}${this.getTerminalValue()}${rightQuote}`;
   }
 
   isNonTerminal() {
@@ -49,5 +61,11 @@ export default class GrammarSymbol {
 
   isSymbol(symbol) {
     return this.getSymbol() === symbol;
+  }
+
+  _checkTerminal() {
+    if (!this.isTerminal()) {
+      throw new TypeError(`Symbol ${this._symbol} is not terminal.`);
+    }
   }
 };
