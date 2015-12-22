@@ -25,6 +25,16 @@ export default class GrammarSymbol {
       quoteRe.test(this._symbol[this._symbol.length - 1]);
   }
 
+  /**
+   * Returns raw terminal value (between quotes)
+   */
+  getTerminalValue() {
+    if (!this.isTerminal()) {
+      throw new TypeError(`Symbol ${this._symbol} is not terminal.`);
+    }
+    return this._symbol.slice(1, this._symbol.length - 1);
+  }
+
   isNonTerminal() {
     return !this.isTerminal();
   }
