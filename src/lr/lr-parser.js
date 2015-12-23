@@ -7,7 +7,7 @@ import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
 import Tokenizer from '../tokenizer';
-import {EOF} from '../special-symbols';
+import {EOF, EPSILON} from '../special-symbols';
 
 const EntryType = LRParsingTable.EntryType;
 
@@ -136,10 +136,13 @@ export default class LRParser {
     let productionNumber = entry.slice(1);
     let production = this._grammar.getProduction(productionNumber);
 
-    // Pop 2x symbols from the stack (RHS + state number for each)
-    let symbolsToPop = production.getRHS().length * 2;
-    while (symbolsToPop--) {
-      this._stack.pop();
+    // Pop 2x symbols from the stack (RHS + state number for each),
+    // unless it's an ε-production for which nothing to pop.
+    if (!production.isEpsilon()) {
+      let symbolsToPop = production.getRHS().length * 2;
+      while (symbolsToPop--) {
+        this._stack.pop();
+      }
     }
 
     let previousState = this._peek();

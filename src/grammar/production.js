@@ -49,6 +49,11 @@ export default class Production {
     return this._RHS;
   }
 
+  isEpsilon() {
+    let RHS = this.getRHS();
+    return RHS.length === 1 && RHS[0].isEpsilon();
+  }
+
   toString() {
     let LHS = this._LHS.getSymbol();
 

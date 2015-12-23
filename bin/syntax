@@ -83,7 +83,7 @@ const parsers = {
     }
 
     // Parse a string.
-    if (options.parse) {
+    if (options.hasOwnProperty('parse')) {
       const LRParser = require('../dist/lr/lr-parser').default;
 
       new LRParser({grammar})
@@ -92,10 +92,16 @@ const parsers = {
   },
 };
 
+const MULTI_LINE_COMMENTS_RE = /\/\*(.|\s)*?\*\//g;
+const SINGLE_LINE_COMMENTS_RE = /\/\/.*?\n/g;
+
 function getGrammar(grammarFile, mode) {
   const Grammar = require('../dist/grammar/grammar').default;
 
-  let grammarData = fs.readFileSync(grammarFile, 'utf-8');
+  let grammarData = fs.readFileSync(grammarFile, 'utf-8')
+    .replace(MULTI_LINE_COMMENTS_RE, '')
+    .replace(SINGLE_LINE_COMMENTS_RE, '');
+
   let grammar;
 
   try {

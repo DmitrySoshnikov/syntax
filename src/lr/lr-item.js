@@ -4,6 +4,7 @@
  */
 
 import Closure from './closure';
+import {EPSILON} from '../special-symbols';
 
 /**
  * An LRItem is built for a production at particular
@@ -155,9 +156,20 @@ export default class LRItem {
 
   /**
    * Whether we have seen the whole production.
+   *
+   * The item `S -> • ε` (or its short equivalent `S -> •`) is final as well.
    */
   isFinal() {
-    return this._dotPosition === this._production.getRHS().length;
+    return this._dotPosition === this._production.getRHS().length ||
+      this.isEpsilonTransition();
+  }
+
+  /**
+   * Whether this item does transition on ε.
+   */
+  isEpsilonTransition() {
+    let currentSymbol = this.getCurrentSymbol();
+    return currentSymbol && currentSymbol.isSymbol(EPSILON);
   }
 
   /**
