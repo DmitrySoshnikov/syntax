@@ -5,6 +5,27 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
 
 See also [LL(1) parser](https://github.com/DmitrySoshnikov/ll1) repo (will be merged here).
 
+#### Installation
+
+##### From Github repo
+
+After normal cloning of the Github repo, one needs to run `build` command to transpile ES6 code:
+
+```
+git clone https://github.com/DmitrySoshnikov/syntax.git
+cd syntax
+npm install
+npm run build
+
+./bin/syntax --help
+```
+
+For developement, instead of `npm run build` one can also use:
+
+```
+npm run watch
+```
+
 #### CLI usage example:
 
 ```
