@@ -212,7 +212,7 @@ export default class LRParsingTable {
         } else {
           // Otherwise, reduce.
           this._action.forEach(terminal => {
-            if (this._shouldReduce(production, terminal)) {
+            if (this._shouldReduce(item, terminal)) {
               this._putActionEntry(
                 row,
                 terminal.getSymbol(),
@@ -247,20 +247,17 @@ export default class LRParsingTable {
     });
   }
 
-  _shouldReduce(production, terminal) {
-    let mode = this._grammar.getMode().getRaw();
-    switch (mode) {
-      case GRAMMAR_MODE.LR0:
-        // LR0 reduces for all actions without a lookahead.
-        return true;
-      case GRAMMAR_MODE.SLR1:
-        // SLR1 considers whether the action symbol is in the Follow(LHS).
-        return this._setsGenerator
-          .followOf(production.getLHS())
-          .hasOwnProperty(terminal.getSymbol());
-      default:
-        throw new Error(`Unsupported grammar type: ${mode}.`);
+  _shouldReduce(item, terminal) {
+    let reduceSet = item.getReduceSet();
+
+    // LR(0) reduces for all terminals.
+    if (reduceSet === true) {
+      return true;
     }
+
+    // SLR(1) considers Follow(LHS), LALR(1) and CLR(1)
+    // considers lookahead sets.
+    return reduceSet.hasOwnProperty(terminal.getSymbol());
   }
 
   _putActionEntry(row, column, entry) {

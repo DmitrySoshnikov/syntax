@@ -7,6 +7,7 @@ export const MODES = {
   LR0: 'LR0',
   SLR1: 'SLR1',
   LALR1: 'LALR1',
+  CLR1: 'CLR1',
   LL1: 'LL1',
 };
 
@@ -33,11 +34,35 @@ export default class GrammarMode {
   }
 
   isLL() {
-    return this._mode === MODES.LL1;
+    return this._isMode(MODES.LL1);
   }
 
   isLR() {
     return !this.isLL();
+  }
+
+  usesLookaheadSet() {
+    return this.isLALR1() || this.isCLR1();
+  }
+
+  isLR0() {
+    return this._isMode(MODES.LR0);
+  }
+
+  isSLR1() {
+    return this._isMode(MODES.SLR1);
+  }
+
+  isLALR1() {
+    return this._isMode(MODES.LALR1);
+  }
+
+  isCLR1() {
+    return this._isMode(MODES.CLR1);
+  }
+
+  _isMode(mode) {
+    return this._mode === mode;
   }
 
   /**

@@ -9,7 +9,7 @@ See also [LL(1) parser](https://github.com/DmitrySoshnikov/ll1) repo (will be me
 
 ##### From Github repo
 
-After normal cloning of the Github repo, one needs to run `build` command to transpile ES6 code:
+After normal cloning of the Github repo, run `build` command to transpile ES6 code:
 
 ```
 git clone https://github.com/DmitrySoshnikov/syntax.git
@@ -50,5 +50,5 @@ In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conf
 ./bin/syntax --grammar examples/example1.slr1 --table --mode lr0
 ```
 
-![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png) 
+![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png)
 ![sl1-grammar-lr0-m](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_6530197571.png)

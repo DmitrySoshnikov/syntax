@@ -64,7 +64,8 @@ export default class SetsGenerator {
     let firstSet = this._firstSets[symbol] = {};
 
     // If it's a terminal, its First set contains just itself.
-    if (this._grammar.isTokenSymbol(grammarSymbol)) {
+    if (this._grammar.isTokenSymbol(grammarSymbol) ||
+        grammarSymbol.isEpsilon()) {
       firstSet[symbol] = true;
       return this._firstSets[symbol];
     }
@@ -176,7 +177,7 @@ export default class SetsGenerator {
       // If nothing following our symbol, or all following symbols
       // were eliminated (i.e. they all contained only epsilons)
       // we should merge followOf(LHS) to the Follow set of our symbol.
-      if (followPart.length === 0) {
+      if (followPart.length === 0 || RHS[RHS.length - 1].isSymbol(symbol)) {
         let LHS = production.getLHS();
         if (!LHS.isSymbol(symbol)) { // To avoid cases like: B -> aB
           this._mergeSets(followSet, this.followOf(LHS));

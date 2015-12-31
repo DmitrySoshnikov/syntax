@@ -30,11 +30,17 @@ export default class Closure {
    * item can be passed in the constructor, other kernel items can
    * be added later via `add` method.
    */
-  constructor({initialKernelItem, grammar, canonicalCollection}) {
+  constructor({
+    initialKernelItem,
+    grammar,
+    canonicalCollection,
+    setsGenerator,
+  }) {
     this._kernelItems = [];
     this._items = [];
     this._grammar = grammar;
     this._canonicalCollection = canonicalCollection;
+    this._setsGenerator = setsGenerator;
     this._number = null;
 
     // A map from transition symbol to the next state.
@@ -170,12 +176,50 @@ export default class Closure {
 
     productionsForSymbol.forEach(production => {
       // Recursively closure the added item.
-      this.addItem(this._getItemForProduction(production));
+      this.addItem(this._getItemForProduction(
+        production,
+        this._calculateLookaheadSet(item),
+      ));
     });
   }
 
-  _getItemForProduction(production) {
-    let itemKey = LRItem.keyForItem(production, 0);
+  /**
+   * Calculates a lookahead set for an added item
+   * in the closure. The lookahead set is determined from
+   * the previous item as First(followPart + previousLookahead).
+   *
+   * A -> a • B ß, a/b
+   * B -> ∂, c/d
+   *
+   * where c/d is First(ß a b), and is the lookahead set.
+   * If ß is ε, then a/b is lookahead set.
+   */
+  _calculateLookaheadSet(item) {
+    if (!this._grammar.getMode().usesLookaheadSet()) {
+      return null;
+    }
+
+    let lookaheadSet;
+
+    let followPosition = item.getDotPosition() + 1;
+    let RHS = item.getProduction().getRHS();
+
+    if (followPosition < RHS.length) {
+      let lookaheadPart = RHS.slice(followPosition);
+      lookaheadSet = this._setsGenerator.firstOfRHS(lookaheadPart);
+    }
+
+    // If no follow part, or we got an empty set, use
+    // lookahead of the previous item.
+    if (!lookaheadSet || Object.keys(lookaheadSet).length === 0) {
+      lookaheadSet = item.getLookaheadSet();
+    }
+
+    return lookaheadSet;
+  }
+
+  _getItemForProduction(production, lookaheadSet = null) {
+    let itemKey = LRItem.keyForItem(production, 0, lookaheadSet);
     let item;
 
     // Register a new item if it's not calculated yet.
@@ -185,6 +229,8 @@ export default class Closure {
         dotPosition: 0,
         grammar: this._grammar,
         canonicalCollection: this._canonicalCollection,
+        setsGenerator: this._setsGenerator,
+        lookaheadSet,
       });
       this._canonicalCollection.registerItem(item);
     } else {

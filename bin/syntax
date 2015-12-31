@@ -55,6 +55,10 @@ const parsers = {
     return this._genericLR(GRAMMAR_MODE.SLR1, options);
   },
 
+  CLR1(options) {
+    return this._genericLR(GRAMMAR_MODE.CLR1, options);
+  },
+
   _genericLR(mode, options) {
     console.log(`\nParsing mode: ${mode}.`);
 
@@ -99,8 +103,7 @@ function getGrammar(grammarFile, mode) {
   const Grammar = require('../dist/grammar/grammar').default;
 
   let grammarData = fs.readFileSync(grammarFile, 'utf-8')
-    .replace(MULTI_LINE_COMMENTS_RE, '')
-    .replace(SINGLE_LINE_COMMENTS_RE, '');
+    .replace(MULTI_LINE_COMMENTS_RE, '');
 
   let grammar;
 

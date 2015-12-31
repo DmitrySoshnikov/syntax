@@ -5,6 +5,7 @@
 
 import Grammar from '../grammar/grammar';
 import LRItem from './lr-item';
+import SetsGenerator from '../sets-generator';
 
 /**
  * Canonical collection of LR items.
@@ -41,6 +42,10 @@ export default class CanonicalCollection {
       production: this._grammar.getAugmentedProduction(),
       grammar: this._grammar,
       canonicalCollection: this,
+      setsGenerator: new SetsGenerator({grammar}),
+      lookaheadSet: this._grammar.getMode().usesLookaheadSet()
+        ? {'$': true}
+        : null,
     });
 
     // Build the entire graph.

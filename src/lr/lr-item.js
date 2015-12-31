@@ -4,6 +4,7 @@
  */
 
 import Closure from './closure';
+import {MODES as GRAMMAR_MODE} from '../grammar/grammar-mode';
 import {EPSILON} from '../special-symbols';
 
 /**
@@ -13,13 +14,29 @@ import {EPSILON} from '../special-symbols';
  * "closure" and "goto" operations.
  */
 export default class LRItem {
-  constructor({production, dotPosition = 0, grammar, canonicalCollection}) {
+  constructor({
+    production,
+    dotPosition = 0,
+    grammar,
+    canonicalCollection,
+    setsGenerator,
+    lookaheadSet = null,
+  }) {
     this._production = production;
     this._dotPosition = dotPosition;
     this._grammar = grammar;
     this._canonicalCollection = canonicalCollection;
+    this._setsGenerator = setsGenerator;
     this._closure = null;
     this._gotoPointer = null;
+    this._reduceSet = null;
+
+    // LR(1) items maintain lookahead.
+    this._lookaheadSet = lookaheadSet;
+  }
+
+  getDotPosition() {
+    return this._dotPosition;
   }
 
   /**
@@ -90,6 +107,7 @@ export default class LRItem {
         initialKernelItem: this,
         grammar: this._grammar,
         canonicalCollection: this._canonicalCollection,
+        setsGenerator: this._setsGenerator,
       });
     }
     return this._closure;
@@ -135,6 +153,7 @@ export default class LRItem {
           initialKernelItem: advancedItem,
           grammar: this._grammar,
           canonicalCollection: this._canonicalCollection,
+          setsGenerator: this._setsGenerator,
         });
         // Register item and state.
         fromClosure.addSymbolTransition({
@@ -173,19 +192,72 @@ export default class LRItem {
   }
 
   /**
-   * Returns serialized representation of an item. This is used
-   * as a key in the global registry of all items that participate
-   * in closures. E.g. `A -> • a A`.
+   * Returns a reduce set (usually a follow lookahead set)
+   * for this item. LR0 mode reduces for every terminal,
+   * SLR(1) uses Follow(LHS), and LALR(1)/CLR(1) lookaheads
+   * set which is First(RHS) of the current symbol, inlcuding
+   * all lookaheads from previous items.
    */
-  getKey() {
-    return LRItem.keyForItem(this._production, this._dotPosition);
+  getReduceSet() {
+    if (!this._reduceSet) {
+      switch (this._grammar.getMode().getRaw()) {
+        case GRAMMAR_MODE.LR0:
+          // LR0 reduces for all terminals, special `true` value.
+          this._reduceSet = true;
+          break;
+
+        case GRAMMAR_MODE.SLR1:
+          // SLR(1) reduces in Follow(LHS).
+          let LHS = this.getProduction().getLHS();
+          this._reduceSet = this._setsGenerator.followOf(LHS);
+          break;
+
+        case GRAMMAR_MODE.LALR1:
+        case GRAMMAR_MODE.CLR1:
+          // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
+          this._reduceSet = this._lookaheadSet;
+          break;
+
+        default:
+          throw new Error(
+            `Unexpected grammar mode ${this._grammar.getMode()}.`
+          );
+      }
+    }
+    return this._reduceSet;
   }
 
-  static keyForItem(production, dotPosition) {
+  /**
+   * Returns lookahead set (for LR(1) items).
+   */
+  getLookaheadSet() {
+    return this._lookaheadSet;
+  }
+
+  /**
+   * Returns serialized representation of an item. This is used
+   * as a key in the global registry of all items that participate
+   * in closures. E.g. `A -> • a A, c/d/e`.
+   */
+  getKey() {
+    return LRItem.keyForItem(
+      this._production,
+      this._dotPosition,
+      this._lookaheadSet,
+    );
+  }
+
+  static keyForItem(production, dotPosition, lookaheadSet = null) {
     let RHS = production.getRHS().map(symbol => symbol.getSymbol());
     RHS.splice(dotPosition, 0, '•');
 
-    return `${production.getLHS().getSymbol()} -> ${RHS.join(' ')}`;
+    let lookaheads = '';
+    if (lookaheadSet) {
+      lookaheads = `, ${Object.keys(lookaheadSet).join('/')}`;
+    }
+
+    return `${production.getLHS().getSymbol()} -> ` +
+      `${RHS.join(' ')}${lookaheads}`;
   }
 
   /**
@@ -200,6 +272,9 @@ export default class LRItem {
       dotPosition: this._dotPosition + 1,
       grammar: this._grammar,
       canonicalCollection: this._canonicalCollection,
+      setsGenerator: this._setsGenerator,
+      // On goto transition lookaheads set doesn't change.
+      lookaheadSet: this.getLookaheadSet(),
     });
   }
 };
