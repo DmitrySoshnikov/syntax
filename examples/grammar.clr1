@@ -1,0 +1,5 @@
+S -> A 'a' A 'b'
+   | B 'b' B 'a'
+
+A -> /*epsilon*/
+B -> /*epsilon*/

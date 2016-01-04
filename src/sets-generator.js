@@ -153,35 +153,45 @@ export default class SetsGenerator {
 
     productionsWithSymbol.forEach(production => {
       let RHS = production.getRHS();
+      let symbolIndex;
 
-      // Get the follow symbol of our symbol.
-      let symbolIndex = RHS.findIndex(s => s.getSymbol() === symbol);
-      let followPart = RHS.slice(symbolIndex + 1);
+      // Get the follow symbol of our symbol. A simple may appear
+      // several times on the RHS, e.g. S -> AaAb, so Follow set should
+      // be {a, b}. Also a symbol may appear as the last symbol, in
+      // which case it should be Follow(LHS).
+      while ((symbolIndex = RHS.findIndex(
+        s => s.getSymbol() === symbol
+      )) !== -1) {
+        let followPart = RHS.slice(symbolIndex + 1);
 
-      // followOf(symbol) is firstOf(followSymbol),
-      // excluding epsilon.
-      if (followPart.length > 0) {
-        while (followPart.length > 0) {
-          let productionSymbol = followPart[0];
-          let firstOfFollow = this.firstOf(productionSymbol);
-          this._mergeSets(followSet, firstOfFollow, [EPSILON]);
-          // If no epsilon in the First of follow, we're done.
-          if (!firstOfFollow.hasOwnProperty(EPSILON)) {
-            break;
+        // followOf(symbol) is firstOf(followSymbol),
+        // excluding epsilon.
+        if (followPart.length > 0) {
+          while (followPart.length > 0) {
+            let productionSymbol = followPart[0];
+            let firstOfFollow = this.firstOf(productionSymbol);
+            this._mergeSets(followSet, firstOfFollow, [EPSILON]);
+            // If no epsilon in the First of follow, we're done.
+            if (!firstOfFollow.hasOwnProperty(EPSILON)) {
+              break;
+            }
+            // Else, move to the next symbol, eliminating this one.
+            followPart.shift();
           }
-          // Else, move to the next symbol, eliminating this one.
-          followPart.shift();
         }
-      }
 
-      // If nothing following our symbol, or all following symbols
-      // were eliminated (i.e. they all contained only epsilons)
-      // we should merge followOf(LHS) to the Follow set of our symbol.
-      if (followPart.length === 0 || RHS[RHS.length - 1].isSymbol(symbol)) {
-        let LHS = production.getLHS();
-        if (!LHS.isSymbol(symbol)) { // To avoid cases like: B -> aB
-          this._mergeSets(followSet, this.followOf(LHS));
+        // If nothing following our symbol, or all following symbols
+        // were eliminated (i.e. they all contained only epsilons)
+        // we should merge followOf(LHS) to the Follow set of our symbol.
+        if (followPart.length === 0) {
+          let LHS = production.getLHS();
+          if (!LHS.isSymbol(symbol)) { // To avoid cases like: B -> aB
+            this._mergeSets(followSet, this.followOf(LHS));
+          }
         }
+
+        // Search in the next part.
+        RHS = followPart;
       }
     });
 
