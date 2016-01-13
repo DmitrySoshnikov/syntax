@@ -1,6 +1,6 @@
 /**
- * This grammar can not be parsed neither by LR(0), nor by SLR(1) resulting
- * to the "reduce-reduce" conflicts.
+ * This grammar can not be parsed neither by LR(0), nor by SLR(1), as well as
+ * not by LALR(1), resulting to the "reduce-reduce" conflicts.
  *
  *
  * LR(0) mode, see `r3/r4` conflicts:
