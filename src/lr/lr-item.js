@@ -18,9 +18,6 @@ import {EPSILON} from '../special-symbols';
  * LALR(1) and CLR(1) parsers. An LR(1) is defined as:
  *
  * LR(1) = LR(0) + lookahead set.
- *
- * Once an item is calculated, it exists in one exemplar and is
- * taken from the registry of the canonical collection.
  */
 export default class LRItem {
   constructor({
@@ -30,10 +27,8 @@ export default class LRItem {
     canonicalCollection,
     setsGenerator,
     lookaheadSet = null,
-    key = null,
   }) {
-    this._key = key ||
-      LRItem.keyForItem(production, dotPosition, lookaheadSet);
+    this._key = LRItem.keyForItem(production, dotPosition, lookaheadSet);
 
     this._production = production;
     this._dotPosition = dotPosition;
@@ -140,7 +135,7 @@ export default class LRItem {
         canonicalCollection: this._canonicalCollection,
         setsGenerator: this._setsGenerator,
         lookaheadSet: this._calculateLookaheadSet(),
-      })
+      });
     });
 
     this._closured = true;
