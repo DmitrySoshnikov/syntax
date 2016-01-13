@@ -198,12 +198,10 @@ export default class LRParsingTable {
   }
 
   _build(currentState) {
-    //console.log('currentState', currentState.getKernelItems().map(item => item.getKey()));
     // Fill actions and goto for this state (row).
     let row = this._table[currentState.getNumber()] = {};
 
     currentState.getItems().forEach(item => {
-      //console.log('item', item.getKey());
 
       // For final item we should "reduce". In LR(0) type we
       // reduce unconditionally for every terminal, in other types
