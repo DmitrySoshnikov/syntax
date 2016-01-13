@@ -22,10 +22,10 @@ export default class CanonicalCollection {
   constructor({grammar}) {
     this._grammar = grammar;
 
-    // Stores all LR-items that are used in closures.
-    // This is to reuse the same LR-item that should "goto"
-    // the same state from different closures.
-    this._allItems = {};
+    // Stores transition from a kernel set to an outer state.
+    // This is to reuse the same outer state, if the transition was
+    // already calculated. In this case we just connect to the outer state.
+    this._kernelSetsTransitions = {};
 
     // All the states that form this collection.
     this._states = [];
@@ -54,7 +54,6 @@ export default class CanonicalCollection {
       .goto();
 
     this._build();
-
   }
 
   registerState(state) {
@@ -69,23 +68,23 @@ export default class CanonicalCollection {
     return this._states;
   }
 
-  isItemRegistered(itemKey) {
-    return this._allItems.hasOwnProperty(itemKey);
+  hasTranstionOnItems(items) {
+    return !!this.getTranstionForItems(items);
   }
 
-  getItemForKey(itemKey) {
-    return this._allItems[itemKey];
+  getTranstionForItems(items) {
+    return this._kernelSetsTransitions[LRItem.keyForItems(items)];
   }
 
-  registerItem(item) {
-    this._allItems[item.getKey()] = item;
+  registerTranstionForItems(items, outerState) {
+    this._kernelSetsTransitions[LRItem.keyForItems(items)] = outerState;
   }
 
   print() {
     console.log('\nCanonical collection of LR items:');
     this._grammar.print();
 
-    this._states.forEach((state, stateNumber) => {
+    this._states.forEach(state => {
       let stateTags = [];
 
       if (state.isFinal()) {
@@ -97,7 +96,7 @@ export default class CanonicalCollection {
       }
 
       console.log(
-        `\nState ${stateNumber}` +
+        `\nState ${state.getNumber()}` +
         (stateTags.length > 0 ? ` (${stateTags.join(', ')})` : '')
       );
 
@@ -143,7 +142,7 @@ export default class CanonicalCollection {
   }
 
   getStartingState() {
-    return this.getRoot().getClosure();
+    return this.getRoot().getState();
   }
 
   _build() {

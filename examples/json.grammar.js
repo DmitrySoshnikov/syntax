@@ -40,6 +40,8 @@
     "start": "JSONText",
 
     "bnf": {
+        "JSONText": [ "JSONValue" ],
+
         "JSONString": [ "STRING" ],
 
         "JSONNullLiteral": [ "NULL" ],
@@ -47,9 +49,6 @@
         "JSONNumber": [ "NUMBER" ],
 
         "JSONBooleanLiteral": [ "TRUE", "FALSE" ],
-
-
-        "JSONText": [ "JSONValue" ],
 
         "JSONValue": [ "JSONNullLiteral",
                        "JSONBooleanLiteral",

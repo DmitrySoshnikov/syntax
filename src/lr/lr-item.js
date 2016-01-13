@@ -3,7 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import Closure from './closure';
+import State from './state';
 import {MODES as GRAMMAR_MODE} from '../grammar/grammar-mode';
 import {EPSILON} from '../special-symbols';
 
@@ -12,6 +12,15 @@ import {EPSILON} from '../special-symbols';
  * dot position. The kernel item (for the augmented production)
  * builds the canonical collection, recursively applying
  * "closure" and "goto" operations.
+ *
+ * There are two types of LR items: LR(0) items, which are used by
+ * LR(0) and SLR(1) parsers, and LR(1) items, which are used by
+ * LALR(1) and CLR(1) parsers. An LR(1) is defined as:
+ *
+ * LR(1) = LR(0) + lookahead set.
+ *
+ * Once an item is calculated, it exists in one exemplar and is
+ * taken from the registry of the canonical collection.
  */
 export default class LRItem {
   constructor({
@@ -21,22 +30,27 @@ export default class LRItem {
     canonicalCollection,
     setsGenerator,
     lookaheadSet = null,
+    key = null,
   }) {
+    this._key = key ||
+      LRItem.keyForItem(production, dotPosition, lookaheadSet);
+
     this._production = production;
     this._dotPosition = dotPosition;
     this._grammar = grammar;
     this._canonicalCollection = canonicalCollection;
     this._setsGenerator = setsGenerator;
-    this._closure = null;
-    this._gotoPointer = null;
+
+    // The state this item belongs to.
+    this._state = null;
+
+    // The state this item goes to.
+    this._outerState = null;
+
     this._reduceSet = null;
 
     // LR(1) items maintain lookahead.
     this._lookaheadSet = lookaheadSet;
-  }
-
-  getDotPosition() {
-    return this._dotPosition;
   }
 
   /**
@@ -50,14 +64,16 @@ export default class LRItem {
    * Whether this item should be closured.
    */
   shouldClosure() {
-    return !this.isFinal() && this.getCurrentSymbol().isNonTerminal();
+    return !this._closured && !this.isFinal() &&
+      this.getCurrentSymbol().isNonTerminal();
   }
 
   /**
    * Whether transition from this item does "shift" action.
    */
   isShift() {
-    return !this.isFinal() && this.getCurrentSymbol().isTerminal();
+    return !this.isFinal() &&
+      this._grammar.isTokenSymbol(this.getCurrentSymbol());
   }
 
   /**
@@ -68,31 +84,31 @@ export default class LRItem {
   }
 
   /**
-   * Whether this item should go to an outer closure state.
-   */
-  shouldConnect() {
-    return !this.isFinal() && !this.isConnected();
-  }
-
-  /**
    * Whether this item is already connected to a closure.
    */
   isConnected() {
-    return this._gotoPointer !== null;
+    return this._outerState !== null;
   }
 
   /**
    * Connects this item to the outer closure state.
    */
-  connect(closure) {
-    this._gotoPointer = closure;
+  connect(state) {
+    this._outerState = state;
   }
 
   /**
    * Returns the closure object for this item.
    */
-  getClosure() {
-    return this._closure;
+  getState() {
+    return this._state;
+  }
+
+  /**
+   * Sets the state to which this item belongs to.
+   */
+  setState(state) {
+    return this._state = state;
   }
 
   /**
@@ -102,68 +118,92 @@ export default class LRItem {
     if (!this.shouldClosure()) {
       return;
     }
-    if (!this._closure) {
-      this._closure = new Closure({
-        initialKernelItem: this,
+
+    // Main kernel item for the augmented production, that creates a new state.
+    if (!this.getState()) {
+      this.setState(new State({
+        kernelItems: [this],
         grammar: this._grammar,
         canonicalCollection: this._canonicalCollection,
         setsGenerator: this._setsGenerator,
-      });
+      }));
     }
-    return this._closure;
+
+    let productionsForSymbol = this._grammar
+      .getProductionsForSymbol(this.getCurrentSymbol());
+
+    let addedItems = productionsForSymbol.map(production => {
+      return new LRItem({
+        production,
+        dotPosition: 0,
+        grammar: this._grammar,
+        canonicalCollection: this._canonicalCollection,
+        setsGenerator: this._setsGenerator,
+        lookaheadSet: this._calculateLookaheadSet(),
+      })
+    });
+
+    this._closured = true;
+    this.getState().addItems(addedItems);
+
+    return this.getState();
   }
 
   /**
-   * Goto operation from this item. The item can be used in
-   * different closures, but always goes to the same outer closure.
-   * The state closure from which item goes to an outer one, is passed
-   * as a parameter.
+   * Calculates a lookahead set for an added item
+   * in the closure. The lookahead set is determined from
+   * the previous item as First(followPart + previousLookahead).
    *
-   * Initial item (for the augmented production) builds the whole
-   * graph of the canonical collection of LR items.
+   * A -> a • B ß, a/b
+   * B -> ∂, c/d
    *
-   * Several different items can also go to the same closure if
-   * they do transition on the same symbol from current state.
+   * where c/d is First(ß a b), and is the lookahead set.
+   * If ß is ε, then a/b is lookahead set.
    */
-  goto(fromClosure) {
-    // Final items don't go anywhere, and an item can already be connected
-    // from previous calculaion when it was used in other state.
-    if (this.shouldConnect()) {
-      let transitionSymbol = this.getCurrentSymbol().getSymbol();
-      let advancedItem = this._advance();
-
-      // If some previous kernel item already created the
-      // transition closure, just connect our item to it.
-      if (fromClosure.hasTransitionOnSymbol(transitionSymbol)) {
-
-        let toClosure = fromClosure
-          .getTransitionOnSymbol(transitionSymbol)
-          .closure;
-
-        // Append another item to the transition.
-        fromClosure.addSymbolTransition({item: this});
-
-        // Connect the item to the outer closure.
-        this.connect(toClosure);
-
-        // And register our item as an additional kernel.
-        toClosure.addKernelItem(advancedItem);
-      } else {
-        this._gotoPointer = new Closure({
-          initialKernelItem: advancedItem,
-          grammar: this._grammar,
-          canonicalCollection: this._canonicalCollection,
-          setsGenerator: this._setsGenerator,
-        });
-        // Register item and state.
-        fromClosure.addSymbolTransition({
-          item: this,
-          closure: this._gotoPointer,
-        });
-      }
+  _calculateLookaheadSet() {
+    if (!this._grammar.getMode().usesLookaheadSet()) {
+      return null;
     }
 
-    return this._gotoPointer;
+    let lookaheadSet;
+
+    let followPosition = this._dotPosition + 1;
+    let RHS = this.getProduction().getRHS();
+
+    if (followPosition < RHS.length) {
+      let lookaheadPart = RHS.slice(followPosition);
+      lookaheadSet = this._setsGenerator.firstOfRHS(lookaheadPart);
+    }
+
+    // If no follow part, or we got an empty set, use
+    // lookahead of the previous item.
+    if (!lookaheadSet || Object.keys(lookaheadSet).length === 0) {
+      lookaheadSet = this.getLookaheadSet();
+    }
+
+    return lookaheadSet;
+  }
+
+  _getItemForProduction(production, lookaheadSet = null) {
+    return new LRItem({
+      production,
+      dotPosition: 0,
+      grammar: this._grammar,
+      canonicalCollection: this._canonicalCollection,
+      setsGenerator: this._setsGenerator,
+      lookaheadSet,
+    });
+  }
+
+  /**
+   * Goto operation from this item.
+   */
+  goto() {
+    if (!this._outerState) {
+      this.getState().goto();
+    }
+
+    return this._outerState;
   }
 
   /**
@@ -195,7 +235,7 @@ export default class LRItem {
    * Returns a reduce set (usually a follow lookahead set)
    * for this item. LR0 mode reduces for every terminal,
    * SLR(1) uses Follow(LHS), and LALR(1)/CLR(1) lookaheads
-   * set which is First(RHS) of the current symbol, inlcuding
+   * set which is First(RHS) of the current symbol, including
    * all lookaheads from previous items.
    */
   getReduceSet() {
@@ -235,16 +275,15 @@ export default class LRItem {
   }
 
   /**
-   * Returns serialized representation of an item. This is used
-   * as a key in the global registry of all items that participate
-   * in closures. E.g. `A -> • a A, c/d/e`.
+   * Returns serialized representation of an item.
+   * E.g. `A -> • a A, c/d/e`.
    */
   getKey() {
-    return LRItem.keyForItem(
-      this._production,
-      this._dotPosition,
-      this._lookaheadSet,
-    );
+    return this._key;
+  }
+
+  toString() {
+    return this.getKey();
   }
 
   static keyForItem(production, dotPosition, lookaheadSet = null) {
@@ -261,12 +300,20 @@ export default class LRItem {
   }
 
   /**
+   * Returns a key for a set of items.
+   */
+  static keyForItems(items) {
+    return items.map(item => item.getKey()).join('|');
+  }
+
+  /**
    * Returns an a new item with an advanced dot position.
    */
-  _advance() {
+  advance() {
     if (this.isFinal()) {
       throw new Error(`Item for ${this._production.getRaw()} is final.`);
     }
+
     return new LRItem({
       production: this._production,
       dotPosition: this._dotPosition + 1,

@@ -26,7 +26,8 @@ import colors from 'colors';
  *  |    | "b"   |
  *  +------------+
  *
- * The table looks like this:
+ * The LR(0) parsing table, which is used by LR(0) and SLR(1) parsers,
+ * looks like this:
  *
  * State      Action            Goto
  * +---+-----+-----+-----++-----+-----+
@@ -46,6 +47,9 @@ import colors from 'colors';
  * +---+-----+-----+-----++-----+-----+
  * | 6 │ r2  │ r2  │ r2  ││     │     │
  * +---+-----+-----+-----++-----+-----+
+ *
+ * Note: for LR(1) items used by LALR(1) and CLR(1) number of reduce steps
+ * may decrease. Also number of states may increase in case of CLR(1).
  *
  *   - State: number of a state (closure) in the graph
  *
@@ -194,10 +198,12 @@ export default class LRParsingTable {
   }
 
   _build(currentState) {
+    //console.log('currentState', currentState.getKernelItems().map(item => item.getKey()));
     // Fill actions and goto for this state (row).
     let row = this._table[currentState.getNumber()] = {};
 
     currentState.getItems().forEach(item => {
+      //console.log('item', item.getKey());
 
       // For final item we should "reduce". In LR(0) type we
       // reduce unconditionally for every terminal, in other types
