@@ -34,7 +34,9 @@ npm run watch
 
 #### Parsing modes
 
-_Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controled via the `--mode` option, e.g. `--mode slr1`.
+_Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR(1)_ as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controled via the `--mode` option, e.g. `--mode slr1`.
+
+> Note: de facto standard for automatically generated parsers is usually the _LALR(1)_ parser. The _CLR(1)_ parser, being the most powerful, and able to parse wider grammar sets, can have much more states than LALR(1), and usually is suitable for educational purposes. As well as its less powerful counterparts, _LR(0)_ and _SLR(1)_ which are less used on practice (although, some production-ready grammars can also normally be parsed by _SLR(1)_, e.g. [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.grammar.js)).
 
 Some grammars can be handled by one mode, but not by another. In this case a _conflict_ will be shown in the table.
 

@@ -30,6 +30,9 @@ export default class LRItem {
   }) {
     this._key = LRItem.keyForItem(production, dotPosition, lookaheadSet);
 
+    // For LR(1) item, same as key, but withough lookaheads.
+    this._lr0Key = LRItem.keyForItem(production, dotPosition, null);
+
     this._production = production;
     this._dotPosition = dotPosition;
     this._grammar = grammar;
@@ -223,7 +226,7 @@ export default class LRItem {
    */
   isEpsilonTransition() {
     let currentSymbol = this.getCurrentSymbol();
-    return currentSymbol && currentSymbol.isSymbol(EPSILON);
+    return !!(currentSymbol && currentSymbol.isSymbol(EPSILON));
   }
 
   /**
@@ -270,11 +273,39 @@ export default class LRItem {
   }
 
   /**
+   * In LALR(1) mode we merge the states with the same kernel items, which
+   * differ only in lookaheads set. The merging is done by extending the
+   * lookaheads of the items.
+   */
+  mergeLookaheadSet(lookaheadSet) {
+    // Extend the set.
+    Object.assign(this._lookaheadSet, lookaheadSet);
+
+    // And rebuild the key since lookahead set is changed.
+    this._key = LRItem.keyForItem(
+      this._production,
+      this._dotPosition,
+      this._lookaheadSet,
+    );
+  }
+
+  /**
    * Returns serialized representation of an item.
    * E.g. `A -> • a A, c/d/e`.
    */
   getKey() {
     return this._key;
+  }
+
+  /**
+   * Same as `getKey`, but don't consider lookaheads of LR(1) item,
+   * returning only its LR(0) representation.
+   *
+   * LR(1): `A -> • a A, c/d/e`
+   * LR(0): `A -> • a A`
+   */
+  getLR0Key() {
+    return this._lr0Key;
   }
 
   toString() {
@@ -299,6 +330,13 @@ export default class LRItem {
    */
   static keyForItems(items) {
     return items.map(item => item.getKey()).join('|');
+  }
+
+  /**
+   * Returns an LR(0) key for a set of items.
+   */
+  static lr0KeyForItems(items) {
+    return items.map(item => item.getLR0Key()).join('|');
   }
 
   /**

@@ -27,6 +27,10 @@ export default class CanonicalCollection {
     // already calculated. In this case we just connect to the outer state.
     this._kernelSetsTransitions = {};
 
+    // Stores states by their kernel items LR(0) key. This is to merge
+    // simplar states in case of LALR(1) mode.
+    this._lr0ItemSets = {};
+
     // All the states that form this collection.
     this._states = [];
 
@@ -57,11 +61,31 @@ export default class CanonicalCollection {
   }
 
   registerState(state) {
-    let subCollection = state.isFinal()
-      ? this._finalStates
-      : this._itermediateStates;
+    this._getStateCollection(state).push(state);
 
-    subCollection.push(state);
+    // Collect states by LR(0) items, to reuse and merge the same
+    // states in case or LALR(1) mode.
+
+    let lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
+
+    if (!this._lr0ItemSets.hasOwnProperty(lr0KeyForItems)) {
+      this._lr0ItemSets[lr0KeyForItems] = state;
+    }
+  }
+
+  unregisterState(state) {
+    let collection = this._getStateCollection(state);
+    let stateIndex = collection.indexOf(state);
+
+    if (stateIndex === -1) {
+      throw new Error(`State ${state.getNumber()} is not registered.`);
+    }
+
+    collection.splice(stateIndex, 1);
+  }
+
+  _getStateCollection(state) {
+    return state.isFinal() ? this._finalStates : this._itermediateStates;
   }
 
   getStates() {
@@ -78,6 +102,15 @@ export default class CanonicalCollection {
 
   registerTranstionForItems(items, outerState) {
     this._kernelSetsTransitions[LRItem.keyForItems(items)] = outerState;
+  }
+
+  /**
+   * In LALR(1) there could be several states with the same
+   * LR(0) items, but which differ only in in lookahead symbols.
+   * In this case we merge such states extending their lookaheads.
+   */
+  getLR0ItemsSet(state) {
+    return this._lr0ItemSets[LRItem.lr0KeyForItems(state.getKernelItems())];
   }
 
   print() {

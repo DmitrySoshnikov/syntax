@@ -59,6 +59,10 @@ const parsers = {
     return this._genericLR(GRAMMAR_MODE.CLR1, options);
   },
 
+  LALR1(options) {
+    return this._genericLR(GRAMMAR_MODE.LALR1, options);
+  },
+
   _genericLR(mode, options) {
     console.log(`\nParsing mode: ${mode}.`);
 

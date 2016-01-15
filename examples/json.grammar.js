@@ -1,6 +1,15 @@
 /**
  * How to run:
  *
+ *   Basic example:
+ *
+ *   ./bin/syntax \
+ *      --grammar examples/json.grammar.js \
+ *      --mode slr1 \
+ *      --parse '{"x": 10}'
+ *
+ *   Parsing table, canonical collection or LR items, etc:
+ *
  *   ./bin/syntax \
  *      --grammar examples/json.grammar.js \
  *      --mode slr1 \

@@ -47,6 +47,9 @@ export default class State {
     // is for a recursive production, S -> S "a".
     this._itemsMap = {};
 
+    // Also items map, but by LR(0) key.
+    this._lr0ItemsMap = {};
+
     // Add initial items, and closure them if needed.
     this.addItems(this._kernelItems);
 
@@ -184,11 +187,26 @@ export default class State {
 
         // If not, create a new outer state with advanced kernel items.
         if (!outerState) {
+
           outerState = new State({
             kernelItems: items.map(item => item.advance()),
             grammar: this._grammar,
             canonicalCollection: this._canonicalCollection,
           });
+
+          // For LALR(1) we should merge states with the same
+          // kernel items, but with different lookaheads.
+          if (this._grammar.getMode().isLALR1()) {
+
+            let sameLR0State = this._canonicalCollection
+              .getLR0ItemsSet(outerState);
+
+            // If such state with the same LR(0) items was already
+            // calculated, just merge the two, and discard the new one.
+            if (sameLR0State && sameLR0State !== outerState) {
+              outerState = sameLR0State.mergeWithState(outerState);
+            }
+          }
 
           this._canonicalCollection
             .registerTranstionForItems(items, outerState);
@@ -231,10 +249,75 @@ export default class State {
       return;
     }
 
+    // In LALR(1) mode we combine items with the same
+    // LR(0) parts merging their lookahead sets.
+    if (this._grammar.getMode().isLALR1() &&
+        this._lr0ItemsMap.hasOwnProperty(item.getLR0Key())) {
+      let existingItem = this._lr0ItemsMap[item.getLR0Key()];
+      existingItem.mergeLookaheadSet(item.getLookaheadSet());
+      return;
+    }
+
     this._items.push(item);
     this._itemsMap[item.getKey()] = item;
+    this._lr0ItemsMap[item.getLR0Key()] = item;
     item.setState(this);
 
     return item;
+  }
+
+  /**
+   * Returns an item by key.
+   */
+  getItemByKey(key) {
+    return this._itemsMap[key];
+  }
+
+  /**
+   * Returns an item by LR(0) key.
+   */
+  getItemByLR0Key(lr0Key) {
+    return this._lr0ItemsMap[lr0Key];
+  }
+
+  /**
+   * Merges the state with another one, that has the same
+   * LR(0) items, but which differs only in lookaheads.
+   * This is used in LALR(1) mode when is compressed from CLR(1).
+   */
+  mergeWithState(state) {
+    if (!this._grammar.getMode().isLALR1()) {
+      throw new Error(
+        `States can be merged only in LALR(1) mode. ` +
+        `This mode is ${this._grammar.getMode().toString()}`
+      );
+    }
+
+    if (state.getItems().length !== this.getItems().length) {
+      throw new Error(
+        `LALR(1): State ${state.getNumber()} is not compatible ` +
+        `with state ${this.getNumber()}`
+      );
+    }
+
+    this.getItems().forEach(item => {
+      let thatItem = state.getItemByLR0Key(item.getLR0Key());
+
+      if (!thatItem) {
+        throw new Error(
+          `Item ${item.getKey()} presents in state ${this.getNumber()}, ` +
+          `but is absent in the ${state.getNumber()}`
+        );
+      }
+
+      // Extend the lookahead set of our item.
+      item.mergeLookaheadSet(thatItem.getLookaheadSet());
+    });
+
+    // After merging lookaheads, we should un-register this new
+    // idential state, since it was registered in the constructor.
+    this._canonicalCollection.unregisterState(state);
+
+    return this;
   }
 };
