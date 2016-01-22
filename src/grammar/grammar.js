@@ -298,21 +298,26 @@ export default class Grammar {
   }
 
   _normalizeLex(lex) {
+    let normalizedLex = [];
+
     // If lexical grammar was provided, normalize and return.
     if (lex) {
-      return lex
+      normalizedLex = lex
         .map(([matcher, tokenHandler]) => new LexRule({
           matcher,
           tokenHandler,
         }));
     }
 
-    // Otherwise, calculate from the set of terminals: "a" : "a".
-    return this.getTerminals()
+    // Also add all terminals "a" : "a" as a lex rule.
+    normalizedLex = normalizedLex.concat(this.getTerminals()
       .map(terminal => new LexRule({
         matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
         tokenHandler: `return ${terminal.quotedTerminal()};`,
-      }));
+      }))
+    );
+
+    return normalizedLex;
   }
 
   static bnfFomString(originalBnf) {

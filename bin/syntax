@@ -40,6 +40,11 @@ const options = require('nomnom')
       help: 'Parse a string and checks for acceptance',
       type: 'string',
     },
+    'ignore-whitespaces': {
+      abbr: 'w',
+      help: 'If no Lex grammar provided, adds a Lex rule to ignore whitespaces',
+      flag: true,
+    }
   })
   .parse();
 
@@ -124,6 +129,13 @@ function getGrammar(grammarFile, mode) {
         bnf: grammarData,
       };
     }
+  }
+
+  if (options['ignore-whitespaces']) {
+    if (!grammar.lex) {
+      grammar.lex = {rules: []};
+    }
+    grammar.lex.rules.unshift(['\\s+', '/* skip whitespace */']);
   }
 
   grammar.mode = mode;
