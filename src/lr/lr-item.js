@@ -329,14 +329,14 @@ export default class LRItem {
    * Returns a key for a set of items.
    */
   static keyForItems(items) {
-    return items.map(item => item.getKey()).join('|');
+    return items.map(item => item.getKey()).sort().join('|');
   }
 
   /**
    * Returns an LR(0) key for a set of items.
    */
   static lr0KeyForItems(items) {
-    return items.map(item => item.getLR0Key()).join('|');
+    return items.map(item => item.getLR0Key()).sort().join('|');
   }
 
   /**
