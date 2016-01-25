@@ -85,22 +85,22 @@ export default class Grammar {
       }
     }
     this._startSymbol = start;
-    this._tokens = [];
+
+    this._mode = new GrammarMode(mode);
+
+    this._bnf = this._normalizeBnf(this._originalBnf);
+    this._lexRules = this._normalizeLex(this._originalLex);
+
+    this._nonTerminals = this.getNonTerminals();
+    this._terminals = this.getTerminals();
 
     if (typeof tokens === 'string') {
       tokens = tokens.split(/\s+/);
     }
 
-    if (Array.isArray(tokens)) {
-      this._tokens = tokens.map(token => new GrammarSymbol(token));
-    }
-
-    this._mode = new GrammarMode(mode);
-
-    this._nonTerminals = null;
-
-    this._bnf = this._normalizeBnf(this._originalBnf);
-    this._lexRules = this._normalizeLex(this._originalLex);
+    this._tokens = Array.isArray(tokens)
+      ? tokens.map(token => new GrammarSymbol(token))
+      : this.getTokens();
   }
 
   /**
@@ -148,15 +148,15 @@ export default class Grammar {
     if (!this._nonTerminals) {
       this._nonTerminals = [];
 
-      let nonTerminalsMap = {};
+      this._nonTerminalsMap = {};
 
       this._bnf.forEach(production => {
         if (production.isAugmented()) {
           return;
         }
         let nonTerminal = production.getLHS();
-        if (!nonTerminalsMap.hasOwnProperty(nonTerminal.getSymbol())) {
-          nonTerminalsMap[nonTerminal.getSymbol()] = true;
+        if (!this._nonTerminalsMap.hasOwnProperty(nonTerminal.getSymbol())) {
+          this._nonTerminalsMap[nonTerminal.getSymbol()] = true;
           this._nonTerminals.push(nonTerminal);
         }
       });
@@ -166,9 +166,31 @@ export default class Grammar {
   }
 
   /**
-   * Returns tokens.
+   * Returns tokens. Infer tokens from the grammar if
+   * they were not passed explicitly.
    */
   getTokens() {
+    if (!this._tokens) {
+      this._tokens = [];
+
+      let tokensMap = {};
+
+      this._bnf.forEach(production => {
+        if (production.isAugmented()) {
+          return;
+        }
+        production.getRHS().forEach(symbol => {
+          let rawSymbol = symbol.getSymbol();
+          if (!symbol.isTerminal() &&
+              !this._nonTerminalsMap.hasOwnProperty(rawSymbol) &&
+              !tokensMap.hasOwnProperty(rawSymbol)) {
+            tokensMap[rawSymbol] = true;
+            this._tokens.push(symbol);
+          }
+        });
+      });
+    }
+
     return this._tokens;
   }
 
