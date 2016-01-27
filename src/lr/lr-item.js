@@ -253,7 +253,7 @@ export default class LRItem {
         case GRAMMAR_MODE.LALR1:
         case GRAMMAR_MODE.CLR1:
           // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
-          this._reduceSet = this._lookaheadSet;
+          this._reduceSet = {...this._lookaheadSet};
           break;
 
         default:
