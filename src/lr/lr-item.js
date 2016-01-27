@@ -279,7 +279,7 @@ export default class LRItem {
    */
   mergeLookaheadSet(lookaheadSet) {
     // Extend the set.
-    Object.assign(this._lookaheadSet, lookaheadSet);
+    this._lookaheadSet = {...this._lookaheadSet, ...lookaheadSet};
 
     // And rebuild the key since lookahead set is changed.
     this._key = LRItem.keyForItem(
