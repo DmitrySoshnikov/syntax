@@ -354,7 +354,7 @@ export default class LRItem {
       canonicalCollection: this._canonicalCollection,
       setsGenerator: this._setsGenerator,
       // On goto transition lookaheads set doesn't change.
-      lookaheadSet: this.getLookaheadSet(),
+      lookaheadSet: {...this.getLookaheadSet()},
     });
   }
 };
