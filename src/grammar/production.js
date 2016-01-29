@@ -53,6 +53,10 @@ export default class Production {
     return this._semanticAction;
   }
 
+  hasSemanticAction() {
+    return this._semanticAction !== null;
+  }
+
   runSemanticAction(args) {
     if (!this._semanticAction) {
       return;

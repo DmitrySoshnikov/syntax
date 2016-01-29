@@ -99,7 +99,7 @@ export default class LRParser {
 
           console.info(`${colors.green('\u2713 Accepted')}\n`);
 
-          if (parsed.semanticValue) {
+          if (parsed.hasOwnProperty('semanticValue')) {
             console.info(
               colors.bold('Parsed value:'),
               parsed.semanticValue, '\n'
@@ -150,8 +150,8 @@ export default class LRParser {
   _reduce(entry, token) {
     let productionNumber = entry.slice(1);
     let production = this._grammar.getProduction(productionNumber);
-
-    let semanticActionArgs = [];
+    let hasSemanticAction = production.hasSemanticAction();
+    let semanticActionArgs = hasSemanticAction ? [] : null;
 
     // Pop 2x symbols from the stack (RHS + state number for each),
     // unless it's an ε-production for which nothing to pop.
@@ -161,24 +161,33 @@ export default class LRParser {
         // Pop state number;
         this._stack.pop();
         // Pop production symbol.
-        semanticActionArgs.unshift(this._stack.pop().semanticValue);
+        let stackEntry = this._stack.pop();
+
+        if (hasSemanticAction) {
+          semanticActionArgs.unshift(stackEntry.semanticValue);
+        }
       }
     }
 
     let previousState = this._peek();
     let symbolToReduceWith = production.getLHS().getSymbol();
 
-    // Pass token info as well.
-    semanticActionArgs.unshift(
-      token ? token.value : null,
-      token ? token.value.length : null
-    );
+    let reduceStackEntry = {symbol: symbolToReduceWith};
 
-    // Run corresponding semantic action.
-    let semanticValue = production.runSemanticAction(semanticActionArgs);
+    if (hasSemanticAction) {
+      // Pass token info as well.
+      semanticActionArgs.unshift(
+        token ? token.value : null,
+        token ? token.value.length : null
+      );
+
+      // Run corresponding semantic action.
+      reduceStackEntry.semanticValue = production
+        .runSemanticAction(semanticActionArgs);
+    }
 
     // Then push LHS.
-    this._stack.push({symbol: symbolToReduceWith, semanticValue});
+    this._stack.push(reduceStackEntry);
 
     let nextState = this._table.get()[previousState][symbolToReduceWith];
 
