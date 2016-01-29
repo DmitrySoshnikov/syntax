@@ -20,6 +20,7 @@ const options = require('nomnom')
       abbr: 'g',
       help: 'File containing LL or LR grammar',
       required: true,
+      metavar: 'FILE'
     },
     table: {
       abbr: 't',
@@ -39,6 +40,12 @@ const options = require('nomnom')
       abbr: 'p',
       help: 'Parse a string and checks for acceptance',
       type: 'string',
+    },
+    file: {
+      abbr: 'f',
+      help: 'File to be parsed',
+      type: 'string',
+      metavar: 'FILE'
     },
     'ignore-whitespaces': {
       abbr: 'w',
@@ -101,6 +108,14 @@ const parsers = {
 
       new LRParser({grammar})
         .parse(options.parse);
+    }
+
+    // Parse a file.
+    if (options.hasOwnProperty('file')) {
+      const LRParser = require('../dist/lr/lr-parser').default;
+
+      new LRParser({grammar})
+        .parse(fs.readFileSync(options.file, 'utf-8'));
     }
   },
 };
