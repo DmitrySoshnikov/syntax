@@ -1,21 +1,10 @@
 /**
  * How to run:
  *
- *   Basic example:
- *
  *   ./bin/syntax \
- *      --grammar examples/json.grammar.js \
- *      --mode slr1 \
- *      --parse '{"x": 10}'
- *
- *   Parsing table, canonical collection or LR items, etc:
- *
- *   ./bin/syntax \
- *      --grammar examples/json.grammar.js \
- *      --mode slr1 \
- *      --collection \
- *      --table \
- *      --parse '{"x": 10, "y": {"z": [1, 2, 3]}}'
+ *     --grammar examples/json.ast.js \
+ *     --mode slr1 \
+ *     --parse '{"x": 10, "y": {"z": [1, 2, true]}}'
  */
 
 {
