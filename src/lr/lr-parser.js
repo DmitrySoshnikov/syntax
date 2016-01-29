@@ -48,6 +48,8 @@ export default class LRParser {
       grammar: this._grammar,
     });
 
+    this._stack = [];
+
     let startingState = this._canonicalCollection
       .getStartingState()
       .getNumber();
