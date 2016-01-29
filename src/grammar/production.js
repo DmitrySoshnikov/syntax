@@ -15,15 +15,15 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor({LHS, RHS, handler, number, isShort, grammar}) {
+  constructor({LHS, RHS, semanticAction, number, isShort, grammar}) {
     this._rawLHS = LHS;
     this._rawRHS = RHS;
     this._number = number;
-    this._handler = handler;
     this._grammar = grammar;
     this._isAugmented = number === 0;
     this._isShort = isShort;
     this._normalize();
+    this._semanticAction = this._buildSemanticAction(semanticAction);
   }
 
   /**
@@ -49,6 +49,17 @@ export default class Production {
     return this._RHS;
   }
 
+  getSemanticAction() {
+    return this._semanticAction;
+  }
+
+  runSemanticAction(args) {
+    if (!this._semanticAction) {
+      return;
+    }
+    return this._semanticAction(...args);
+  }
+
   isEpsilon() {
     let RHS = this.getRHS();
     return RHS.length === 1 && RHS[0].isEpsilon();
@@ -66,6 +77,29 @@ export default class Production {
     return this._isShort
       ? `${pad} | ${RHS}`
       : `${LHS} -> ${RHS}`
+  }
+
+  /**
+   * Constructs semantic action based on the RHS length,
+   * each stack entry which corresponds to a symbol is available
+   * as $1, $2, $3, etc. arguments. The result is $$.
+   */
+  _buildSemanticAction(semanticAction) {
+    if (!semanticAction) {
+      return null;
+    }
+
+    // Builds a string of args: '$1, $2, $3...'
+    let args = [...Array(this.getRHS().length)]
+      .map((_, i) => `$${i + 1}`)
+      .join(',');
+
+    return new Function(
+      'yytext',
+      'yyleng',
+      args,
+      `var $$; ${semanticAction}; return $$;`
+    );
   }
 
   _normalize() {

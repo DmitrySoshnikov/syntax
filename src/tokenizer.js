@@ -64,7 +64,7 @@ export default class Tokenizer {
     for (let lexRule of this._grammar.getLexRules()) {
       let matched = this._match(string, lexRule.getMatcher());
       if (matched) {
-        let rawToken = lexRule.getToken();
+        let [yytext, rawToken] = lexRule.getTokenData(matched);
 
         // Usually whitespaces, etc.
         if (!rawToken) {
@@ -77,7 +77,7 @@ export default class Tokenizer {
           type: token.getSymbol(),
           value: token.isTerminal()
             ? token.getSymbol()
-            : matched,
+            : yytext,
         };
       }
     }

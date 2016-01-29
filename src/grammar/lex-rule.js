@@ -24,15 +24,31 @@ export default class LexRule {
    */
   constructor({matcher, tokenHandler}) {
     this._matcher = new RegExp(`^${matcher}`);
-    this._handler = new Function(tokenHandler);
+    this._handler = this._buildHandler(tokenHandler);
   }
 
   getMatcher() {
     return this._matcher;
   }
 
-  getToken() {
-    return this._handler();
+  getTokenData(yytext) {
+    return this._handler(yytext);
+  }
+
+  /**
+   * Builds a wrapper function on top of the handler.
+   * This is in order to be able directly modify `yytext`,
+   * (which is closured), and return a token.
+   */
+  _buildHandler(tokenHandler) {
+    let yytext, yyleng;
+    let tokenFn = eval(`(function() { ${tokenHandler} })`);
+    return (_yytext) => {
+      yytext = _yytext;
+      yyleng = _yytext.length;
+      let token = tokenFn();
+      return [yytext, token]
+    };
   }
 
   static matcherFromTerminal(terminal) {

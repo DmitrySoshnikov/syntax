@@ -395,17 +395,17 @@ export default class Grammar {
 
     nonTerminals.forEach(LHS => {
       originalBnf[LHS].forEach((RHS, k) => {
-        let handler = null;
+        let semanticAction = null;
 
         if (Array.isArray(RHS)) {
-          handler = RHS[1];
+          semanticAction = RHS[1];
           RHS = RHS[0];
         }
 
         normalizedBnf.push(new Production({
           LHS,
           RHS,
-          handler,
+          semanticAction,
           number: number++,
           isShort: k > 0,
           grammar: this,

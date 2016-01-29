@@ -8,6 +8,7 @@ import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
+import colors from 'colors';
 
 const EntryType = LRParsingTable.EntryType;
 
@@ -40,7 +41,7 @@ export default class LRParser {
   }
 
   parse(string) {
-    console.log(`\nParsing: ${string}\n`);
+    console.info(`\n${colors.bold('Parsing:')} ${string}\n`);
 
     let tokenizer = new Tokenizer({
       string,
@@ -55,6 +56,7 @@ export default class LRParser {
     this._stack.push(startingState);
 
     let token = tokenizer.getNextToken();
+    let shiftedToken = null;
 
     do {
       if (!token) {
@@ -72,10 +74,11 @@ export default class LRParser {
       switch (LRParsingTable.getEntryType(entry)) {
         case EntryType.SHIFT:
           this._shift(token, entry);
+          shiftedToken = token;
           token = tokenizer.getNextToken();
           break;
         case EntryType.REDUCE:
-          this._reduce(entry);
+          this._reduce(entry, shiftedToken);
           // Don't advance tokens on reduce.
           break;
         case EntryType.SR_CONFLICT:
@@ -86,7 +89,7 @@ export default class LRParser {
         case EntryType.ACCEPT:
           // Pop starting production and its state number.
           this._stack.pop();
-          this._stack.pop();
+          let parsed = this._stack.pop();
 
           if (this._stack.length !== 1 ||
               this._stack[0] !== startingState ||
@@ -94,7 +97,15 @@ export default class LRParser {
             this._unexpectedToken(token);
           }
 
-          console.log(`Accepted.\n`);
+          console.info(`${colors.green('\u2713 Accepted')}\n`);
+
+          if (parsed.semanticValue) {
+            console.info(
+              colors.bold('Parsed value:'),
+              parsed.semanticValue, '\n'
+            );
+          }
+
           return true;
       }
 
@@ -129,27 +140,44 @@ export default class LRParser {
   }
 
   _shift(token, entry) {
-    this._stack.push(token.type, Number(entry.slice(1)));
+    this._stack.push(
+      {symbol: token.type, semanticValue: token.value},
+      Number(entry.slice(1))
+    );
   }
 
-  _reduce(entry) {
+  _reduce(entry, token) {
     let productionNumber = entry.slice(1);
     let production = this._grammar.getProduction(productionNumber);
+
+    let semanticActionArgs = [];
 
     // Pop 2x symbols from the stack (RHS + state number for each),
     // unless it's an ε-production for which nothing to pop.
     if (!production.isEpsilon()) {
-      let symbolsToPop = production.getRHS().length * 2;
-      while (symbolsToPop--) {
+      let rhsLengh = production.getRHS().length;
+      while (rhsLengh--) {
+        // Pop state number;
         this._stack.pop();
+        // Pop production symbol.
+        semanticActionArgs.unshift(this._stack.pop().semanticValue);
       }
     }
 
     let previousState = this._peek();
     let symbolToReduceWith = production.getLHS().getSymbol();
 
+    // Pass token info as well.
+    semanticActionArgs.unshift(
+      token ? token.value : null,
+      token ? token.value.length : null
+    );
+
+    // Run corresponding semantic action.
+    let semanticValue = production.runSemanticAction(semanticActionArgs);
+
     // Then push LHS.
-    this._stack.push(symbolToReduceWith);
+    this._stack.push({symbol: symbolToReduceWith, semanticValue});
 
     let nextState = this._table.get()[previousState][symbolToReduceWith];
 
