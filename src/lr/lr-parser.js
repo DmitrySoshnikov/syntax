@@ -104,6 +104,7 @@ export default class LRParser {
               colors.bold('Parsed value:'),
               parsed.semanticValue, '\n'
             );
+            return parsed.semanticValue;
           }
 
           return true;
