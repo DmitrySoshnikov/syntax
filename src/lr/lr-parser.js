@@ -41,8 +41,6 @@ export default class LRParser {
   }
 
   parse(string) {
-    console.info(`\n${colors.bold('Parsing:')} ${string}\n`);
-
     let tokenizer = new Tokenizer({
       string,
       grammar: this._grammar,
@@ -88,7 +86,7 @@ export default class LRParser {
           break;
         case EntryType.RR_CONFLICT:
           this._conflictError('reduce-reduce', state, column);
-        case EntryType.ACCEPT:
+        case EntryType.ACCEPT: {
           // Pop starting production and its state number.
           this._stack.pop();
           let parsed = this._stack.pop();
@@ -99,17 +97,14 @@ export default class LRParser {
             this._unexpectedToken(token);
           }
 
-          console.info(`${colors.green('\u2713 Accepted')}\n`);
+          let result = {status: 'accept'};
 
           if (parsed.hasOwnProperty('semanticValue')) {
-            console.info(
-              colors.bold('Parsed value:'),
-              parsed.semanticValue, '\n'
-            );
-            return parsed.semanticValue;
+            result.value = parsed.semanticValue;
           }
 
-          return true;
+          return result;
+        }
       }
 
     } while (tokenizer.hasMoreTokens() || this._stack.length > 1);

@@ -2,6 +2,7 @@
 
 'use strict';
 
+const colors = require('colors');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -104,21 +105,39 @@ const parsers = {
 
     // Parse a string.
     if (options.hasOwnProperty('parse')) {
-      const LRParser = require('../dist/lr/lr-parser').default;
-
-      new LRParser({grammar})
-        .parse(options.parse);
+      parse(options.parse, grammar);
     }
 
     // Parse a file.
     if (options.hasOwnProperty('file')) {
-      const LRParser = require('../dist/lr/lr-parser').default;
-
-      new LRParser({grammar})
-        .parse(fs.readFileSync(options.file, 'utf-8'));
+      parse(fs.readFileSync(options.file, 'utf-8'), grammar);
     }
   },
 };
+
+function parse(string, grammar) {
+  console.info(`\n${colors.bold('Parsing:')} ${string}\n`);
+
+  const LRParser = require('../dist/lr/lr-parser').default;
+
+  try {
+    const parsed = new LRParser({grammar}).parse(string);
+
+    if (parsed.status === 'accept') {
+      console.info(`${colors.green('\u2713 Accepted')}\n`);
+    }
+
+    if (parsed.hasOwnProperty('value')) {
+      console.info(
+        colors.bold('Parsed value:'),
+        parsed.value, '\n'
+      );
+    }
+  } catch (e) {
+    console.info(`${colors.red('Rejected: ' + e.message)}\n`);
+    throw e;
+  }
+}
 
 const MULTI_LINE_COMMENTS_RE = /\/\*(.|\s)*?\*\//g;
 const SINGLE_LINE_COMMENTS_RE = /[^:]\/\/.*?\n/g;
