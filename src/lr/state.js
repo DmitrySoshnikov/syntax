@@ -22,6 +22,8 @@
  * S  -> S • "a"
  */
 
+import LRItem from './lr-item';
+
 export default class State {
 
   /**
@@ -300,19 +302,23 @@ export default class State {
       );
     }
 
-    this.getItems().forEach(item => {
-      let thatItem = state.getItemByLR0Key(item.getLR0Key());
+    if (LRItem.keyForItems(this.getKernelItems()) !==
+        LRItem.keyForItems(state.getKernelItems())) {
 
-      if (!thatItem) {
-        throw new Error(
-          `Item ${item.getKey()} presents in state ${this.getNumber()}, ` +
-          `but is absent in the ${state.getNumber()}`
-        );
-      }
+      this.getItems().forEach(item => {
+        let thatItem = state.getItemByLR0Key(item.getLR0Key());
 
-      // Extend the lookahead set of our item.
-      item.mergeLookaheadSet(thatItem.getLookaheadSet());
-    });
+        if (!thatItem) {
+          throw new Error(
+            `Item ${item.getKey()} presents in state ${this.getNumber()}, ` +
+            `but is absent in the ${state.getNumber()}`
+          );
+        }
+
+        // Extend the lookahead set of our item.
+        item.mergeLookaheadSet(thatItem.getLookaheadSet());
+      });
+    }
 
     // After merging lookaheads, we should un-register this new
     // idential state, since it was registered in the constructor.

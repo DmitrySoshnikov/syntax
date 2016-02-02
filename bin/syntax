@@ -128,11 +128,9 @@ function parse(string, grammar) {
     }
 
     if (parsed.hasOwnProperty('value')) {
-      console.info(
-        colors.bold('Parsed value:'),
-        parsed.value, '\n'
-      );
+      console.info(colors.bold('Parsed value:'), parsed.value, '\n');
     }
+
   } catch (e) {
     console.info(`${colors.red('Rejected: ' + e.message)}\n`);
     throw e;
