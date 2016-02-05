@@ -350,8 +350,7 @@ export default class Grammar {
       .split('\n')
       .filter(line => !!line)
       .forEach(productionLine => {
-        let splitter = productionLine.indexOf('->') !== -1 ? '->' : '|';
-        let splitted = productionLine.split(splitter);
+        let splitted = productionLine.split(/->|:|\|/);
 
         let LHS = splitted[0].trim();
 
