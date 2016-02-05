@@ -350,9 +350,13 @@ export default class Grammar {
       .split('\n')
       .filter(line => !!line)
       .forEach(productionLine => {
-        let splitted = productionLine.split(/->|:|\|/);
+        let splitted = productionLine.match(/^\s*(\w?)\s*(?:->|:|\|)\s*(.*)$/);
 
-        let LHS = splitted[0].trim();
+        if (!splitted) {
+          throw new Error(`Invalid production: ${production}.`)
+        }
+
+        let LHS = splitted[1].trim();
 
         if (LHS) {
           currentNonTerminal = LHS;
@@ -364,7 +368,7 @@ export default class Grammar {
           objectBnf[LHS] = [];
         }
 
-        let RHS = splitted[1].trim();
+        let RHS = splitted[2].trim();
 
         objectBnf[LHS].push(RHS);
       });
