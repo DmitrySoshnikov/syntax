@@ -9,6 +9,7 @@
  *   > ['+', 1, 15]
  *
  * See also recursive descent version for this grammar:
+ * https://gist.github.com/DmitrySoshnikov/2a434dda67019a4a7c37
  */
 
 {
