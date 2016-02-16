@@ -146,7 +146,7 @@ export default class State {
       .getCurrentSymbol()
       .getSymbol();
 
-    return getTransitionOnSymbol(transitionSymbol).state;
+    return this.getTransitionOnSymbol(transitionSymbol).state;
   }
 
   /**
@@ -180,45 +180,49 @@ export default class State {
     Object.keys(this._transitionsForSymbol).forEach(symbol => {
       let transitionsForSymbol = this.getTransitionOnSymbol(symbol);
 
-      if (!transitionsForSymbol.state) {
-        let items = transitionsForSymbol.items;
+      // Already calculated the outer state, exit.
+      if (transitionsForSymbol.state) {
+        return;
+      }
 
-        // See if we already calculated transition for this kernel set.
-        let outerState = this._canonicalCollection
-          .getTranstionForItems(items);
+      let items = transitionsForSymbol.items;
 
-        // If not, create a new outer state with advanced kernel items.
-        if (!outerState) {
+      // See if we already calculated transition for this kernel set.
+      let outerState = this._canonicalCollection
+        .getTranstionForItems(items);
 
-          outerState = new State({
-            kernelItems: items.map(item => item.advance()),
-            grammar: this._grammar,
-            canonicalCollection: this._canonicalCollection,
-          });
+      // If not, create a new outer state with advanced kernel items.
+      if (!outerState) {
 
-          // For LALR(1) we should merge states with the same
-          // kernel items, but with different lookaheads.
-          if (this._grammar.getMode().isLALR1()) {
+        outerState = new State({
+          kernelItems: items.map(item => item.advance()),
+          grammar: this._grammar,
+          canonicalCollection: this._canonicalCollection,
+        });
 
-            let sameLR0State = this._canonicalCollection
-              .getLR0ItemsSet(outerState);
+        // For LALR(1) we should merge states with the same
+        // kernel items, but with different lookaheads.
+        if (this._grammar.getMode().isLALR1()) {
 
-            // If such state with the same LR(0) items was already
-            // calculated, just merge the two, and discard the new one.
-            if (sameLR0State && sameLR0State !== outerState) {
-              outerState = sameLR0State.mergeWithState(outerState);
-            }
+          let sameLR0State = this._canonicalCollection
+            .getLR0ItemsSet(outerState);
+
+          // If such state with the same LR(0) items was already
+          // calculated, just merge the two, and discard the new one.
+          if (sameLR0State && sameLR0State !== outerState) {
+            outerState = sameLR0State.mergeWithState(outerState);
           }
-
-          this._canonicalCollection
-            .registerTranstionForItems(items, outerState);
         }
 
-        // And connect our items to it.
-        items.forEach(item => {
-          this.setSymbolTransition({item, state: outerState});
-        });
+        this._canonicalCollection
+          .registerTranstionForItems(items, outerState);
       }
+
+      // And connect our items to it.
+      items.forEach(item => {
+        this.setSymbolTransition({item, state: outerState});
+      });
+
     });
 
     this._visited = true;

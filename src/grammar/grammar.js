@@ -350,7 +350,7 @@ export default class Grammar {
       .split('\n')
       .filter(line => !!line)
       .forEach(productionLine => {
-        let splitted = productionLine.match(/^\s*(\w?)\s*(?:->|:|\|)\s*(.*)$/);
+        let splitted = productionLine.match(/^\s*([\w\-]*)\s*(?:->|:|\|)\s*(.*)$/);
 
         if (!splitted) {
           throw new Error(`Invalid production: ${production}.`)

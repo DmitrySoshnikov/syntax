@@ -106,7 +106,7 @@ export default class CanonicalCollection {
 
   /**
    * In LALR(1) there could be several states with the same
-   * LR(0) items, but which differ only in in lookahead symbols.
+   * LR(0) items, but which differ only in lookahead symbols.
    * In this case we merge such states extending their lookaheads.
    */
   getLR0ItemsSet(state) {
