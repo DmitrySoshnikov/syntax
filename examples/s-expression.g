@@ -27,9 +27,9 @@
     "s-exp": [["atom", "return $$ = $1;"],
               ["list", "return $$ = $1;"]],
 
-     "list": [["( list-entries )", "$$ = []; $$.push.apply($$, $2);"]],
+     "list": [["( list-entries )", "$$ = $2;"]],
 
-     "list-entries": [["s-exp list-entries", "$$ = []; $$.push($1); $$.push.apply($$, $2);"],
+     "list-entries": [["s-exp list-entries", "$2.unshift($1); $$ = $2;"],
                       ["ε", "$$ = [];"]],
 
      "atom": [["NUMBER", "$$ = Number(yytext);"],
