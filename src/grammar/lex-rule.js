@@ -3,8 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import GrammarSymbol from './grammar-symbol';
-
 /**
  * A lexical grammar rule.
  */
@@ -24,11 +22,16 @@ export default class LexRule {
    */
   constructor({matcher, tokenHandler}) {
     this._matcher = new RegExp(`^${matcher}`);
+    this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
   }
 
   getMatcher() {
     return this._matcher;
+  }
+
+  getRawHandler() {
+    return this._rawHandler;
   }
 
   getTokenData(yytext) {
@@ -47,7 +50,7 @@ export default class LexRule {
       yytext = _yytext;
       yyleng = _yytext.length;
       let token = tokenFn();
-      return [yytext, token]
+      return [yytext, token];
     };
   }
 

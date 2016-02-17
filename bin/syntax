@@ -9,6 +9,9 @@ const vm = require('vm');
 
 const GRAMMAR_MODE = require('../dist/grammar/grammar-mode').MODES;
 
+const Grammar = require('../dist/grammar/grammar').default;
+const LRParserGenerator = require('../dist/lr/lr-parser-generator').default;
+
 const options = require('nomnom')
   .script('syntax')
   .options({
@@ -47,6 +50,17 @@ const options = require('nomnom')
       help: 'File to be parsed',
       type: 'string',
       metavar: 'FILE'
+    },
+    output: {
+      abbr: 'o',
+      help: 'Output file for a generated parser module',
+      type: 'string',
+      metavar: 'FILE'
+    },
+    'use-custom-tokenizer': {
+      abbr: 'k',
+      help: 'To not generate built-in tokenizer code',
+      flag: true,
     },
     'ignore-whitespaces': {
       abbr: 'w',
@@ -112,6 +126,20 @@ const parsers = {
     if (options.hasOwnProperty('file')) {
       parse(fs.readFileSync(options.file, 'utf-8'), grammar);
     }
+
+    // Generate parser module.
+    if (options.output) {
+      new LRParserGenerator({
+        grammar,
+        outputFile: options.output,
+        useCustomTokenizer: options['use-custom-tokenizer'],
+      }).generate();
+
+      console.info(
+        `${colors.green('\n\u2713 Successfully generated:')}`,
+        options.output, '\n'
+      );
+    }
   },
 };
 
@@ -137,32 +165,8 @@ function parse(string, grammar) {
   }
 }
 
-const MULTI_LINE_COMMENTS_RE = /\/\*(.|\s)*?\*\//g;
-const SINGLE_LINE_COMMENTS_RE = /[^:]\/\/.*?\n/g;
-
 function getGrammar(grammarFile, mode) {
-  const Grammar = require('../dist/grammar/grammar').default;
-
-  let grammarData = fs.readFileSync(grammarFile, 'utf-8')
-    .replace(MULTI_LINE_COMMENTS_RE, '')
-    .replace(SINGLE_LINE_COMMENTS_RE, '');
-
-  let grammar;
-
-  try {
-    // An object with `lex`, and `bnf`, valid JSON.
-    grammar = JSON.parse(grammarData);
-  } catch (e) {
-    // JS code.
-    try {
-      grammar = vm.runInNewContext(`(${grammarData})`);
-    } catch (e) {
-      // Just a bnf as a string.
-      grammar = {
-        bnf: grammarData,
-      };
-    }
-  }
+  let grammar = LRParserGenerator.loadGrammarData(grammarFile);
 
   if (options['ignore-whitespaces']) {
     if (!grammar.lex) {

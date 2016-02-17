@@ -176,7 +176,7 @@ export default class Grammar {
       let tokensMap = {};
 
       this._bnf.forEach(production => {
-        if (production.isAugmented()) {
+        if (production.isAugmented() || production.isEpsilon()) {
           return;
         }
         production.getRHS().forEach(symbol => {
@@ -391,7 +391,6 @@ export default class Grammar {
         LHS: `${this._startSymbol}'`,
         RHS: this._startSymbol,
         number: number++,
-        grammar: this,
       });
       normalizedBnf[0] = augmentedProduction;
     }
@@ -411,7 +410,6 @@ export default class Grammar {
           semanticAction,
           number: number++,
           isShort: k > 0,
-          grammar: this,
         }));
       });
     });

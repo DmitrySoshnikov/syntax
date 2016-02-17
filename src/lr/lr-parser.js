@@ -24,6 +24,10 @@ export default class LRParser {
       grammar: this._grammar,
     });
 
+    this._tokenizer = new Tokenizer({
+      grammar: this._grammar,
+    });
+
     this._stack = [];
   }
 
@@ -40,10 +44,7 @@ export default class LRParser {
   }
 
   parse(string) {
-    let tokenizer = new Tokenizer({
-      string,
-      grammar: this._grammar,
-    });
+    this._tokenizer.initString(string);
 
     this._stack = [];
 
@@ -54,7 +55,7 @@ export default class LRParser {
     // Start from the initial state.
     this._stack.push(startingState);
 
-    let token = tokenizer.getNextToken();
+    let token = this._tokenizer.getNextToken();
     let shiftedToken = null;
 
     do {
@@ -74,7 +75,7 @@ export default class LRParser {
         case EntryType.SHIFT:
           this._shift(token, entry);
           shiftedToken = token;
-          token = tokenizer.getNextToken();
+          token = this._tokenizer.getNextToken();
           break;
         case EntryType.REDUCE:
           this._reduce(entry, shiftedToken);
@@ -92,7 +93,7 @@ export default class LRParser {
 
           if (this._stack.length !== 1 ||
               this._stack[0] !== startingState ||
-              tokenizer.hasMoreTokens()) {
+              this._tokenizer.hasMoreTokens()) {
             this._unexpectedToken(token);
           }
 
@@ -106,7 +107,7 @@ export default class LRParser {
         }
       }
 
-    } while (tokenizer.hasMoreTokens() || this._stack.length > 1);
+    } while (this._tokenizer.hasMoreTokens() || this._stack.length > 1);
   }
 
   _unexpectedEndOfInput() {

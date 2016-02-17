@@ -18,8 +18,8 @@
       ["\\s+", "/* skip whitespace */"],
       ["\\d+", "return 'NUMBER';"],
       ["[a-zA-Z\\-\\+\\*\\?\\=/]+\\d*", "return 'SYMBOL';"],
-      ["\\(", "return '('"],
-      ["\\)", "return ')'"],
+      ["\\(", "return '(';"],
+      ["\\)", "return ')';"],
     ]
   },
 

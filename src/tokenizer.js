@@ -22,10 +22,15 @@ export default class Tokenizer {
    * that belongs to the given grammar.
    */
   constructor({string, grammar}) {
+    this._grammar = grammar;
+    if (string) {
+      this.initString(string);
+    }
+  }
+
+  initString(string) {
     this._string = string + EOF;
     this._cursor = 0;
-    this._grammar = grammar;
-    this._lexRules = this._grammar.getLexRules();
   }
 
   getTokens() {

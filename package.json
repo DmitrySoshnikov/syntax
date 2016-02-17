@@ -9,8 +9,8 @@
   "bugs": "https://github.com/DmitrySoshnikov/syntax/issues",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist; babel src/ --out-dir dist/ --presets es2015,stage-1,stage-2",
-    "watch": "babel src/ --out-dir dist/ --watch --presets es2015,stage-1,stage-2",
+    "build": "rm -rf dist; mkdir dist;  mkdir dist/templates; cp -r src/templates/* dist/templates/; babel src/ --out-dir dist/ --presets es2015,stage-1,stage-2",
+    "watch": "cp -r src/templates/* dist/templates/; babel src/ --out-dir dist/ --watch --presets es2015,stage-1,stage-2",
     "test": "jest",
     "prepublish": "jest && npm run build"
   },

@@ -15,14 +15,14 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor({LHS, RHS, semanticAction, number, isShort, grammar}) {
+  constructor({LHS, RHS, semanticAction, number, isShort}) {
     this._rawLHS = LHS;
     this._rawRHS = RHS;
     this._number = number;
-    this._grammar = grammar;
     this._isAugmented = number === 0;
     this._isShort = isShort;
     this._normalize();
+    this._rawSemanticAction = semanticAction || null;
     this._semanticAction = this._buildSemanticAction(semanticAction);
   }
 
@@ -47,6 +47,10 @@ export default class Production {
 
   getRHS() {
     return this._RHS;
+  }
+
+  getRawSemanticAction() {
+    return this._rawSemanticAction;
   }
 
   getSemanticAction() {
