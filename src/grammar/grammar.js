@@ -176,7 +176,7 @@ export default class Grammar {
       let tokensMap = {};
 
       this._bnf.forEach(production => {
-        if (production.isAugmented()) {
+        if (production.isAugmented() || production.isEpsilon()) {
           return;
         }
         production.getRHS().forEach(symbol => {
