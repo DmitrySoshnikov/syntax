@@ -57,10 +57,11 @@ const options = require('nomnom')
       type: 'string',
       metavar: 'FILE'
     },
-    'use-custom-tokenizer': {
+    'custom-tokenizer': {
       abbr: 'k',
-      help: 'To not generate built-in tokenizer code',
-      flag: true,
+      help: 'Path to a file with custom tokenizer class',
+      type: 'string',
+      metavar: 'FILE'
     },
     'ignore-whitespaces': {
       abbr: 'w',
@@ -132,7 +133,7 @@ const parsers = {
       new LRParserGenerator({
         grammar,
         outputFile: options.output,
-        useCustomTokenizer: options['use-custom-tokenizer'],
+        customTokenizer: options['custom-tokenizer'],
       }).generate();
 
       console.info(

@@ -36,10 +36,10 @@ export default class LRParserGenerator {
   /**
    * Instance constructor.
    */
-  constructor({grammar, outputFile, useCustomTokenizer = false}) {
+  constructor({grammar, outputFile, customTokenizer = null}) {
     this._grammar = grammar;
     this._outputFile = outputFile;
-    this._useCustomTokenizer = useCustomTokenizer;
+    this._customTokenizer = customTokenizer;
 
     if (!grammar.getMode().isLR()) {
       throw new Error(`Only LR parsers are supported at the moment.`);
@@ -76,11 +76,16 @@ export default class LRParserGenerator {
    */
   _generateParserData() {
     // Lexical grammar.
-    if (this._useCustomTokenizer === false) {
+    if (this._customTokenizer === null) {
+      // Built-in tokinizer.
       this._generateTokenizer();
       this._generateLexRules();
     } else {
-      this._resultData = this._resultData.replace('<<TOKENIZER>>', '');
+      // Require custom tokenizer if was provided.
+      this._resultData = this._resultData.replace(
+        '<<TOKENIZER>>',
+        `tokenizer = require('${this._customTokenizer}');`
+      );
     }
 
     // Syntactic grammar.
@@ -166,12 +171,12 @@ export default class LRParserGenerator {
     grammarFile,
     mode,
     outputFile,
-    useCustomTokenizer = false,
+    customTokenizer = null,
   }) {
     return new LRParserGenerator({
       grammar: this.loadGrammar(grammarFile, mode),
       outputFile: outputFile || `${grammarFile}.parser.js`,
-      useCustomTokenizer,
+      customTokenizer,
     });
   }
 

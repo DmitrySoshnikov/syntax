@@ -34,7 +34,7 @@ npm run watch
 
 #### Parser generation
 
-To generate a parser module, specify the `--output` option, which is a path to the output parser file. Once generated, the module can normally be required, and used for parsing strings based for a given grammar.
+To generate a parser module, specify the `--output` option, which is a path to the output parser file. Once generated, the module can normally be required, and used for parsing strings based on a given grammar.
 
 Example for the [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.ast.js):
 
@@ -58,30 +58,50 @@ console.log(value); // JS object: {x: 10, y: [1, 2]}
 
 > NOTE: built-in tokenizer uses underlying regexp implementation to extract stream of tokens.
 
-It is possible to provide custom tokenizer if a built-in isn't sufficient. For this pass the `--use-custom-tokenizer` option, and the built-in tokenizer code won't be generated:
+It is possible to provide a custom tokenizer if a built-in isn't sufficient. For this pass the `--custom-tokenizer` option, which is a path to a file that implements a tokenizer. In this case the built-in tokenizer code won't be generated.
 
 ```
-./bin/syntax --grammar examples/json.ast.js --mode SLR1 --output json-parser.js --use-custom-tokenizer
+./bin/syntax --grammar examples/json.ast.js --mode SLR1 --output json-parser.js --custom-tokenizer './my-tokenizer.js'
 
 ✓ Successfully generated: json-parser.js
 ```
 
-```js
-const JSONParser = require('./json-parser');
-
-// Custom tokenizer.
-JSONParser.setTokenizer(new CustomJSONTokenizer());
-
-let value = JSONParser.parse('{"x": 10, "y": [1, 2]}');
-
-console.log(value); // JS object: {x: 10, y: [1, 2]}
-```
+In the generated code, the custom tokenizer is just required as a module: `require('./my-tokenizer.js')`.
 
 The tokenizer should implement the following iterator-like interface:
 
 - `initString`: initials a pasrsing string;
 - `hasMoreTokens`: whether stream of tokens still has more tokens to consume;
-- `getNextToken`: returns next token;
+- `getNextToken`: returns next token in the format `{type, value}`;
+
+For example:
+
+```js
+// File: ./my-tokenizer.js
+
+const MyTokenizer = {
+
+  initString(string) {
+    this._string = string;
+    this._cursor = 0;
+  },
+
+  hasMoreTokens() {
+    return this._cursor < this._string.length;
+  },
+
+  getNextToken() {
+    // Implement logic here.
+
+    return {
+      type: <<TOKEN_TYPE>>,
+      value: <<TOKEN_VALUE>>,
+    }
+  },
+};
+
+module.exports = MyTokenizer;
+```
 
 #### Parsing modes
 

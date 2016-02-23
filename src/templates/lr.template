@@ -8,7 +8,7 @@
  *     --mode <parsing-mode>
  *     --output ~/path-to-output-file.js
  *
- * In case of custom tokenizer, one may pass --use-custom-tokenizer option.
+ * In case of custom tokenizer, one may pass `--custom-tokenizer` option.
  */
 
 'use strict';
@@ -49,11 +49,7 @@ let tokenizer;
 const LRParser = {
   parse(string) {
     if (!tokenizer) {
-      throw new Error(
-        `Tokenizer instance wasn't specified. ` +
-        'Use `parser.setTokenizer(tokenizerInstance);`' +
-        `or generate the parser with the default tokenizer.`
-      );
+      throw new Error(`Tokenizer instance wasn't specified.`);
     }
 
     tokenizer.initString(string);
