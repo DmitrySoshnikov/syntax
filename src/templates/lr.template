@@ -5,9 +5,10 @@
  *
  *   ./bin/syntax \
  *     --grammar ~/path-to-grammar-file
+ *     --mode <parsing-mode>
  *     --output ~/path-to-output-file.js
  *
- * In case of custom tokeninzer, one may pass --use-custom-tokinzer option.
+ * In case of custom tokenizer, one may pass --use-custom-tokenizer option.
  */
 
 'use strict';
