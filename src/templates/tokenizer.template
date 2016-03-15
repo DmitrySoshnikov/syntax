@@ -1,7 +1,7 @@
 /**
  * Generic tokenizer used by the parser in the Syntax tool.
  *
- * See `--use-custom-tokinzer` to skip this generation, and use a custom one.
+ * See `--custom-tokinzer` to skip this generation, and use a custom one.
  */
 
 const lexRules = <<LEX_RULES>>;

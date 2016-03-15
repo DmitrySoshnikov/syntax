@@ -92,9 +92,9 @@ const parsers = {
   },
 
   _genericLR(mode, options) {
-    console.log(`\nParsing mode: ${mode}.`);
-
     const grammar = getGrammar(options.grammar, mode);
+
+    console.info(`\nParsing mode: ${grammar.getMode()}.`);
 
     // Canonical collection or LR items.
     if (options.collection) {
@@ -199,7 +199,7 @@ function extractMode(options) {
   }
 
   if (!mode) {
-    console.log(`\n"mode" option is required\n`);
+    console.error(`\n"mode" option is required\n`);
     return null;
   }
 
@@ -217,7 +217,7 @@ function extractMode(options) {
       .filter(mode => !mode.startsWith('_'))
       .join(', ');
 
-    console.log(
+    console.error(
       `\n"${mode}" is not implemented yet. ` +
       `Available parsers are: ${availableModes}.\n`
     );

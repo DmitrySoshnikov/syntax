@@ -182,17 +182,6 @@ export default class LRItem {
     return lookaheadSet;
   }
 
-  _getItemForProduction(production, lookaheadSet = null) {
-    return new LRItem({
-      production,
-      dotPosition: 0,
-      grammar: this._grammar,
-      canonicalCollection: this._canonicalCollection,
-      setsGenerator: this._setsGenerator,
-      lookaheadSet,
-    });
-  }
-
   /**
    * Goto operation from this item.
    */
@@ -273,13 +262,12 @@ export default class LRItem {
   }
 
   /**
-   * In LALR(1) mode we merge the states with the same kernel items, which
-   * differ only in lookaheads set. The merging is done by extending the
-   * lookaheads of the items.
+   * Sets a lookahead set to this item (can happen when we merge
+   * states in LALR(1), and need to recalculate lookaheads.
    */
-  mergeLookaheadSet(lookaheadSet) {
+  setLookaheadSet(lookaheadSet) {
     // Extend the set.
-    this._lookaheadSet = {...this._lookaheadSet, ...lookaheadSet};
+    this._lookaheadSet = lookaheadSet;
 
     // And rebuild the key since lookahead set is changed.
     this._key = LRItem.keyForItem(
@@ -287,6 +275,16 @@ export default class LRItem {
       this._dotPosition,
       this._lookaheadSet,
     );
+  }
+
+  /**
+   * In LALR(1) mode we merge the states with the same kernel items, which
+   * differ only in lookaheads set. The merging is done by extending the
+   * lookaheads of the items.
+   */
+  mergeLookaheadSet(lookaheadSet) {
+    // Extend the set.
+    this.setLookaheadSet({...this._lookaheadSet, ...lookaheadSet});
   }
 
   /**
@@ -318,7 +316,8 @@ export default class LRItem {
 
     let lookaheads = '';
     if (lookaheadSet) {
-      lookaheads = `, ${Object.keys(lookaheadSet).join('/')}`;
+      lookaheads = ', #lookaheads= ' +
+        JSON.stringify(Object.keys(lookaheadSet));
     }
 
     return `${production.getLHS().getSymbol()} -> ` +
@@ -333,10 +332,12 @@ export default class LRItem {
   }
 
   /**
-   * Returns an LR(0) key for a set of items.
+   * Returns an LR(0) key for a set of items (duplicates are removed).
    */
   static lr0KeyForItems(items) {
-    return items.map(item => item.getLR0Key()).sort().join('|');
+    let keysMap = {};
+    items.forEach(item => keysMap[item.getLR0Key()] = true);
+    return Object.keys(keysMap).sort().join('|');
   }
 
   /**

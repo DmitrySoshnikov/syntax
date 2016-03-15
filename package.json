@@ -11,8 +11,7 @@
   "scripts": {
     "build": "rm -rf dist; mkdir dist;  mkdir dist/templates; cp -r src/templates/* dist/templates/; babel src/ --out-dir dist/ --presets es2015,stage-1,stage-2",
     "watch": "cp -r src/templates/* dist/templates/; babel src/ --out-dir dist/ --watch --presets es2015,stage-1,stage-2",
-    "test": "jest",
-    "prepublish": "jest && npm run build"
+    "prepublish": "npm run build"
   },
   "bin": {
     "syntax": "./bin/syntax"
@@ -37,22 +36,6 @@
     "colors": "^1.1.2"
   },
   "devDependencies": {
-    "babel": "^6.2.0",
-    "babel-jest": "^6.0.1",
-    "jest-cli": "^0.8.0"
-  },
-  "jest": {
-    "scriptPreprocessor": "<rootDir>/node_modules/babel-jest",
-    "preprocessCachingDisabled": true,
-    "testPathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "testPathDirs": [
-      "src",
-      "bin"
-    ],
-    "unmockedModulePathPatterns": [
-      "babel"
-    ]
+    "babel": "^6.2.0"
   }
 }

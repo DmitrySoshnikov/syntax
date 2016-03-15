@@ -138,15 +138,21 @@ export default class State {
   }
 
   getItemTransion(itemKey) {
+    return this.getItemTransionInfo(itemKey).state;
+  }
+
+  getItemTransionInfo(itemKey) {
     if (!this._itemsMap.hasOwnProperty(itemKey)) {
       throw new Error(`Item ${itemKey} is not in the state ${this._number}.`);
     }
 
-    let transitionSymbol = this._itemsMap[itemKey]
-      .getCurrentSymbol()
-      .getSymbol();
+    let item = this._itemsMap[itemKey];
 
-    return this.getTransitionOnSymbol(transitionSymbol).state;
+    if (item.isFinal()) {
+      throw new Error(`Item ${itemKey} is final.`);
+    }
+
+    return this.getTransitionOnSymbol(item.getCurrentSymbol().getSymbol());
   }
 
   /**
@@ -200,20 +206,6 @@ export default class State {
           canonicalCollection: this._canonicalCollection,
         });
 
-        // For LALR(1) we should merge states with the same
-        // kernel items, but with different lookaheads.
-        if (this._grammar.getMode().isLALR1()) {
-
-          let sameLR0State = this._canonicalCollection
-            .getLR0ItemsSet(outerState);
-
-          // If such state with the same LR(0) items was already
-          // calculated, just merge the two, and discard the new one.
-          if (sameLR0State && sameLR0State !== outerState) {
-            outerState = sameLR0State.mergeWithState(outerState);
-          }
-        }
-
         this._canonicalCollection
           .registerTranstionForItems(items, outerState);
       }
@@ -255,18 +247,14 @@ export default class State {
       return;
     }
 
-    // In LALR(1) mode we combine items with the same
-    // LR(0) parts merging their lookahead sets.
-    if (this._grammar.getMode().isLALR1() &&
-        this._lr0ItemsMap.hasOwnProperty(item.getLR0Key())) {
-      let existingItem = this._lr0ItemsMap[item.getLR0Key()];
-      existingItem.mergeLookaheadSet(item.getLookaheadSet());
-      return;
-    }
-
     this._items.push(item);
     this._itemsMap[item.getKey()] = item;
-    this._lr0ItemsMap[item.getLR0Key()] = item;
+
+    if (!this._lr0ItemsMap[item.getLR0Key()]) {
+      this._lr0ItemsMap[item.getLR0Key()] = [];
+    }
+    this._lr0ItemsMap[item.getLR0Key()].push(item);
+
     item.setState(this);
 
     return item;
@@ -283,7 +271,76 @@ export default class State {
    * Returns an item by LR(0) key.
    */
   getItemByLR0Key(lr0Key) {
-    return this._lr0ItemsMap[lr0Key];
+    let lr0ItemsCount = this._lr0ItemsMap[lr0Key].length;
+
+    if (lr0ItemsCount !== 1) {
+      throw new Error(
+        `Number of LR0 items for ${lr0Key} is not 1 in ${this.getNumber()}. ` +
+        `Call mergeLR0Items before accessing this method.`
+      );
+    }
+
+    return this._lr0ItemsMap[lr0Key][lr0ItemsCount - 1];
+  }
+
+
+  /**
+   * Merges items with the same LR(0) parts for LALR(1).
+   */
+  mergeLR0Items() {
+    Object.keys(this._lr0ItemsMap).forEach(lr0Key => {
+      let items = this._lr0ItemsMap[lr0Key];
+      let rootItem = items[0];
+
+      // Merge the items, keeping only one.
+      while (items.length > 1) {
+        this.mergeTwoItems(rootItem, items.pop());
+      }
+    });
+  }
+
+  mergeTwoItems(first, second) {
+    let transition = !first.isFinal()
+      ? this.getItemTransionInfo(first.getKey())
+      : null;
+
+    delete this._itemsMap[first.getKey()];
+
+    if (transition) {
+      delete transition.itemsMap[first.getKey()];
+    }
+
+    let secondKey = second.getKey();
+
+    first.mergeLookaheadSet(second.getLookaheadSet());
+
+    // And remove it from all collections.
+    delete this._itemsMap[secondKey];
+
+    let itemIndex = this._items.indexOf(second);
+    if (itemIndex !== -1) {
+      this._items.splice(itemIndex, 1);
+    }
+
+    itemIndex = this._kernelItems.indexOf(second);
+    if (itemIndex !== -1) {
+      this._kernelItems.splice(itemIndex, 1);
+    }
+
+    if (transition) {
+      delete transition.itemsMap[secondKey];
+
+      itemIndex = transition.items.indexOf(second);
+      if (itemIndex !== -1) {
+        transition.items.splice(itemIndex, 1);
+      }
+    }
+
+    this._itemsMap[first.getKey()] = first;
+
+    if (transition) {
+      transition.itemsMap[first.getKey()] = first;
+    }
   }
 
   /**
@@ -295,14 +352,14 @@ export default class State {
     if (!this._grammar.getMode().isLALR1()) {
       throw new Error(
         `States can be merged only in LALR(1) mode. ` +
-        `This mode is ${this._grammar.getMode().toString()}`
+        `This mode is ${this._grammar.getMode().toString()}.`
       );
     }
 
     if (state.getItems().length !== this.getItems().length) {
       throw new Error(
         `LALR(1): State ${state.getNumber()} is not compatible ` +
-        `with state ${this.getNumber()}`
+        `with state ${this.getNumber()}.`
       );
     }
 
@@ -315,12 +372,11 @@ export default class State {
         if (!thatItem) {
           throw new Error(
             `Item ${item.getKey()} presents in state ${this.getNumber()}, ` +
-            `but is absent in the ${state.getNumber()}`
+            `but is absent in the ${state.getNumber()}.`
           );
         }
 
-        // Extend the lookahead set of our item.
-        item.mergeLookaheadSet(thatItem.getLookaheadSet());
+        this.mergeTwoItems(item, thatItem);
       });
     }
 

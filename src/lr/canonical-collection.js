@@ -28,7 +28,7 @@ export default class CanonicalCollection {
     this._kernelSetsTransitions = {};
 
     // Stores states by their kernel items LR(0) key. This is to merge
-    // simplar states in case of LALR(1) mode.
+    // similar states in case of LALR(1) mode.
     this._lr0ItemSets = {};
 
     // All the states that form this collection.
@@ -58,6 +58,46 @@ export default class CanonicalCollection {
       .goto();
 
     this._build();
+
+    if (this._grammar.getMode().isLALR1()) {
+      this.compressCLRToLALR();
+    }
+  }
+
+  /**
+   * Basic LALR(1) implementation compressing from CLR(1).
+   *
+   * TODO: implement more efficient algorithm, e.g.
+   * LALR(1) by converting to SLR(1).
+   */
+  compressCLRToLALR() {
+    Object.keys(this._lr0ItemSets).forEach(lr0StateKey => {
+      let states = this._lr0ItemSets[lr0StateKey];
+
+      let rootState = states[0];
+      rootState.mergeLR0Items();
+
+      while (states.length > 1) {
+        let state = states.pop();
+        state.mergeLR0Items();
+        rootState.mergeWithState(state);
+      }
+
+      rootState.getItems().forEach(item => {
+        // If the item was already connected, we should recalculate its
+        // connection to the first state in the LR(0) states collection,
+        // since only this state will be kept after states are merged.
+        if (item.isConnected()) {
+          let outerStates = this.getLR0ItemsSet(item.goto());
+          let outerState = outerStates[0];
+          item.connect(outerState);
+        }
+      });
+
+    });
+
+    // After compression reassign new numbers to states.
+    this._remap();
   }
 
   registerState(state) {
@@ -69,19 +109,34 @@ export default class CanonicalCollection {
     let lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
 
     if (!this._lr0ItemSets.hasOwnProperty(lr0KeyForItems)) {
-      this._lr0ItemSets[lr0KeyForItems] = state;
+      this._lr0ItemSets[lr0KeyForItems] = [];
     }
+
+    this._lr0ItemSets[lr0KeyForItems].push(state);
   }
 
   unregisterState(state) {
     let collection = this._getStateCollection(state);
-    let stateIndex = collection.indexOf(state);
 
+    let stateIndex = collection.indexOf(state);
     if (stateIndex === -1) {
-      throw new Error(`State ${state.getNumber()} is not registered.`);
+      collection.splice(stateIndex, 1);
     }
 
-    collection.splice(stateIndex, 1);
+    stateIndex = this._states.indexOf(state);
+    if (stateIndex !== -1) {
+      this._states.splice(stateIndex, 1);
+    }
+
+    let keyForItems = LRItem.keyForItems(state.getKernelItems());
+    delete this._kernelSetsTransitions[keyForItems];
+
+    let lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
+    let lr0States = this._lr0ItemSets[lr0KeyForItems];
+    stateIndex = lr0States.indexOf(state);
+    if (stateIndex !== -1) {
+      lr0States.splice(stateIndex, 1);
+    }
   }
 
   _getStateCollection(state) {
@@ -182,6 +237,10 @@ export default class CanonicalCollection {
     // Build all states form itermediate and final states, and
     // also allocate the state number for each state.
     this._states.push(...this._itermediateStates, ...this._finalStates);
+    this._remap();
+  }
+
+  _remap() {
     this._states.forEach((state, number) => state.setNumber(number));
   }
 };
