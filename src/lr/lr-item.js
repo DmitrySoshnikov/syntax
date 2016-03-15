@@ -173,10 +173,17 @@ export default class LRItem {
       lookaheadSet = this._setsGenerator.firstOfRHS(lookaheadPart);
     }
 
-    // If no follow part, or we got an empty set, use
-    // lookahead of the previous item.
-    if (!lookaheadSet || Object.keys(lookaheadSet).length === 0) {
-      lookaheadSet = this.getLookaheadSet();
+    if (!lookaheadSet) {
+      lookaheadSet = {};
+    }
+
+    // If no follow part, or we got an empty set, use lookahead of
+    // the previous item. The previous part should also be merged if
+    // the set contains epsilon.
+    if (Object.keys(lookaheadSet).length === 0 ||
+        lookaheadSet.hasOwnProperty(EPSILON)) {
+      delete lookaheadSet[EPSILON];
+      lookaheadSet = {...lookaheadSet, ...this.getLookaheadSet()};
     }
 
     return lookaheadSet;

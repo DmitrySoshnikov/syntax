@@ -3,7 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import {EPSILON} from '../special-symbols';
+import {EOF, EPSILON} from '../special-symbols';
 
 /**
  * Class encapsulates operations with one
@@ -53,6 +53,10 @@ export default class GrammarSymbol {
 
   isEpsilon() {
     return this._symbol === EPSILON;
+  }
+
+  isEOF() {
+    return this._symbol === EOF;
   }
 
   getSymbol() {

@@ -65,7 +65,8 @@ export default class SetsGenerator {
 
     // If it's a terminal, its First set contains just itself.
     if (this._grammar.isTokenSymbol(grammarSymbol) ||
-        grammarSymbol.isEpsilon()) {
+        grammarSymbol.isEpsilon() ||
+        grammarSymbol.isEOF()) {
       firstSet[symbol] = true;
       return this._firstSets[symbol];
     }
@@ -86,7 +87,7 @@ export default class SetsGenerator {
   firstOfRHS(RHS) {
     let firstSet = {};
 
-    for (let productionSymbol of RHS) {
+    for (let [i, productionSymbol] of RHS.entries()) {
 
       // Direct epsilon goes to the First set.
       if (productionSymbol.isEpsilon()) {
@@ -105,6 +106,12 @@ export default class SetsGenerator {
       // don't break the loop, and proceed to the next symbol of the RHS.
       if (!firstOfCurrent.hasOwnProperty(EPSILON)) {
         break;
+      }
+
+      // If all symbols on RHS are eliminated, or the last
+      // symbol contains EPSILON, add it to the set.
+      else if (i === RHS.length - 1) {
+        firstSet[EPSILON] = true;
       }
     }
 
@@ -258,7 +265,7 @@ export default class SetsGenerator {
         throw new Error('Unknow set');
     }
 
-    console.log('\n' + rhsHeader + ':\n');
+    console.info('\n' + rhsHeader + ':\n');
 
     let printer = new TablePrinter({
       head: [lhsHeader, rhsHeader],
@@ -268,8 +275,8 @@ export default class SetsGenerator {
       printer.push([symbol, Object.keys(set[symbol]).join(', ')]);
     }
 
-    console.log(printer.toString());
-    console.log('');
+    console.info(printer.toString());
+    console.info('');
   }
 
   /**
