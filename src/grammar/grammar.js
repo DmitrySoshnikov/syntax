@@ -8,6 +8,8 @@ import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
 
+import {default as BnfParser} from '../generated/bnf-parser.gen';
+
 /**
  * Class encapsulates operations with a grammar.
  */
@@ -72,7 +74,7 @@ export default class Grammar {
     // For simple use-cases when it's more convenient to
     // write a grammar directly as a string.
     if (typeof bnf === 'string') {
-      bnf = Grammar.bnfFomString(bnf);
+      bnf = BnfParser.parse(bnf).bnf;
     }
 
     this._originalBnf = bnf;
@@ -340,40 +342,6 @@ export default class Grammar {
     );
 
     return normalizedLex;
-  }
-
-  static bnfFomString(originalBnf) {
-    let objectBnf = {};
-    let currentNonTerminal = null;
-
-    originalBnf
-      .split('\n')
-      .filter(line => !!line)
-      .forEach(productionLine => {
-        let splitted = productionLine.match(/^\s*([\w\-]*)\s*(?:->|:|\|)\s*(.*)$/);
-
-        if (!splitted) {
-          throw new Error(`Invalid production: ${production}.`)
-        }
-
-        let LHS = splitted[1].trim();
-
-        if (LHS) {
-          currentNonTerminal = LHS;
-        } else {
-          LHS = currentNonTerminal;
-        }
-
-        if (!objectBnf[LHS]) {
-          objectBnf[LHS] = [];
-        }
-
-        let RHS = splitted[2].trim();
-
-        objectBnf[LHS].push(RHS);
-      });
-
-    return objectBnf;
   }
 
   _normalizeBnf(originalBnf) {

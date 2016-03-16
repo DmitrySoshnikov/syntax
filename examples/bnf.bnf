@@ -1,0 +1,78 @@
+/**
+ * BNF grammar grammar.
+ *
+ * A BNF parser generated from it can parse its own grammar.
+ *
+ * Example:
+ *
+ *   ./bin/syntax -g examples/bnf.g -f examples/bnf.bnf -m slr1
+ */
+
+%%
+
+Spec
+              : '%%' ProductionList
+                  { return $$ = {bnf: $2 }; }
+              ;
+
+ProductionList
+              : ProductionList Production
+                  { $$ = $1; $$[$2[0]] = $2[1]; }
+
+              | Production
+                  { $$ = {}; $$[$1[0]] = $1[1]; }
+              ;
+
+Production
+              : LHS ':' HandleList ';'
+                  { $$ = [$1, $3]; }
+              ;
+
+LHS
+              : ID
+                  { $$ = yytext; }
+              ;
+
+HandleList
+              : HandleList '|' HandleAction
+                  { $$ = $1; $$.push($3); }
+
+              | HandleAction
+                  { $$ = [$1]; }
+              ;
+
+HandleAction
+              : Handle Action
+                  { $$ = [$1, $2]; }
+              ;
+
+Handle
+              : Entries
+                  { $$ = $1; }
+              |
+                  { $$ = ''; }
+              ;
+
+
+Entries
+              : Entries Entry
+                  { $$ = $1 + ' ' + $2; }
+
+              | Entry
+                  { $$ = $1; }
+              ;
+
+Entry
+              : ID
+                  { $$ = yytext; }
+
+              | STRING
+                  { $$ = yytext; }
+              ;
+
+Action
+              : CODE
+                  { $$ = yytext; }
+              |
+                  { $$ = null; }
+              ;

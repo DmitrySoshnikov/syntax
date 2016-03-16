@@ -1,0 +1,7 @@
+rm -rf dist
+mkdir dist
+mkdir dist/templates
+cp -r src/templates/* dist/templates/
+mkdir dist/generated
+cp -r src/generated/* dist/generated/
+babel src/ --out-dir dist/ --presets es2015,stage-1,stage-2
