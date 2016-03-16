@@ -3,12 +3,11 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import BnfParser from '../generated/bnf-parser.gen';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
-
-import {default as BnfParser} from '../generated/bnf-parser.gen';
 
 /**
  * Class encapsulates operations with a grammar.
@@ -144,7 +143,7 @@ export default class Grammar {
   }
 
   /**
-   * Returns list of terminals in this grammar.
+   * Returns list of non-terminals in this grammar.
    */
   getNonTerminals() {
     if (!this._nonTerminals) {

@@ -27,7 +27,7 @@ const PARSER_TEMPLATE = fs.readFileSync(
  * saves it to the `outputFile`.
  *
  * By default also generates code for a
- * tokenizer, unless `useTokenizer` is `false` (in which case the parser
+ * tokenizer, unless `customTokenizer` is `false` (in which case the parser
  * will expect a custom tokenizer instance, that should implement its
  * interface.
  */
@@ -55,6 +55,10 @@ export default class LRParserGenerator {
     // Init the result data to the template, parts of which
     // are further generated (productions, lex-rules, table, etc).
     this._resultData = PARSER_TEMPLATE;
+
+    this._nonTerminals = this._grammar
+      .getNonTerminals()
+      .map(symbol => symbol.getSymbol());
   }
 
   /**
@@ -125,7 +129,8 @@ export default class LRParserGenerator {
   }
 
   /**
-   * Format of the production is: [LHS, RHS.length, semanticAction]
+   * Format of the production is:
+   * [Non-terminal index, RHS.length, semanticAction]
    */
   _generateProductions() {
     let productions = this._grammar.getProductions().map(production => {
@@ -144,7 +149,8 @@ export default class LRParserGenerator {
         semanticAction = `(${args}) => { ${rawSemanticAction} }`;
       }
 
-      return `['${LHS}', ${RHSLength}, ${semanticAction}]`;
+      return `[${this._nonTerminals.indexOf(LHS)}, ${RHSLength}` +
+        (semanticAction ? `, ${semanticAction}` : '') + ']';
     });
 
     this._resultData = this._resultData.replace(
@@ -157,9 +163,25 @@ export default class LRParserGenerator {
    * Actual parsing table.
    */
   _generateTable() {
+    let originalTable = this._table.get();
+    let table = {};
+
+    for (let state in originalTable) {
+      let row = {};
+      let originalRow = originalTable[state];
+
+      for (let symbol in originalRow) {
+        let entry = originalRow[symbol];
+        let nonTerminalIndex = this._nonTerminals.indexOf(symbol);
+        row[nonTerminalIndex !== -1 ? nonTerminalIndex : symbol] = entry;
+      }
+
+      table[state] = row;
+    }
+
     this._resultData = this._resultData.replace(
       '<<TABLE>>',
-      JSON.stringify(this._table.get())
+      JSON.stringify(table)
     );
   }
 
