@@ -267,7 +267,7 @@ export default class LRParsingTable {
   _putActionEntry(row, column, entry) {
     let previousEntry = row[column];
 
-    // In case we have a transtion on the same
+    // In case we have a transition on the same
     // symbol, and an action was already registered.
     if (previousEntry === entry) {
       return;
@@ -275,8 +275,16 @@ export default class LRParsingTable {
 
     // Register an entry handling possible "shift-reduce" (s/r)
     // or "reduce-reduce" (r/r) conflicts.
-    row[column] = previousEntry
-      ? `${previousEntry}/${entry}`
-      : entry;
+
+    // Exclude duplicates for possibly the same conflict entry.
+    if (previousEntry) {
+      previousEntry = previousEntry.split('/');
+      if (previousEntry.indexOf(entry) === -1) {
+        previousEntry.push(entry);
+      }
+      entry = previousEntry.join('/');
+    }
+
+    row[column] = entry;
   }
 };
