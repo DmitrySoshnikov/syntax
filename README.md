@@ -128,7 +128,7 @@ In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conf
 
 ##### Conflicts resolution
 
-LR conflicts can be resolved automatically and semi-automatically (by specifying precedence and associativity of operators).
+Sometimes changing parsing mode is not enough for fixing conflicts: for some grammars conflicts may stay and in the _LALR(1)_, and even the _CLR(1)_ modes. LR conflicts can be resolved though automatically and semi-automatically by specifying precedence and associativity of operators.
 
 For example, the [following grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc-conflict.g) has a _shift-reduce_ conflict:
 
@@ -173,7 +173,7 @@ E
   ;
 ```
 
-See detailed description of the conflicts resolution algorithm in the [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc.g), which is can be parsed normally:
+See detailed description of the conflicts resolution algorithm in [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc.g), which is can be parsed normally:
 
 ```
 ./bin/syntax -g examples/calculator-assoc.g -m lalr1 -w -p 'id * id + id'
