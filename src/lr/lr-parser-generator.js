@@ -36,7 +36,12 @@ export default class LRParserGenerator {
   /**
    * Instance constructor.
    */
-  constructor({grammar, outputFile, customTokenizer = null}) {
+  constructor({
+    grammar,
+    outputFile,
+    customTokenizer = null,
+    resolveConflicts = false,
+  }) {
     this._grammar = grammar;
     this._outputFile = outputFile;
     this._customTokenizer = customTokenizer;
@@ -50,6 +55,7 @@ export default class LRParserGenerator {
         grammar: this._grammar,
       }),
       grammar: this._grammar,
+      resolveConflicts,
     });
 
     // Init the result data to the template, parts of which

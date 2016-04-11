@@ -1,7 +1,7 @@
 # syntax
 Syntactic analysis toolkit for education, tracing the parsing process, and parsers generation.
 
-Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorighms.
+Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 
 See also [LL(1) parser](https://github.com/DmitrySoshnikov/ll1) repo (will be merged here).
 
@@ -70,7 +70,7 @@ In the generated code, the custom tokenizer is just required as a module: `requi
 
 The tokenizer should implement the following iterator-like interface:
 
-- `initString`: initials a pasrsing string;
+- `initString`: initializes a parsing string;
 - `hasMoreTokens`: whether stream of tokens still has more tokens to consume;
 - `getNextToken`: returns next token in the format `{type, value}`;
 
@@ -105,7 +105,7 @@ module.exports = MyTokenizer;
 
 #### Parsing modes
 
-_Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR(1)_ as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controled via the `--mode` option, e.g. `--mode slr1`.
+_Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR(1)_ as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controlled via the `--mode` option, e.g. `--mode slr1`.
 
 > Note: de facto standard for automatically generated parsers is usually the _LALR(1)_ parser. The _CLR(1)_ parser, being the most powerful, and able to parse wider grammar sets, can have much more states than LALR(1), and usually is suitable for educational purposes. As well as its less powerful counterparts, _LR(0)_ and _SLR(1)_ which are less used on practice (although, some production-ready grammars can also normally be parsed by _SLR(1)_, e.g. [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.ast.js)).
 
@@ -125,3 +125,62 @@ In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conf
 
 ![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png)
 ![sl1-grammar-lr0-m](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_6530197571.png)
+
+##### Conflicts resolution
+
+LR conflicts can be resolved automatically and semi-automatically (by specifying precedence and associativity of operators).
+
+For example, the [following grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc-conflict.g) has a _shift-reduce_ conflict:
+
+```
+%token id
+
+%%
+
+E
+  : E '+' E
+  | E '*' E
+  | id
+  ;
+```
+
+Therefore, a parsing is not possible using this grammar:
+
+```
+./bin/syntax -g examples/calculator-assoc-conflict.g -m lalr1 -w -p 'id * id + id'
+
+Parsing mode: LALR(1).
+
+Parsing: id * id + id
+
+Rejected: Parse error: Found "shift-reduce" conflict at state 6, terminal '+'.
+```
+
+This can be fixed though using operators associativity and precedence:
+
+```
+%token id
+
+%left '+'
+%left '*'
+
+%%
+
+E
+  : E '+' E
+  | E '*' E
+  | id
+  ;
+```
+
+See detailed description of the conflicts resolution algorithm in the [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc.g), which is can be parsed normally:
+
+```
+./bin/syntax -g examples/calculator-assoc.g -m lalr1 -w -p 'id * id + id'
+
+Parsing mode: LALR(1).
+
+Parsing: id * id + id
+
+✓ Accepted
+```

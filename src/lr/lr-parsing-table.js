@@ -102,9 +102,10 @@ export default class LRParsingTable {
    * The table is built from the canonical collection,
    * which was built for the specific grammar.
    */
-  constructor({canonicalCollection, grammar}) {
+  constructor({canonicalCollection, grammar, resolveConflicts = false}) {
     this._canonicalCollection = canonicalCollection;
     this._grammar = grammar;
+    this._shouldResolveConflicts = resolveConflicts;
     this._setsGenerator = new SetsGenerator({grammar});
 
     this._action = grammar.getTerminals()
@@ -112,7 +113,7 @@ export default class LRParsingTable {
 
     this._goto = grammar.getNonTerminals();
     this._table = {};
-    this._build(this._canonicalCollection.getStartingState());
+    this._build();
   }
 
   get() {
@@ -122,7 +123,7 @@ export default class LRParsingTable {
   print() {
     this._grammar.print();
 
-    console.log(`\n${this._grammar.getMode().toString()} parsing table:\n`);
+    console.info(`\n${this._grammar.getMode().toString()} parsing table:\n`);
 
     let actionSymbols = this._action
       .map(actionSymbol => actionSymbol.getSymbol());
@@ -137,7 +138,8 @@ export default class LRParsingTable {
 
     Object.keys(this._table).forEach(stateNumber => {
       let tableRow = this._table[stateNumber];
-      let row = {[stateNumber]: []};
+      let stateLable = colors.blue(stateNumber);
+      let row = {[stateLable]: []};
 
       // Action part.
       actionSymbols.forEach(actionSymbol => {
@@ -145,21 +147,23 @@ export default class LRParsingTable {
 
         if (this._hasConflict(entry)) {
           entry = colors.red(entry);
+        } else if (entry === 'acc') {
+          entry = colors.green(entry);
         }
 
-        row[stateNumber].push(entry);
+        row[stateLable].push(entry);
       });
 
       // Goto part.
       nonTerminals.forEach(nonTerminal => {
-        row[stateNumber].push(tableRow[nonTerminal] || '');
+        row[stateLable].push(tableRow[nonTerminal] || '');
       });
 
       printer.push(row);
     });
 
-    console.log(printer.toString());
-    console.log('');
+    console.info(printer.toString());
+    console.info('');
   }
 
   static get EntryType() {
@@ -197,58 +201,168 @@ export default class LRParsingTable {
       entryType === EntryType.SR_CONFLICT;
   }
 
-  _build(currentState) {
-    // Fill actions and goto for this state (row).
-    let row = this._table[currentState.getNumber()] = {};
+  _build() {
+    this._canonicalCollection.getStates().forEach(state => {
+      // Fill actions and goto for this state (row).
+      let row = this._table[state.getNumber()] = {};
 
-    currentState.getItems().forEach(item => {
+      state.getItems().forEach(item => {
 
-      // For final item we should "reduce". In LR(0) type we
-      // reduce unconditionally for every terminal, in other types
-      // e.g. SLR(1) consider lookahead (follow) sets.
-      if (item.isFinal()) {
-        let production = item.getProduction();
+        // For final item we should "reduce". In LR(0) type we
+        // reduce unconditionally for every terminal, in other types
+        // e.g. SLR(1) consider lookahead (follow) sets.
+        if (item.isFinal()) {
+          let production = item.getProduction();
 
-        // For the final item of the augmented production,
-        // the action is "acc" (accept).
-        if (production.isAugmented()) {
-          row[EOF] = 'acc';
+          // For the final item of the augmented production,
+          // the action is "acc" (accept).
+          if (production.isAugmented()) {
+            row[EOF] = 'acc';
+          } else {
+            // Otherwise, reduce.
+            this._action.forEach(terminal => {
+              if (this._shouldReduce(item, terminal)) {
+                this._putActionEntry(
+                  row,
+                  terminal.getSymbol(),
+                  `r${production.getNumber()}`
+                );
+              }
+            });
+          }
+
         } else {
-          // Otherwise, reduce.
-          this._action.forEach(terminal => {
-            if (this._shouldReduce(item, terminal)) {
-              this._putActionEntry(
-                row,
-                terminal.getSymbol(),
-                `r${production.getNumber()}`
-              );
-            }
-          });
-        }
+          let transitionSymbol = item.getCurrentSymbol();
+          let rawSymbol = transitionSymbol.getSymbol();
+          let nextState = item.goto().getNumber();
 
-      } else {
-        let transitionSymbol = item.getCurrentSymbol();
-        let rawSymbol = transitionSymbol.getSymbol();
-        let nextState = item.goto().getNumber();
-
-        // Other terminals do "shift" action and go to the next state,
-        // and non-terminals just go to the next
-        if (this._grammar.isTokenSymbol(transitionSymbol)) {
-          this._putActionEntry(
-            row,
-            transitionSymbol.getSymbol(),
-            `s${nextState}`
-          );
-        } else {
-          row[transitionSymbol.getSymbol()] = nextState;
+          // Other terminals do "shift" action and go to the next state,
+          // and non-terminals just go to the next
+          if (this._grammar.isTokenSymbol(transitionSymbol)) {
+            this._putActionEntry(
+              row,
+              transitionSymbol.getSymbol(),
+              `s${nextState}`
+            );
+          } else {
+            row[transitionSymbol.getSymbol()] = nextState;
+          }
         }
+      });
 
-        // If we haven't visit the next state yet, go recursively to it.
-        if (!this._table.hasOwnProperty(nextState)) {
-          this._build(item.goto());
-        }
+      if (Object.keys(row).some(symbol => this._hasConflict(row[symbol]))) {
+        this._resolveConflicts(state, row);
       }
     });
+  }
+
+  _resolveConflicts(state, row) {
+    if (Object.keys(this._grammar.getOperators()) === 0 &&
+        !this._shouldResolveConflicts) {
+      return;
+    }
+
+    Object.keys(row).forEach(symbol => {
+      let entryType = LRParsingTable.getEntryType(row[symbol]);
+
+      if (entryType === EntryType.SR_CONFLICT) {
+        this._resolveSRConflict(row, symbol);
+      } else if (entryType === EntryType.RR_CONFLICT) {
+        this._resolveRRConflict(row, symbol);
+      }
+    });
+  }
+
+  _resolveSRConflict(row, symbol) {
+    let entry = row[symbol];
+    let operators = this._grammar.getOperators();
+
+    let [reducePart, shiftPart] = this._splitSRParts(entry);
+
+    // Default resolution is to shift if no precedence is specified.
+    if (!operators.hasOwnProperty(symbol)) {
+      if (this._shouldResolveConflicts) {
+        row[symbol] = shiftPart;
+      }
+      return;
+    }
+
+    // Else, working with operators precedence.
+
+    let {
+      precedence: symbolPrecedence,
+      assoc: symbolAssoc,
+    } = operators[symbol];
+
+    let productionPrecedence = this._grammar
+      .getProduction(reducePart.slice(1))
+      .getPrecedence();
+
+    // 1. If production's precedence is higher, the choice is to reduce:
+    //
+    //   R: E -> E * E • (reduce since `*` > `+`)
+    //   S: E -> E • + E
+    //
+    if (productionPrecedence > symbolPrecedence) {
+      row[symbol] = reducePart;
+    }
+
+    // 2. If the symbol's precedence is higher, the choice is to shift:
+    //
+    //   E -> E + E •
+    //   E -> E • * E (shift since `*` > `+`)
+    //
+    else if (symbolPrecedence > productionPrecedence) {
+      row[symbol] = shiftPart;
+    }
+
+    // 3. If they have equal precedence, the choice is made based on the
+    // associativity of that precedence level:
+    //
+    //   E -> E * E • (choose to reduce since `*` is left-associative)
+    //   E -> E • * E
+    //
+    // This case we want `id * id * id` to be left-associative, i.e.
+    // `(id * id) * id`, but not right-associative, that would be
+    // `id * (id * id)`.
+    //
+    else if (productionPrecedence === symbolPrecedence &&
+             productionPrecedence !== 0 &&
+             symbolPrecedence !== 0) {
+
+      // Left-assoc.
+      if (symbolAssoc === 'left') {
+        row[symbol] = reducePart;
+      } else if (symbolAssoc === 'right') {
+        row[symbol] = shiftPart;
+      } else if (symbolAssoc === 'nonassoc') {
+        // No action on `nonassoc`.
+        delete rows[symbol];
+      }
+    }
+  }
+
+  _resolveRRConflict(row, symbol) {
+    if (!this._shouldResolveConflicts) {
+      return;
+    }
+
+    let entry = row[symbol];
+    let [r1, r2] = entry.split('/');
+
+    // R/R conflicts are resolved by choosing a production that
+    // goes first in the grammar (i.e. its number is smaller).
+    row[symbol] = Number(r1.slice(1)) < Number(r2.slice(1))
+      ? r1
+      : r2;
+  }
+
+  _splitSRParts(entry) {
+    let srConflict = entry.split('/');
+
+    return LRParsingTable.getEntryType(srConflict[0]) === EntryType.REDUCE
+      ? [srConflict[0], srConflict[1]]
+      : [srConflict[1], srConflict[0]];
   }
 
   _shouldReduce(item, terminal) {

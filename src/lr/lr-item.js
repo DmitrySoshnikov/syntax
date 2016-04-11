@@ -208,6 +208,50 @@ export default class LRItem {
   }
 
   /**
+   * Whether this reduce item conflicts with a shift symbol.
+   */
+  conflictsWithShiftSymbol(symbol) {
+    this._assertReduce();
+
+    let reduceSet = this.calculateReduceSet();
+
+    if (reduceSet === true) {
+      return true;
+    }
+
+    return Object.keys(reduceSet).indexOf(symbol.getSymbol()) !== -1;
+  }
+
+  /**
+   * Whether this reduce item conflicts with another reduce item
+   * (this may happen if the lookaheads intersect).
+   */
+  conflictsWithReduceItem(reduceItem) {
+    this._assertReduce();
+
+    let reduceSet = this.calculateReduceSet();
+
+    if (reduceSet === true) {
+      return true;
+    }
+
+    let thisReduceSet = Object.keys(reduceSet);
+    let thatReduceSet = Object.keys(reduceItem.calculateReduceSet());
+
+    let lookaheadsIntersection = thisReduceSet.filter(symbol => {
+      return thatReduceSet.indexOf(symbol) !== -1;
+    });
+
+    return lookaheadsIntersection.length !== 0;
+  }
+
+  _assertReduce() {
+    if (!this.isReduce()) {
+      throw new Error(`Item ${this.getKey()} is not a reduce item.`);
+    }
+  }
+
+  /**
    * Whether we have seen the whole production.
    *
    * The item `S -> • ε` (or its short equivalent `S -> •`) is final as well.
@@ -234,31 +278,32 @@ export default class LRItem {
    */
   getReduceSet() {
     if (!this._reduceSet) {
-      switch (this._grammar.getMode().getRaw()) {
-        case GRAMMAR_MODE.LR0:
-          // LR0 reduces for all terminals, special `true` value.
-          this._reduceSet = true;
-          break;
-
-        case GRAMMAR_MODE.SLR1:
-          // SLR(1) reduces in Follow(LHS).
-          let LHS = this.getProduction().getLHS();
-          this._reduceSet = this._setsGenerator.followOf(LHS);
-          break;
-
-        case GRAMMAR_MODE.LALR1:
-        case GRAMMAR_MODE.CLR1:
-          // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
-          this._reduceSet = {...this._lookaheadSet};
-          break;
-
-        default:
-          throw new Error(
-            `Unexpected grammar mode ${this._grammar.getMode()}.`
-          );
-      }
+      this._reduceSet = this.calculateReduceSet();
     }
     return this._reduceSet;
+  }
+
+  calculateReduceSet() {
+    switch (this._grammar.getMode().getRaw()) {
+      case GRAMMAR_MODE.LR0:
+        // LR0 reduces for all terminals, special `true` value.
+        return true;
+
+      case GRAMMAR_MODE.SLR1:
+        // SLR(1) reduces in Follow(LHS).
+        let LHS = this.getProduction().getLHS();
+        return this._setsGenerator.followOf(LHS);
+
+      case GRAMMAR_MODE.LALR1:
+      case GRAMMAR_MODE.CLR1:
+        // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
+        return {...this._lookaheadSet};
+
+      default:
+        throw new Error(
+          `Unexpected grammar mode ${this._grammar.getMode()}.`
+        );
+    }
   }
 
   /**
@@ -362,7 +407,9 @@ export default class LRItem {
       canonicalCollection: this._canonicalCollection,
       setsGenerator: this._setsGenerator,
       // On goto transition lookaheads set doesn't change.
-      lookaheadSet: {...this.getLookaheadSet()},
+      lookaheadSet: this._grammar.getMode().usesLookaheadSet()
+        ? {...this.getLookaheadSet()}
+        : null,
     });
   }
 };

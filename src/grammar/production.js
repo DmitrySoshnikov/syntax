@@ -15,15 +15,25 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor({LHS, RHS, semanticAction = null, number, isShort = false}) {
+  constructor({
+    LHS,
+    RHS,
+    number,
+    semanticAction,
+    isShort = false,
+    grammar,
+    precedence,
+  }) {
     this._rawLHS = LHS;
     this._rawRHS = RHS;
     this._number = number;
     this._isAugmented = number === 0;
     this._isShort = isShort;
+    this._grammar = grammar;
     this._normalize();
     this._rawSemanticAction = semanticAction;
     this._semanticAction = this._buildSemanticAction(semanticAction);
+    this._precedence = precedence || this._calculatePrecedence();
   }
 
   /**
@@ -47,6 +57,10 @@ export default class Production {
 
   getRHS() {
     return this._RHS;
+  }
+
+  getPrecedence() {
+    return this._precedence;
   }
 
   getRawSemanticAction() {
@@ -133,5 +147,19 @@ export default class Production {
 
     this._LHS = LHS;
     this._RHS = RHS;
+  }
+
+  _calculatePrecedence() {
+    let operators = this._grammar.getOperators();
+
+    for (let grammarSymbol of this.getRHS()) {
+      let symbol = grammarSymbol.getSymbol();
+
+      if (symbol in operators) {
+        return operators[symbol].precedence;
+      }
+    }
+
+    return 0;
   }
 };

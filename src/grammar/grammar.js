@@ -18,7 +18,7 @@ export default class Grammar {
    * A grammar may be passed as an object with `lex` and `bnf` properties.
    * The `lex` part is a set of rules for the lexer, and `bnf` is actual
    * context-free grammar. If `start` property is passed, it's used as the
-   * start symbol, otherwise it's infered from the first production.
+   * start symbol, otherwise it's inferred from the first production.
    *
    * const grammar = {
    *
@@ -69,7 +69,7 @@ export default class Grammar {
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
-  constructor({lex = null, tokens, bnf, start = null, mode}) {
+  constructor({lex, tokens, bnf, operators, start, mode}) {
     // For simple use-cases when it's more convenient to
     // write a grammar directly as a string.
     if (typeof bnf === 'string') {
@@ -89,8 +89,10 @@ export default class Grammar {
 
     this._mode = new GrammarMode(mode);
 
-    this._bnf = this._normalizeBnf(this._originalBnf);
-    this._lexRules = this._normalizeLex(this._originalLex);
+    this._operators = this._processOperators(operators);
+
+    this._bnf = this._processBnf(this._originalBnf);
+    this._lexRules = this._processLex(this._originalLex);
 
     this._nonTerminals = this.getNonTerminals();
     this._terminals = this.getTerminals();
@@ -117,6 +119,13 @@ export default class Grammar {
    */
   getMode() {
     return this._mode;
+  }
+
+  /**
+   * Returns precedence and associativity of operators.
+   */
+  getOperators() {
+    return this._operators;
   }
 
   /**
@@ -276,7 +285,7 @@ export default class Grammar {
    * Pretty prints the grammar.
    */
   print() {
-    console.log('\nGrammar:\n');
+    console.info('\nGrammar:\n');
 
     let pad = '    ';
     let productions = this.getProductions();
@@ -287,11 +296,11 @@ export default class Grammar {
         `${pad}${this._padLeft(production.getNumber(), numberPad)}. ` +
         production.toString();
 
-      console.log(productionOutput);
+      console.info(productionOutput);
 
       if (production.isAugmented()) {
         let splitter = Array(productionOutput.length - 2).join('-');
-        console.log(`${pad}${splitter}`);
+        console.info(`${pad}${splitter}`);
       }
     });
   }
@@ -320,12 +329,29 @@ export default class Grammar {
     });
   }
 
-  _normalizeLex(lex) {
-    let normalizedLex = [];
+  _processOperators(operators) {
+    let processedOperators = {};
+
+    if (operators) {
+      operators.forEach((opData, i) => {
+        opData.slice(1).forEach(op => {
+          processedOperators[op] = {
+            precedence: i + 1,
+            assoc: opData[0],
+          };
+        })
+      });
+    }
+
+    return processedOperators;
+  }
+
+  _processLex(lex) {
+    let processedLex = [];
 
     // If lexical grammar was provided, normalize and return.
     if (lex) {
-      normalizedLex = lex
+      processedLex = lex
         .map(([matcher, tokenHandler]) => new LexRule({
           matcher,
           tokenHandler,
@@ -333,18 +359,18 @@ export default class Grammar {
     }
 
     // Also add all terminals "a" : "a" as a lex rule.
-    normalizedLex = normalizedLex.concat(this.getTerminals()
+    processedLex = processedLex.concat(this.getTerminals()
       .map(terminal => new LexRule({
         matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
         tokenHandler: `return ${terminal.quotedTerminal()};`,
       }))
     );
 
-    return normalizedLex;
+    return processedLex;
   }
 
-  _normalizeBnf(originalBnf) {
-    let normalizedBnf = [];
+  _processBnf(originalBnf) {
+    let processedBnf = [];
     let nonTerminals = Object.keys(originalBnf);
     let number = 0;
 
@@ -353,34 +379,51 @@ export default class Grammar {
     }
 
     if (this._mode.isLR()) {
-      // Augmented rule, S' -> S.
+      // Augmented rule, $accept -> S.
       let augmentedProduction = new Production({
-        LHS: `${this._startSymbol}'`,
+        LHS: '$accept',
         RHS: this._startSymbol,
         number: number++,
+        grammar: this,
       });
-      normalizedBnf[0] = augmentedProduction;
+      processedBnf[0] = augmentedProduction;
     }
 
     nonTerminals.forEach(LHS => {
       originalBnf[LHS].forEach((RHS, k) => {
         let semanticAction = null;
+        let precedence = null;
 
         if (Array.isArray(RHS)) {
-          semanticAction = RHS[1];
+          let precedenceTag = null;
+
+          if (typeof RHS[1] === 'string') {
+            semanticAction = RHS[1];
+          } else if (RHS[1] && typeof RHS[1] === 'object') {
+            precedenceTag = RHS[1].prec;
+          } else if (RHS[2]) {
+            precedenceTag = RHS[2].prec;
+          }
+
           RHS = RHS[0];
+
+          if (precedenceTag && this._operators) {
+            precedence = this._operators[precedenceTag].precedence;
+          }
         }
 
-        normalizedBnf.push(new Production({
+        processedBnf.push(new Production({
           LHS,
           RHS,
           semanticAction,
+          precedence,
           number: number++,
           isShort: k > 0,
+          grammar: this,
         }));
       });
     });
 
-    return normalizedBnf;
+    return processedBnf;
   }
 };

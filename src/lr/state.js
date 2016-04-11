@@ -102,6 +102,85 @@ export default class State {
     return this.isFinal() && this.getItems()[0].getProduction().isAugmented();
   }
 
+  /**
+   * Returns all reduce items in this set.
+   */
+  getReduceItems() {
+    return this.getItems().filter(item => item.isReduce());
+  }
+
+  /**
+   * Calculates all the conflicts in the state, marking the
+   * state as inadequate in case of "s/r" or "r/r" conflicts.
+   *
+   * Note: conflicts only possible in states that contain
+   * reduce items, plus another reduce or shift item.
+   */
+  analyzeConflicts() {
+    this._conflicts = {sr: [], rr: []};
+
+    let reduceItems = this.getReduceItems();
+
+    // "reduce-reduce" conflicts.
+    if (reduceItems.length > 1) {
+      reduceSet: for (let reduceItem of reduceItems) {
+        for (let reduceItemToCheck of reduceItems) {
+          if (reduceItem !== reduceItemToCheck &&
+              reduceItem.conflictsWithReduceItem(reduceItemToCheck)) {
+            this._conflicts.rr = reduceItems;
+            break reduceSet;
+          }
+        }
+      }
+    }
+
+    // "shift-reduce" conflicts.
+    this.getItems().forEach(item => {
+      if (!item.isShift()) {
+        return;
+      }
+      reduceItems.forEach(reduceItem => {
+        if (reduceItem.conflictsWithShiftSymbol(item.getCurrentSymbol())) {
+          this._conflicts.sr.push([item, reduceItem]);
+        }
+      });
+    });
+
+    return this._conflicts;
+  }
+
+  /**
+   * Gets conflicts of this set.
+   */
+  getConflicts() {
+    if (!this._conflicts) {
+      this._conflicts = this.analyzeConflicts();
+    }
+    return this._conflicts;
+  }
+
+  /**
+   * Gets "reduce-reduce" conflicts.
+   */
+  getRRConflicts() {
+    return this.getConflicts().rr;
+  }
+
+  /**
+   * Gets "shift-reduce" conflicts.
+   */
+  getSRConflicts() {
+    return this.getConflicts().sr;
+  }
+
+  /**
+   * Whether the state is inadequate, i.e. has conflicts.
+   */
+  isInadequate() {
+    return this._conflicts.sr.length > 0 ||
+      this._conflicts.rr.length > 0;
+  }
+
   hasTransitionOnSymbol(symbol) {
     return this._transitionsForSymbol.hasOwnProperty(symbol);
   }

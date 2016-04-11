@@ -184,7 +184,7 @@ export default class CanonicalCollection {
       }
 
       console.log(
-        `\nState ${state.getNumber()}` +
+        `\nState ${state.getNumber()}:` +
         (stateTags.length > 0 ? ` (${stateTags.join(', ')})` : '')
       );
 

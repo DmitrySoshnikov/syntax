@@ -67,7 +67,12 @@ const options = require('nomnom')
       abbr: 'w',
       help: 'Adds a Lex rule to ignore whitespaces',
       flag: true,
-    }
+    },
+    'resolve-conflicts': {
+      abbr: 'r',
+      help: 'Whether to auto-resolve conflicts with default action',
+      flag: true,
+    },
   })
   .parse();
 
@@ -115,6 +120,7 @@ const parsers = {
       new LRParsingTable({
         grammar,
         canonicalCollection: new CanonicalCollection({grammar}),
+        resolveConflicts: options['resolve-conflicts'],
       }).print();
     }
 
@@ -134,6 +140,7 @@ const parsers = {
         grammar,
         outputFile: options.output,
         customTokenizer: options['custom-tokenizer'],
+        resolveConflicts: options['resolve-conflicts'],
       }).generate();
 
       console.info(
