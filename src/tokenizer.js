@@ -91,7 +91,8 @@ export default class Tokenizer {
   }
 
   isEOF() {
-    return this._string[this._cursor] === EOF;
+    return this._string[this._cursor] === EOF &&
+      this._cursor === this._string.length - 1;
   }
 
   hasMoreTokens() {
