@@ -42,6 +42,10 @@ export default class Grammar {
    *     ]
    *   },
    *
+   *   // Arbitrary code to be included in the generated parser.
+   *
+   *   "moduleInclude": "const AST = require('./ast');"
+   *
    *   "tokens": "a ( ) + NUMBER",
    *
    *   "start": "S",
@@ -69,7 +73,15 @@ export default class Grammar {
    * Note: if no `lex` is provided, the lexical grammar is inferred
    * from the list of all terminals in the `bnf` grammar.
    */
-  constructor({lex, tokens, bnf, operators, start, mode}) {
+  constructor({
+    lex,
+    tokens,
+    bnf,
+    operators,
+    start,
+    mode,
+    moduleInclude = '',
+  }) {
     // For simple use-cases when it's more convenient to
     // write a grammar directly as a string.
     if (typeof bnf === 'string') {
@@ -78,6 +90,8 @@ export default class Grammar {
 
     this._originalBnf = bnf;
     this._originalLex = null;
+
+    this._moduleInclude = moduleInclude;
 
     if (lex) {
       this._originalLex = lex.rules;
@@ -119,6 +133,13 @@ export default class Grammar {
    */
   getMode() {
     return this._mode;
+  }
+
+  /**
+   * Returns module include code.
+   */
+  getModuleInclude() {
+    return this._moduleInclude;
   }
 
   /**

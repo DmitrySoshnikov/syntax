@@ -6,6 +6,7 @@
 import CanonicalCollection from './canonical-collection';
 import Grammar from '../grammar/grammar';
 import LRParsingTable from './lr-parsing-table';
+import {EOF} from '../special-symbols';
 
 import fs from 'fs';
 import path from 'path';
@@ -65,6 +66,12 @@ export default class LRParserGenerator {
     this._nonTerminals = this._grammar
       .getNonTerminals()
       .map(symbol => symbol.getSymbol());
+
+    this._tokens = this._grammar
+      .getTokens()
+      .map(symbol => symbol.getSymbol());
+
+    this._tokens.push(EOF);
   }
 
   /**
@@ -85,6 +92,9 @@ export default class LRParserGenerator {
    * tokenizer.
    */
   _generateParserData() {
+    // Arbitrary code included to the module.
+    this._generateModuleInclude();
+
     // Lexical grammar.
     if (this._customTokenizer === null) {
       // Built-in tokinizer.
@@ -103,6 +113,16 @@ export default class LRParserGenerator {
     this._generateTable();
 
     return this._resultData;
+  }
+
+  /**
+   * Injects the code passed in the module include directive.
+   */
+  _generateModuleInclude() {
+    this._resultData = this._resultData.replace(
+      '<<MODULE_INCLUDE>>',
+      this._grammar.getModuleInclude(),
+    );
   }
 
   /**
@@ -172,6 +192,16 @@ export default class LRParserGenerator {
     let originalTable = this._table.get();
     let table = {};
 
+    // Encode tokens table: token indices start after non-terminal indices.
+    let tokens = {};
+    for (let k = 0; k < this._tokens.length; k++) {
+      tokens[this._tokens[k]] = this._nonTerminals.length + k;
+    }
+    this._resultData = this._resultData.replace(
+      '<<TOKENS>>',
+      JSON.stringify(tokens),
+    );
+
     for (let state in originalTable) {
       let row = {};
       let originalRow = originalTable[state];
@@ -179,7 +209,17 @@ export default class LRParserGenerator {
       for (let symbol in originalRow) {
         let entry = originalRow[symbol];
         let nonTerminalIndex = this._nonTerminals.indexOf(symbol);
-        row[nonTerminalIndex !== -1 ? nonTerminalIndex : symbol] = entry;
+        let tokenIndex = tokens[symbol];
+        // Format of a row: {
+        //  <nonTerminalIndex from the production table> |
+        //  <tokenIndex> :
+        //    table-entry
+        // }
+        row[
+          nonTerminalIndex !== -1
+            ? nonTerminalIndex
+            : tokenIndex
+        ] = entry;
       }
 
       table[state] = row;

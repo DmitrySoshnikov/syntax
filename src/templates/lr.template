@@ -13,6 +13,8 @@
 
 'use strict';
 
+<<MODULE_INCLUDE>>
+
 let yytext;
 let yyleng;
 let $$;
@@ -23,10 +25,11 @@ const EOF = {
   }
 };
 
-const productions = <<PRODUCTIONS>>;
-const table = <<TABLE>>;
+const ps = <<PRODUCTIONS>>;
+const tks = <<TOKENS>>;
+const tbl = <<TABLE>>;
 
-let stack = [];
+let s = [];
 
 function unexpectedToken(token) {
   if (token.value === EOF) {
@@ -54,73 +57,75 @@ const LRParser = {
 
     tokenizer.initString(string);
 
-    stack = [];
+    s = [];
 
-    stack.push(0);
+    s.push(0);
 
-    let token = tokenizer.getNextToken();
-    let shiftedToken = null;
+    let t = tokenizer.getNextToken();
+    let st = null;
 
     do {
-      if (!token) {
+      if (!t) {
         unexpectedEndOfInput();
       }
 
-      let state = stack[stack.length - 1];
-      let column = token.type;
-      let entry = table[state][column];
+      let sta = s[s.length - 1];
+      let clm = tks[t.type];
+      let e = tbl[sta][clm];
+console.log('state', sta, 'clm', clm, 'e', e, 't.type', t.type);
 
-      if (!entry) {
-        unexpectedToken(token);
+
+      if (!e) {
+        unexpectedToken(t);
       }
 
-      if (entry[0] === 's') {
-        stack.push(
-          {symbol: token.type, semanticValue: token.value},
-          Number(entry.slice(1))
+      if (e[0] === 's') {
+        s.push(
+          {symbol: t.type, semanticValue: t.value},
+          Number(e.slice(1))
         );
-        shiftedToken = token;
-        token = tokenizer.getNextToken();
-      } else if (entry[0] === 'r') {
-        let productionNumber = entry.slice(1);
-        let production = productions[productionNumber];
-        let hasSemanticAction = typeof production[2] === 'function';
-        let semanticActionArgs = hasSemanticAction ? [] : null;
+        st = t;
+        t = tokenizer.getNextToken();
+      } else if (e[0] === 'r') {
+        let pn = e.slice(1);
+        let p = ps[pn];
+        let hsa = typeof p[2] === 'function';
+        let saa = hsa ? [] : null;
 
-        if (production[1] !== 0) {
-          let rhsLengh = production[1];
-          while (rhsLengh--) {
-            stack.pop();
-            let stackEntry = stack.pop();
+        if (p[1] !== 0) {
+          let rhsl = p[1];
+          while (rhsl--) {
+            s.pop();
+            let se = s.pop();
 
-            if (hasSemanticAction) {
-              semanticActionArgs.unshift(stackEntry.semanticValue);
+            if (hsa) {
+              saa.unshift(se.semanticValue);
             }
           }
         }
 
-        let reduceStackEntry = {symbol: production[0]};
+        let rse = {symbol: p[0]};
 
-        if (hasSemanticAction) {
-          yytext = shiftedToken ? shiftedToken.value : null;
-          yyleng = shiftedToken ? shiftedToken.value.length : null;
+        if (hsa) {
+          yytext = st ? st.value : null;
+          yyleng = st ? st.value.length : null;
 
-          production[2](...semanticActionArgs);
-          reduceStackEntry.semanticValue = $$;
+          p[2](...saa);
+          rse.semanticValue = $$;
         }
 
-        stack.push(
-          reduceStackEntry,
-          table[stack[stack.length - 1]][production[0]]
+        s.push(
+          rse,
+          tbl[s[s.length - 1]][p[0]]
         );
-      } else if (entry === 'acc') {
-        stack.pop();
-        let parsed = stack.pop();
+      } else if (e === 'acc') {
+        s.pop();
+        let parsed = s.pop();
 
-        if (stack.length !== 1 ||
-            stack[0] !== 0 ||
+        if (s.length !== 1 ||
+            s[0] !== 0 ||
             tokenizer.hasMoreTokens()) {
-          unexpectedToken(token);
+          unexpectedToken(t);
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
@@ -130,7 +135,7 @@ const LRParser = {
         return true;
       }
 
-    } while (tokenizer.hasMoreTokens() || stack.length > 1);
+    } while (tokenizer.hasMoreTokens() || s.length > 1);
   },
 
   setTokenizer(customTokenizer) {
