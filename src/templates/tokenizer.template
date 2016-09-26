@@ -49,7 +49,8 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF.toString();
+    return this._string[this._cursor] === EOF.toString() &&
+      this._cursor === this._string.length - 1;
   },
 
   hasMoreTokens() {
