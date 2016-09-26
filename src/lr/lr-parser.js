@@ -6,14 +6,19 @@
 import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
+import ParserGenerator from './lr-parser-generator';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
+
+import os from 'os';
+import path from 'path';
 
 const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
-  constructor({grammar}) {
+  constructor({grammar, parserModule}) {
     this._grammar = grammar;
+    this._parserModule = parserModule;
 
     this._canonicalCollection = new CanonicalCollection({
       grammar: this._grammar,
@@ -43,7 +48,28 @@ export default class LRParser {
     return this._canonicalCollection;
   }
 
+  static fromParserGenerator({grammar}) {
+    // Generate parser in the temp directory.
+    const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
+
+    const parserModule = new ParserGenerator({
+      grammar,
+      outputFile,
+      resolveConflicts: true,
+    }).generate();
+
+    return new LRParser({grammar, parserModule});
+  }
+
   parse(string) {
+    // If parser module has been generated, use it.
+    if (this._parserModule) {
+      return {
+        status: 'accept',
+        value: this._parserModule.parse(string),
+      };
+    }
+
     this._tokenizer.initString(string);
 
     this._stack = [];

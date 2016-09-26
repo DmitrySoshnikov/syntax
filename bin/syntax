@@ -152,25 +152,38 @@ const parsers = {
 };
 
 function parse(string, grammar) {
-  console.info(`\n${colors.bold('Parsing:')} ${string}\n`);
+  console.info(`\n${colors.bold('Parsing:')}\n\n ${string}\n`);
 
   const LRParser = require('../dist/lr/lr-parser').default;
 
   try {
-    const parsed = new LRParser({grammar}).parse(string);
+    const parsed = LRParser
+      .fromParserGenerator({grammar})
+      .parse(string);
 
     if (parsed.status === 'accept') {
       console.info(`${colors.green('\u2713 Accepted')}\n`);
     }
 
     if (parsed.hasOwnProperty('value')) {
-      console.info(colors.bold('Parsed value:'), parsed.value, '\n');
+      console.info(
+        colors.bold('Parsed value:'), '\n\n',
+        formatParsedOutput(parsed.value), '\n'
+      );
     }
 
   } catch (e) {
     console.info(`${colors.red('Rejected: ' + e.message)}\n`);
     throw e;
   }
+}
+
+function formatParsedOutput(output) {
+  const kind = Object.prototype.toString.call(output).slice(8, -1);
+  if (kind === 'Array' || kind === 'Object') {
+    return JSON.stringify(output, null, 2);
+  }
+  return output;
 }
 
 function getGrammar(grammarFile, mode) {
