@@ -72,8 +72,6 @@ const LRParser = {
       let sta = s[s.length - 1];
       let clm = tks[t.type];
       let e = tbl[sta][clm];
-console.log('state', sta, 'clm', clm, 'e', e, 't.type', t.type);
-
 
       if (!e) {
         unexpectedToken(t);

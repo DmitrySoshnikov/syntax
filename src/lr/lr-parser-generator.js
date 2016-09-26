@@ -104,7 +104,7 @@ export default class LRParserGenerator {
       // Require custom tokenizer if was provided.
       this._resultData = this._resultData.replace(
         '<<TOKENIZER>>',
-        `tokenizer = require('${this._customTokenizer}');`
+        () => `tokenizer = require('${this._customTokenizer}');`,
       );
     }
 
@@ -121,7 +121,7 @@ export default class LRParserGenerator {
   _generateModuleInclude() {
     this._resultData = this._resultData.replace(
       '<<MODULE_INCLUDE>>',
-      this._grammar.getModuleInclude(),
+      () => this._grammar.getModuleInclude(),
     );
   }
 
@@ -136,7 +136,7 @@ export default class LRParserGenerator {
 
     this._resultData = this._resultData.replace(
       '<<TOKENIZER>>',
-      tokenizerCode
+      () => tokenizerCode,
     );
   }
 
@@ -150,7 +150,7 @@ export default class LRParserGenerator {
 
     this._resultData = this._resultData.replace(
       '<<LEX_RULES>>',
-      `[${lexRules.join(',\n')}]`
+      () => `[${lexRules.join(',\n')}]`,
     );
   }
 
@@ -181,7 +181,7 @@ export default class LRParserGenerator {
 
     this._resultData = this._resultData.replace(
       '<<PRODUCTIONS>>',
-      () => `[${productions.join(',\n')}]`
+      () => `[${productions.join(',\n')}]`,
     );
   }
 
@@ -199,7 +199,7 @@ export default class LRParserGenerator {
     }
     this._resultData = this._resultData.replace(
       '<<TOKENS>>',
-      JSON.stringify(tokens),
+      () => JSON.stringify(tokens),
     );
 
     for (let state in originalTable) {
@@ -227,7 +227,7 @@ export default class LRParserGenerator {
 
     this._resultData = this._resultData.replace(
       '<<TABLE>>',
-      JSON.stringify(table)
+      () => JSON.stringify(table),
     );
   }
 
