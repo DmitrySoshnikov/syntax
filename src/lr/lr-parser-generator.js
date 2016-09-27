@@ -12,9 +12,6 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 
-const MULTI_LINE_COMMENTS_RE = /\/\*(.|\s)*?\*\//g;
-const SINGLE_LINE_COMMENTS_RE = /[^:]\/\/.*?\n/g;
-
 /**
  * Generic template for all LR parsers.
  */
@@ -262,10 +259,7 @@ export default class LRParserGenerator {
    * Reads grammar file data.
    */
   static loadGrammarData(grammarFile) {
-    let rawGrammarData = fs.readFileSync(grammarFile, 'utf-8')
-      .replace(MULTI_LINE_COMMENTS_RE, '')
-      .replace(SINGLE_LINE_COMMENTS_RE, '');
-
+    let rawGrammarData = fs.readFileSync(grammarFile, 'utf-8');
     let grammarData;
 
     try {
@@ -274,7 +268,9 @@ export default class LRParserGenerator {
     } catch (e) {
       // JS code.
       try {
-        grammarData = vm.runInNewContext(`(${rawGrammarData})`);
+        grammarData = vm.runInNewContext(`
+          (function() { return (${rawGrammarData});})()
+        `);
       } catch (e) {
         // Just a bnf as a string.
         grammarData = {
