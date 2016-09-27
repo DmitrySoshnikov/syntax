@@ -13,6 +13,8 @@
 
 'use strict';
 
+
+
 let yytext;
 let yyleng;
 let $$;
@@ -23,7 +25,7 @@ const EOF = {
   }
 };
 
-const productions = [[-1, 1],
+const ps = [[-1, 1],
 [0, 2, ($1,$2) => { return $$ = {bnf: $2 }; }],
 [1, 2, ($1,$2) => { $$ = $1; $$[$2[0]] = $2[1]; }],
 [1, 1, ($1) => { $$ = {}; $$[$1[0]] = $1[1]; }],
@@ -40,9 +42,10 @@ const productions = [[-1, 1],
 [8, 1, ($1) => { $$ = yytext; }],
 [9, 1, ($1) => { $$ = yytext; }],
 [9, 0, () => { $$ = null; }]];
-const table = {"0":{"0":9,"%%":"s1"},"1":{"1":2,"2":10,"3":3,"ID":"s11"},"2":{"2":12,"3":3,"$":"r1","ID":"s11"},"3":{"SPLITTER":"s4"},"4":{"4":5,"5":13,"6":6,"7":7,"8":14,";":"r10","|":"r10","CODE":"r10","ID":"s15","STRING":"s16"},"5":{";":"s17","|":"s8"},"6":{"9":19,"CODE":"s20",";":"r16","|":"r16"},"7":{"8":21,";":"r9","|":"r9","CODE":"r9","ID":"s15","STRING":"s16"},"8":{"5":18,"6":6,"7":7,"8":14,";":"r10","|":"r10","CODE":"r10","ID":"s15","STRING":"s16"},"9":{"$":"acc"},"10":{"ID":"r3","$":"r3"},"11":{"SPLITTER":"r5"},"12":{"ID":"r2","$":"r2"},"13":{";":"r7","|":"r7"},"14":{";":"r12","ID":"r12","|":"r12","STRING":"r12","CODE":"r12"},"15":{";":"r13","ID":"r13","|":"r13","STRING":"r13","CODE":"r13"},"16":{";":"r14","ID":"r14","|":"r14","STRING":"r14","CODE":"r14"},"17":{"ID":"r4","$":"r4"},"18":{";":"r6","|":"r6"},"19":{";":"r8","|":"r8"},"20":{";":"r15","|":"r15"},"21":{";":"r11","ID":"r11","|":"r11","STRING":"r11","CODE":"r11"}};
+const tks = {"%%":10,"SPLITTER":11,";":12,"ID":13,"|":14,"STRING":15,"CODE":16,"$":17};
+const tbl = {"0":{"0":20,"10":"s1"},"1":{"1":2,"2":3,"3":4,"13":"s21"},"2":{"2":5,"3":4,"13":"s21","17":"r1"},"3":{"13":"r3","17":"r3"},"4":{"11":"s6"},"5":{"13":"r2","17":"r2"},"6":{"4":7,"5":8,"6":9,"7":10,"8":11,"12":"r10","13":"s12","14":"r10","15":"s13","16":"r10"},"7":{"12":"s14","14":"s15"},"8":{"12":"r7","14":"r7"},"9":{"9":17,"12":"r16","14":"r16","16":"s18"},"10":{"8":19,"12":"r9","13":"s12","14":"r9","15":"s13","16":"r9"},"11":{"12":"r12","13":"r12","14":"r12","15":"r12","16":"r12"},"12":{"12":"r13","13":"r13","14":"r13","15":"r13","16":"r13"},"13":{"12":"r14","13":"r14","14":"r14","15":"r14","16":"r14"},"14":{"13":"r4","17":"r4"},"15":{"5":16,"6":9,"7":10,"8":11,"12":"r10","13":"s12","14":"r10","15":"s13","16":"r10"},"16":{"12":"r6","14":"r6"},"17":{"12":"r8","14":"r8"},"18":{"12":"r15","14":"r15"},"19":{"12":"r11","13":"r11","14":"r11","15":"r11","16":"r11"},"20":{"17":"acc"},"21":{"11":"r5"}};
 
-let stack = [];
+let s = [];
 
 function unexpectedToken(token) {
   if (token.value === EOF) {
@@ -121,7 +124,8 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF.toString();
+    return this._string[this._cursor] === EOF.toString() &&
+      this._cursor === this._string.length - 1;
   },
 
   hasMoreTokens() {
@@ -146,73 +150,73 @@ const LRParser = {
 
     tokenizer.initString(string);
 
-    stack = [];
+    s = [];
 
-    stack.push(0);
+    s.push(0);
 
-    let token = tokenizer.getNextToken();
-    let shiftedToken = null;
+    let t = tokenizer.getNextToken();
+    let st = null;
 
     do {
-      if (!token) {
+      if (!t) {
         unexpectedEndOfInput();
       }
 
-      let state = stack[stack.length - 1];
-      let column = token.type;
-      let entry = table[state][column];
+      let sta = s[s.length - 1];
+      let clm = tks[t.type];
+      let e = tbl[sta][clm];
 
-      if (!entry) {
-        unexpectedToken(token);
+      if (!e) {
+        unexpectedToken(t);
       }
 
-      if (entry[0] === 's') {
-        stack.push(
-          {symbol: token.type, semanticValue: token.value},
-          Number(entry.slice(1))
+      if (e[0] === 's') {
+        s.push(
+          {symbol: t.type, semanticValue: t.value},
+          Number(e.slice(1))
         );
-        shiftedToken = token;
-        token = tokenizer.getNextToken();
-      } else if (entry[0] === 'r') {
-        let productionNumber = entry.slice(1);
-        let production = productions[productionNumber];
-        let hasSemanticAction = typeof production[2] === 'function';
-        let semanticActionArgs = hasSemanticAction ? [] : null;
+        st = t;
+        t = tokenizer.getNextToken();
+      } else if (e[0] === 'r') {
+        let pn = e.slice(1);
+        let p = ps[pn];
+        let hsa = typeof p[2] === 'function';
+        let saa = hsa ? [] : null;
 
-        if (production[1] !== 0) {
-          let rhsLengh = production[1];
-          while (rhsLengh--) {
-            stack.pop();
-            let stackEntry = stack.pop();
+        if (p[1] !== 0) {
+          let rhsl = p[1];
+          while (rhsl--) {
+            s.pop();
+            let se = s.pop();
 
-            if (hasSemanticAction) {
-              semanticActionArgs.unshift(stackEntry.semanticValue);
+            if (hsa) {
+              saa.unshift(se.semanticValue);
             }
           }
         }
 
-        let reduceStackEntry = {symbol: production[0]};
+        let rse = {symbol: p[0]};
 
-        if (hasSemanticAction) {
-          yytext = shiftedToken ? shiftedToken.value : null;
-          yyleng = shiftedToken ? shiftedToken.value.length : null;
+        if (hsa) {
+          yytext = st ? st.value : null;
+          yyleng = st ? st.value.length : null;
 
-          production[2](...semanticActionArgs);
-          reduceStackEntry.semanticValue = $$;
+          p[2](...saa);
+          rse.semanticValue = $$;
         }
 
-        stack.push(
-          reduceStackEntry,
-          table[stack[stack.length - 1]][production[0]]
+        s.push(
+          rse,
+          tbl[s[s.length - 1]][p[0]]
         );
-      } else if (entry === 'acc') {
-        stack.pop();
-        let parsed = stack.pop();
+      } else if (e === 'acc') {
+        s.pop();
+        let parsed = s.pop();
 
-        if (stack.length !== 1 ||
-            stack[0] !== 0 ||
+        if (s.length !== 1 ||
+            s[0] !== 0 ||
             tokenizer.hasMoreTokens()) {
-          unexpectedToken(token);
+          unexpectedToken(t);
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
@@ -222,7 +226,7 @@ const LRParser = {
         return true;
       }
 
-    } while (tokenizer.hasMoreTokens() || stack.length > 1);
+    } while (tokenizer.hasMoreTokens() || s.length > 1);
   },
 
   setTokenizer(customTokenizer) {
