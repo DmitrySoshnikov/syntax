@@ -14,7 +14,7 @@
     "prepublish": "npm run build"
   },
   "bin": {
-    "syntax": "./bin/syntax"
+    "syntax-cli": "./bin/syntax"
   },
   "keywords": [
     "parser",
