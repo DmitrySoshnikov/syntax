@@ -7,9 +7,15 @@ See also [LL(1) parser](https://github.com/DmitrySoshnikov/ll1) repo (will be me
 
 #### Installation
 
-##### From Github repo
+The tool can be installed as an NPM module (notice, it's called `syntax-cli` there):
 
-After normal cloning of the Github repo, run `build` command to transpile ES6 code:
+```
+npm install -g syntax-cli
+
+syntax-cli --help
+```
+
+Or for developement, from the github repository. Rrun `build` command to transpile ES6 code:
 
 ```
 git clone https://github.com/DmitrySoshnikov/syntax.git
@@ -20,7 +26,7 @@ npm run build
 ./bin/syntax --help
 ```
 
-For developement, instead of `npm run build` one can also use:
+For developement can also use the `watch` command:
 
 ```
 npm run watch
