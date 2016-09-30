@@ -53,7 +53,10 @@ export default class Tokenizer {
    */
   getNextToken() {
     if (!this.hasMoreTokens()) {
-      return null;
+      return {
+        type: EOF,
+        value: EOF,
+      };
     } else if (this.isEOF()) {
       this._cursor++;
       return {
