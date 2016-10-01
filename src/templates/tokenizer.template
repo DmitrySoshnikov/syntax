@@ -1,6 +1,8 @@
 /**
  * Generic tokenizer used by the parser in the Syntax tool.
  *
+ * https://www.npmjs.com/package/syntax-cli
+ *
  * See `--custom-tokinzer` to skip this generation, and use a custom one.
  */
 
