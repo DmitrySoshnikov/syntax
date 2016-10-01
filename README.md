@@ -15,7 +15,7 @@ npm install -g syntax-cli
 syntax-cli --help
 ```
 
-Or for developement, from the github repository. Rrun `build` command to transpile ES6 code:
+Or for development, from the github repository. Run `build` command to transpile ES6 code:
 
 ```
 git clone https://github.com/DmitrySoshnikov/syntax.git
@@ -26,7 +26,7 @@ npm run build
 ./bin/syntax --help
 ```
 
-For developement can also use the `watch` command:
+For development one can also use the `watch` command:
 
 ```
 npm run watch
