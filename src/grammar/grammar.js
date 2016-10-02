@@ -81,6 +81,8 @@ export default class Grammar {
     start,
     mode,
     moduleInclude = '',
+    onParseBegin = '',
+    onParseEnd = '',
   }) {
     // For simple use-cases when it's more convenient to
     // write a grammar directly as a string.
@@ -91,7 +93,10 @@ export default class Grammar {
     this._originalBnf = bnf;
     this._originalLex = null;
 
+    // Hooks to allow injecting user code.
     this._moduleInclude = moduleInclude;
+    this._onParseBegin = onParseBegin;
+    this._onParseEnd = onParseEnd;
 
     if (lex) {
       this._originalLex = lex.rules;
@@ -140,6 +145,20 @@ export default class Grammar {
    */
   getModuleInclude() {
     return this._moduleInclude;
+  }
+
+  /**
+   * Returns code for parseBegin callback.
+   */
+  getOnParseBegin() {
+    return this._onParseBegin;
+  }
+
+  /**
+   * Returns code for parseEnd callback.
+   */
+  getOnParseEnd() {
+    return this._onParseEnd;
   }
 
   /**

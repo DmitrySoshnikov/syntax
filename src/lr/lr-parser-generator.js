@@ -92,6 +92,9 @@ export default class LRParserGenerator {
     // Arbitrary code included to the module.
     this._generateModuleInclude();
 
+    // Parse begin hook.
+    this._generateOnParseBegin();
+
     // Lexical grammar.
     if (this._customTokenizer === null) {
       // Built-in tokinizer.
@@ -109,6 +112,9 @@ export default class LRParserGenerator {
     this._generateProductions();
     this._generateTable();
 
+    // Parse end hook.
+    this._generateOnParseEnd();
+
     return this._resultData;
   }
 
@@ -119,6 +125,26 @@ export default class LRParserGenerator {
     this._resultData = this._resultData.replace(
       '<<MODULE_INCLUDE>>',
       () => this._grammar.getModuleInclude(),
+    );
+  }
+
+  /**
+   * Injects the code executed on parse begin.
+   */
+  _generateOnParseBegin() {
+    this._resultData = this._resultData.replace(
+      '<<ON_PARSE_BEGIN>>',
+      () => this._grammar.getOnParseBegin(),
+    );
+  }
+
+  /**
+   * Injects the code executed on parse end.
+   */
+  _generateOnParseEnd() {
+    this._resultData = this._resultData.replace(
+      '<<ON_PARSE_END>>',
+      () => this._grammar.getOnParseEnd(),
     );
   }
 

@@ -6,6 +6,10 @@
  * to require modules for corresponding AST nodes, or direct AST nodes
  * definitions.
  *
+ * The "onParseBegin", and "onParseEnd" hooks are executed accordingly, when
+ * parsing starts (receiving parsing string as an argument), and ends
+ * (receiving a parsed value).
+ *
  * ./bin/syntax -g ./examples/module-include.g.js -m slr1 -o './parser.js'
  *
  * > require('./parser').parse('2 + 2 * 2');
@@ -59,6 +63,14 @@
         this.value = value;
       }
     }
+  `,
+
+  "onParseBegin": `
+    console.log('Custom hook executed on parse begin. Parsing:', $1, '\\n');
+  `,
+
+  "onParseEnd": `
+    console.log('Custom hook executed on parse end. Parsed:\\n\\n', $1, '\\n');
   `,
 
   "operators": [

@@ -53,8 +53,20 @@ function parseError(message) {
 let tokenizer;
 <<TOKENIZER>>
 
+function onParseBegin($1) {
+  <<ON_PARSE_BEGIN>>
+  LRParser.onParseBegin($1);
+}
+
+function onParseEnd($1) {
+  <<ON_PARSE_END>>
+  LRParser.onParseEnd($1);
+}
+
 const LRParser = {
   parse(string) {
+    onParseBegin(string);
+
     if (!tokenizer) {
       throw new Error(`Tokenizer instance wasn't specified.`);
     }
@@ -131,9 +143,11 @@ const LRParser = {
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
+          onParseEnd(parsed.semanticValue);
           return parsed.semanticValue;
         }
 
+        onParseEnd();
         return true;
       }
 
@@ -148,6 +162,9 @@ const LRParser = {
   getTokenizer() {
     return tokenizer;
   },
+
+  onParseBegin(string) {},
+  onParseEnd(parsed) {},
 
 };
 
