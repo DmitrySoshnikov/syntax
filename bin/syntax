@@ -179,8 +179,7 @@ function parse(string, grammar) {
 }
 
 function formatParsedOutput(output) {
-  const kind = Object.prototype.toString.call(output).slice(8, -1);
-  if (kind === 'Array' || kind === 'Object') {
+  if (Array.isArray(output) || output.constructor === Object) {
     return JSON.stringify(output, null, 2);
   }
   return output;

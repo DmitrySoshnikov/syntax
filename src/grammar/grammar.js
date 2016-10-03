@@ -3,7 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import BnfParser from '../generated/bnf-parser.gen';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
@@ -84,12 +83,6 @@ export default class Grammar {
     onParseBegin = '',
     onParseEnd = '',
   }) {
-    // For simple use-cases when it's more convenient to
-    // write a grammar directly as a string.
-    if (typeof bnf === 'string') {
-      bnf = BnfParser.parse(bnf).bnf;
-    }
-
     this._originalBnf = bnf;
     this._originalLex = null;
 

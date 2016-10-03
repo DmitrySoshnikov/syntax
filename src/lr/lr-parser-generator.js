@@ -3,6 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import BnfParser from '../generated/bnf-parser.gen';
 import CanonicalCollection from './canonical-collection';
 import Grammar from '../grammar/grammar';
 import LRParsingTable from './lr-parsing-table';
@@ -299,10 +300,8 @@ export default class LRParserGenerator {
           (function() { return (${rawGrammarData});})()
         `);
       } catch (e) {
-        // Just a bnf as a string.
-        grammarData = {
-          bnf: rawGrammarData,
-        };
+        // A grammar in string BNF, parse it.
+        grammarData = BnfParser.parse(rawGrammarData);
       }
     }
 
