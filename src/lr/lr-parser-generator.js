@@ -66,6 +66,7 @@ export default class LRParserGenerator {
 
     this._tokens = this._grammar
       .getTokens()
+      .concat(this._grammar.getTerminals())
       .map(symbol => symbol.getSymbol());
 
     this._tokens.push(EOF);
