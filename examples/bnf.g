@@ -11,6 +11,7 @@
         "rules": [
             ["\/\\*(.|\\s)*?\\*\/",        "/* skip comments */"],
             ["\\s+",                       "/* skip whitespace */"],
+            ["%\\{(.|\\r|\\n)*?%\\}",      "yytext = yytext.slice(2, -2).trim(); return 'MODULE_INCLUDE'"],
             ["\\{\\s*(.*)\\s*\\}",         "yytext = yytext.slice(1, -1).trim(); return 'CODE'"],
             ["[a-zA-Z][a-zA-Z0-9_-]*",     "return 'ID'"],
             ["(?:->|:)",                   "return 'SPLITTER'"],
@@ -24,7 +25,10 @@
     },
 
     "bnf": {
-        "Spec":           [["%% ProductionList",            "return $$ = {bnf: $2 };"]],
+        "Spec":           [["OptModInc %% ProductionList",  "return $$ = {bnf: $3, moduleInclude: $1}"]],
+
+        "OptModInc":      [["MODULE_INCLUDE",               "$$ = $1"],
+                           ["ε"]],
 
         "ProductionList": [["ProductionList Production",    "$$ = $1; $$[$2[0]] = $2[1];"],
                            ["Production",                   "$$ = {}; $$[$1[0]] = $1[1];"]],

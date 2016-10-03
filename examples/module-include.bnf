@@ -1,0 +1,34 @@
+/**
+ * Module includes.
+ *
+ * The "moduleInclude" prologue code allows including an arbitrary code at the
+ * beginning of the generated parser file. As an example, it can be the code
+ * to require modules for corresponding AST nodes, or direct AST nodes
+ * definitions.
+ */
+
+%{
+  // Define AST node classes.
+  class Node {}
+
+  /* JS comments work here */
+  class Binary extends Node {}
+  class Primary extends Node {}
+%}
+
+%%
+
+E
+  : E '+' T       { $$ = new Binary($1, $2, '+') }
+  | T             { $$ = $1 }
+  ;
+
+T
+  : T '*' F       { $$ = new Binary($1, $2, '*') }
+  | F             { $$ = $1 }
+  ;
+
+F
+  : 'id'          { $$ = new Primary($1) }
+  | '(' E ')'     { $$ = $2 }
+  ;

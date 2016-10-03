@@ -11,8 +11,14 @@
 %%
 
 Spec
-              : '%%' ProductionList
-                  { return $$ = {bnf: $2 }; }
+              : OptModInc '%%' ProductionList
+                  { return $$ = {bnf: $3, moduleInclude: $1 }; }
+              ;
+
+OptModInc
+              : MODULE_INCLUDE
+                  { $$ = $1; }
+              |
               ;
 
 ProductionList
