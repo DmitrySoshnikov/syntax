@@ -195,7 +195,7 @@ Parsing: id * id + id
 
 The `moduleInclude` directive allows injecting an arbitrary code to the generated parser file. This is usually code to require needed dependencies, or to define them inline. As an example, see [the corresponding example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.g.js), which defines all classes for AST nodes inline, and then uses them in the rule handlers.
 
-In addition, two parser events: `onParseBegin` and `onParseEnd` allow injecting a code which is executed when the parsing starts, and ends respectively.
+The code can also define handlers for some parse events (attaching them to `yyparse` object), in particular for `onParseBegin` and `onParseEnd`. This allow injecting a code which is executed when the parsing process starts, and ends accordingly.
 
 ```js
 "moduleInclude": `
@@ -208,14 +208,16 @@ In addition, two parser events: `onParseBegin` and `onParseEnd` allow injecting 
   class BinaryExpression extends Node {
     ...
   }
-`,
 
-"onParseBegin": `
-  console.log('Parsing code:', $1);
-`
+  // Event handlers.
 
-"onParseEnd": `
-  console.log('Parsed value:', $1)
+  yyparse.onParseBegin = (string) => {
+    console.log('Parsing code:', string);
+  };
+
+  yyparse.onParseEnd = (value) => {
+    console.log('Parsed value:', value);
+  };
 `,
 
 ...
