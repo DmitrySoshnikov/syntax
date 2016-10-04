@@ -80,16 +80,13 @@ export default class Grammar {
     start,
     mode,
     moduleInclude = '',
-    onParseBegin = '',
-    onParseEnd = '',
   }) {
     this._originalBnf = bnf;
     this._originalLex = null;
 
-    // Hooks to allow injecting user code.
+    // Injecting user code, including handlers for `yyparse.onParseBegin`,
+    // and `yyparse.onParseEnd`.
     this._moduleInclude = moduleInclude;
-    this._onParseBegin = onParseBegin;
-    this._onParseEnd = onParseEnd;
 
     if (lex) {
       this._originalLex = lex.rules;
@@ -138,20 +135,6 @@ export default class Grammar {
    */
   getModuleInclude() {
     return this._moduleInclude;
-  }
-
-  /**
-   * Returns code for parseBegin callback.
-   */
-  getOnParseBegin() {
-    return this._onParseBegin;
-  }
-
-  /**
-   * Returns code for parseEnd callback.
-   */
-  getOnParseEnd() {
-    return this._onParseEnd;
   }
 
   /**

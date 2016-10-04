@@ -17,8 +17,6 @@
 
 'use strict';
 
-
-
 let yytext;
 let yyleng;
 let $$;
@@ -51,22 +49,7 @@ const ps = [[-1, 1],
 const tks = {"%%":11,"MODULE_INCLUDE":12,"SPLITTER":13,";":14,"ID":15,"|":16,"STRING":17,"CODE":18,"$":19};
 const tbl = {"0":{"0":21,"1":1,"11":"r3","12":"s22"},"1":{"11":"s2"},"2":{"2":3,"3":4,"4":5,"15":"s23"},"3":{"3":6,"4":5,"15":"s23","19":"r1"},"4":{"15":"r5","19":"r5"},"5":{"13":"s7"},"6":{"15":"r4","19":"r4"},"7":{"5":8,"6":9,"7":10,"8":11,"9":12,"14":"r12","15":"s13","16":"r12","17":"s14","18":"r12"},"8":{"14":"s15","16":"s16"},"9":{"14":"r9","16":"r9"},"10":{"10":18,"14":"r18","16":"r18","18":"s19"},"11":{"9":20,"14":"r11","15":"s13","16":"r11","17":"s14","18":"r11"},"12":{"14":"r14","15":"r14","16":"r14","17":"r14","18":"r14"},"13":{"14":"r15","15":"r15","16":"r15","17":"r15","18":"r15"},"14":{"14":"r16","15":"r16","16":"r16","17":"r16","18":"r16"},"15":{"15":"r6","19":"r6"},"16":{"6":17,"7":10,"8":11,"9":12,"14":"r12","15":"s13","16":"r12","17":"s14","18":"r12"},"17":{"14":"r8","16":"r8"},"18":{"14":"r10","16":"r10"},"19":{"14":"r17","16":"r17"},"20":{"14":"r13","15":"r13","16":"r13","17":"r13","18":"r13"},"21":{"19":"acc"},"22":{"11":"r2"},"23":{"13":"r7"}};
 
-let s = [];
-
-function unexpectedToken(token) {
-  if (token.value === EOF) {
-    unexpectedEndOfInput();
-  }
-  parseError(`Unexpected token: ${token.value}.`);
-}
-
-function unexpectedEndOfInput() {
-  parseError(`Unexpected end of input.`);
-}
-
-function parseError(message) {
-  throw new Error(`Parse error: ${message}`);
-}
+const s = [];
 
 let tokenizer;
 /**
@@ -154,19 +137,9 @@ tokenizer = {
   },
 };
 
-function onParseBegin($1) {
-  
-  LRParser.onParseBegin($1);
-}
-
-function onParseEnd($1) {
-  
-  LRParser.onParseEnd($1);
-}
-
-const LRParser = {
+const yyparse = {
   parse(string) {
-    onParseBegin(string);
+    yyparse.onParseBegin(string);
 
     if (!tokenizer) {
       throw new Error(`Tokenizer instance wasn't specified.`);
@@ -174,8 +147,7 @@ const LRParser = {
 
     tokenizer.initString(string);
 
-    s = [];
-
+    s.length = 0;
     s.push(0);
 
     let t = tokenizer.getNextToken();
@@ -244,11 +216,11 @@ const LRParser = {
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
-          onParseEnd(parsed.semanticValue);
+          yyparse.onParseEnd(parsed.semanticValue);
           return parsed.semanticValue;
         }
 
-        onParseEnd();
+        yyparse.onParseEnd();
         return true;
       }
 
@@ -257,7 +229,7 @@ const LRParser = {
 
   setTokenizer(customTokenizer) {
     tokenizer = customTokenizer;
-    return this;
+    return yyparse;
   },
 
   getTokenizer() {
@@ -266,7 +238,23 @@ const LRParser = {
 
   onParseBegin(string) {},
   onParseEnd(parsed) {},
-
 };
 
-module.exports = LRParser;
+
+
+function unexpectedToken(token) {
+  if (token.value === EOF) {
+    unexpectedEndOfInput();
+  }
+  parseError(`Unexpected token: ${token.value}.`);
+}
+
+function unexpectedEndOfInput() {
+  parseError(`Unexpected end of input.`);
+}
+
+function parseError(message) {
+  throw new Error(`Parse error: ${message}`);
+}
+
+module.exports = yyparse;

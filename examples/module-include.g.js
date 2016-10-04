@@ -6,9 +6,12 @@
  * to require modules for corresponding AST nodes, or direct AST nodes
  * definitions.
  *
- * The "onParseBegin", and "onParseEnd" hooks are executed accordingly, when
- * parsing starts (receiving parsing string as an argument), and ends
- * (receiving a parsed value).
+ * The code may define callbacks for several parse events, attaching them
+ * to the `yyparse` object. For example:
+ *
+ *   yyparse.onParseBegin = (string) => {
+ *     console.log('Parsing:', string);
+ *   };
  *
  * ./bin/syntax -g ./examples/module-include.g.js -m slr1 -o './parser.js'
  *
@@ -63,14 +66,15 @@
         this.value = value;
       }
     }
-  `,
 
-  "onParseBegin": `
-    console.log('Custom hook executed on parse begin. Parsing:', $1, '\\n');
-  `,
+    yyparse.onParseBegin = (string) => {
+      console.log('Custom hook on parse begin. Parsing:', string, '\\n');
+    };
 
-  "onParseEnd": `
-    console.log('Custom hook executed on parse end. Parsed:\\n\\n', $1, '\\n');
+    yyparse.onParseEnd = (value) => {
+      console.log('Custom hook on parse end. Parsed:\\n\\n', value, '\\n');
+    };
+
   `,
 
   "operators": [

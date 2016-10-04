@@ -17,8 +17,6 @@
 
 'use strict';
 
-<<MODULE_INCLUDE>>
-
 let yytext;
 let yyleng;
 let $$;
@@ -33,39 +31,14 @@ const ps = <<PRODUCTIONS>>;
 const tks = <<TOKENS>>;
 const tbl = <<TABLE>>;
 
-let s = [];
-
-function unexpectedToken(token) {
-  if (token.value === EOF) {
-    unexpectedEndOfInput();
-  }
-  parseError(`Unexpected token: ${token.value}.`);
-}
-
-function unexpectedEndOfInput() {
-  parseError(`Unexpected end of input.`);
-}
-
-function parseError(message) {
-  throw new Error(`Parse error: ${message}`);
-}
+const s = [];
 
 let tokenizer;
 <<TOKENIZER>>
 
-function onParseBegin($1) {
-  <<ON_PARSE_BEGIN>>
-  LRParser.onParseBegin($1);
-}
-
-function onParseEnd($1) {
-  <<ON_PARSE_END>>
-  LRParser.onParseEnd($1);
-}
-
-const LRParser = {
+const yyparse = {
   parse(string) {
-    onParseBegin(string);
+    yyparse.onParseBegin(string);
 
     if (!tokenizer) {
       throw new Error(`Tokenizer instance wasn't specified.`);
@@ -73,8 +46,7 @@ const LRParser = {
 
     tokenizer.initString(string);
 
-    s = [];
-
+    s.length = 0;
     s.push(0);
 
     let t = tokenizer.getNextToken();
@@ -143,11 +115,11 @@ const LRParser = {
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
-          onParseEnd(parsed.semanticValue);
+          yyparse.onParseEnd(parsed.semanticValue);
           return parsed.semanticValue;
         }
 
-        onParseEnd();
+        yyparse.onParseEnd();
         return true;
       }
 
@@ -156,7 +128,7 @@ const LRParser = {
 
   setTokenizer(customTokenizer) {
     tokenizer = customTokenizer;
-    return this;
+    return yyparse;
   },
 
   getTokenizer() {
@@ -165,7 +137,23 @@ const LRParser = {
 
   onParseBegin(string) {},
   onParseEnd(parsed) {},
-
 };
 
-module.exports = LRParser;
+<<MODULE_INCLUDE>>
+
+function unexpectedToken(token) {
+  if (token.value === EOF) {
+    unexpectedEndOfInput();
+  }
+  parseError(`Unexpected token: ${token.value}.`);
+}
+
+function unexpectedEndOfInput() {
+  parseError(`Unexpected end of input.`);
+}
+
+function parseError(message) {
+  throw new Error(`Parse error: ${message}`);
+}
+
+module.exports = yyparse;
