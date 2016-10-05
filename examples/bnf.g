@@ -11,6 +11,13 @@
         "rules": [
             ["\/\\*(.|\\s)*?\\*\/",        "/* skip comments */"],
             ["\\s+",                       "/* skip whitespace */"],
+            ["%start",                     "return '%start'"],
+            ["%prec",                      "return '%prec'"],
+            ["%left",                      "return '%left'"],
+            ["%right",                     "return '%right'"],
+            ["%nonassoc",                  "return '%nonassoc'"],
+            ["%token",                     "return '%token'"],
+            ["%lex[\w\W]*?/lex",           "return 'LEX_BLOCK'"],
             ["%\\{(.|\\r|\\n)*?%\\}",      "yytext = yytext.slice(2, -2).trim(); return 'MODULE_INCLUDE'"],
             ["\\{\\s*(.*)\\s*\\}",         "yytext = yytext.slice(1, -1).trim(); return 'CODE'"],
             ["[a-zA-Z][a-zA-Z0-9_-]*",     "return 'ID'"],
@@ -20,38 +27,82 @@
             ["\\{",                        "return '{'"],
             ["\\}",                        "return '}'"],
             ["%%",                         "return '%%'"],
-            ["(?:\"|')([^\"']*)(?:\"|')",  "return 'STRING'"]
-        ]
+            ["%[a-zA-Z]+[^\\r\\n]*",       "/* skip unrecognized options */"],
+            ["(?:\"|')([^\"']*)(?:\"|')",  "return 'STRING'"],
+        ],
     },
 
-    "bnf": {
-        "Spec":           [["OptModInc %% ProductionList",  "return $$ = {bnf: $3, moduleInclude: $1}"]],
+    "moduleInclude": `
+      let tokens;
+      let operators;
+      let extra;
 
-        "OptModInc":      [["MODULE_INCLUDE",               "$$ = $1"],
+      yyparse.onParseBegin = () => {
+        tokens = [];
+        operators = [];
+        extra = {};
+      };
+    `,
+
+    "bnf": {
+        "Spec":           [["Declarations %% Productions", `
+                            const spec = Object.assign({bnf: $3}, extra);
+
+                            if (operators.length) {
+                              spec.operators = operators;
+                            }
+
+                            if (tokens.length) {
+                              spec.tokens = tokens.join(' ');
+                            }
+
+                            $$ = spec;
+                          `]],
+
+        "Declarations":   ["Declaration",
+                           "Declarations Declaration"],
+
+        "Declaration":    [["MODULE_INCLUDE",               "extra.moduleInclude = $1"],
+                           ["%start LHS",                   "extra.start = $2"],
+                           ["%left OperatorList",           "operators.push(['left'].concat($2))"],
+                           ["%right OperatorList",          "operators.push(['right'].concat($2))"],
+                           ["%nonassoc OperatorList",       "operators.push(['nonassoc'].concat($2))"],
+                           ["%token ID",                    "tokens.push($2)"],
                            ["ε"]],
 
-        "ProductionList": [["ProductionList Production",    "$$ = $1; $$[$2[0]] = $2[1];"],
-                           ["Production",                   "$$ = {}; $$[$1[0]] = $1[1];"]],
+        "OperatorList":   [["Base",                         "$$ = [$1]"],
+                           ["OperatorList Base",            "$$ = $1; $1.push($2)"]],
 
-        "Production":     [["LHS SPLITTER HandleList ;",    "$$ = [$1, $3];"]],
+        "Productions":    [["Productions Production",       "$$ = $1; $$[$2[0]] = $2[1]"],
+                           ["Production",                   "$$ = {}; $$[$1[0]] = $1[1]"]],
 
-        "LHS":            [["ID",                           "$$ = yytext;"]],
+        "Production":     [["LHS SPLITTER HandleList ;",    "$$ = [$1, $3]"]],
 
-        "HandleList":     [["HandleList | HandleAction",    "$$ = $1; $$.push($3);"],
-                           ["HandleAction",                 "$$ = [$1];"]],
+        "LHS":            [["ID",                           "$$ = $1"]],
 
-        "HandleAction":   [["Handle Action",                "$$ = [$1, $2];"]],
+        "HandleList":     [["HandleList | HandleAction",    "$$ = $1; $1.push($3)"],
+                           ["HandleAction",                 "$$ = [$1]"]],
 
-        "Handle":         [["Entries",                      "$$ = $1;"],
-                           ["ε",                            "$$ = '';"]],
+        "HandleAction":   [["Handle Action",                "$$ = [$1[0], $2]; $1[1] && $$.push({prec: $1[1]})"]],
 
-        "Entries":        [["Entries Entry",                "$$ = $1 + ' ' + $2;"],
-                           ["Entry",                        "$$ = $1;"]],
+        "Handle":         [["Entries Prec",                 "$$ = [$1, $2]"],
+                           ["ε",                            "$$ = ''"]],
 
-        "Entry":          [["ID",                           "$$ = yytext;"],
-                           ["STRING",                       "$$ = yytext;"]],
+        "Prec":           [["%prec Primary",                "$$ = $2"],
+                           ["ε"]],
 
-        "Action":         [["CODE",                         "$$ = yytext;"],
-                           ["ε",                            "$$ = null;"]]
+        "Entries":        [["Entries Primary",              "$$ = $1 + ' ' + $2"],
+                           ["Primary",                      "$$ = $1"]],
+
+        "Primary":        [["ID",                           "$$ = $1"],
+                           ["STRING",                       "$$ = $1"]],
+
+        "Base":           [["ID",                           "$$ = $1"],
+                           ["String",                       "$$ = $1"]],
+
+        "String":         [["STRING",                       "$$ = $1.slice(1, -1)"]],
+
+        "Action":         [["CODE",                         "$$ = $1"],
+                           ["ε",                            "$$ = null"]]
     }
 }
