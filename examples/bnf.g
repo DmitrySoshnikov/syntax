@@ -17,7 +17,7 @@
       ["%right",                      "return '%right'"],
       ["%nonassoc",                   "return '%nonassoc'"],
       ["%token",                      "return '%token'"],
-      ["%lex[\w\W]*?/lex",            "return 'LEX_BLOCK'"],
+      ["%lex\\s*(.*)\\s*\\/lex",      "yytext = yytext.slice(4, -4).trim(); return 'LEX_BLOCK'"],
       ["%\\{(.|\\r|\\n)*?%\\}",       "yytext = yytext.slice(2, -2).trim(); return 'MODULE_INCLUDE'"],
       ["\\{\\s*(.*)\\s*\\}",          "yytext = yytext.slice(1, -1).trim(); return 'CODE'"],
       ["[a-zA-Z][a-zA-Z0-9_-]*",      "return 'ID'"],
@@ -65,7 +65,8 @@
     "Declarations": ["Declaration",
                      "Declarations Declaration"],
 
-    "Declaration":  [["MODULE_INCLUDE",             "extra.moduleInclude = $1"],
+    "Declaration":  [["LEX_BLOCK",                  "extra.lex = $1"],
+                     ["MODULE_INCLUDE",             "extra.moduleInclude = $1"],
                      ["%start LHS",                 "extra.start = $2"],
                      ["%left OperatorList",         "operators.push(['left'].concat($2))"],
                      ["%right OperatorList",        "operators.push(['right'].concat($2))"],
