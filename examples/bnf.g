@@ -72,8 +72,8 @@
                      ["%nonassoc OperatorList",     "operators.push(['nonassoc'].concat($2))"],
                      ["%token ID",                  "tokens.push($2)"]],
 
-    "OperatorList": [["Base",                       "$$ = [$1]"],
-                     ["OperatorList Base",          "$$ = $1; $1.push($2)"]],
+    "OperatorList": [["Primary",                    "$$ = [$1]"],
+                     ["OperatorList Primary",       "$$ = $1; $1.push($2)"]],
 
     "Productions":  [["Productions Production",     "$$ = $1; $$[$2[0]] = $2[1]"],
                      ["Production",                 "$$ = {}; $$[$1[0]] = $1[1]"]],
@@ -98,11 +98,6 @@
 
     "Primary":      [["ID",                         "$$ = $1"],
                      ["STRING",                     "$$ = $1"]],
-
-    "Base":         [["ID",                         "$$ = $1"],
-                     ["String",                     "$$ = $1"]],
-
-    "String":       [["STRING",                     "$$ = $1.slice(1, -1)"]],
 
     "Action":       [["CODE",                       "$$ = $1"],
                      ["ε",                          "$$ = null"]]
