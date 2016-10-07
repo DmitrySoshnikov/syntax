@@ -314,7 +314,7 @@ export default class Grammar {
 
       console.info(productionOutput);
 
-      if (production.isAugmented()) {
+      if (this._mode.isLR() && production.isAugmented()) {
         let splitter = Array(productionOutput.length - 2).join('-');
         console.info(`${pad}${splitter}`);
       }
@@ -388,7 +388,9 @@ export default class Grammar {
   _processBnf(originalBnf) {
     let processedBnf = [];
     let nonTerminals = Object.keys(originalBnf);
-    let number = 0;
+
+    // LR grammar uses augmented 0-production.
+    let number = this._mode.isLR() ? 0 : 1;
 
     if (!this._startSymbol) {
       this._startSymbol = nonTerminals[0];

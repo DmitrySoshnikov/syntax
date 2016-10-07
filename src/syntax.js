@@ -21,3 +21,6 @@ export {default as Closure} from './lr/closure';
 export {default as LRItem} from './lr/lr-item';
 export {default as LRParser} from './lr/lr-parser';
 export {default as LRParsingTable} from './lr/lr-parsing-table';
+
+// LL parsing.
+export {default as LLParsingTable} from './ll/ll-parsing-table';

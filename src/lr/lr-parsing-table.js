@@ -5,7 +5,6 @@
 
 import {MODES as GRAMMAR_MODE} from '../grammar/grammar-mode';
 import GrammarSymbol from '../grammar/grammar-symbol';
-import SetsGenerator from '../sets-generator';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
 import colors from 'colors';
@@ -106,7 +105,6 @@ export default class LRParsingTable {
     this._canonicalCollection = canonicalCollection;
     this._grammar = grammar;
     this._shouldResolveConflicts = resolveConflicts;
-    this._setsGenerator = new SetsGenerator({grammar});
 
     this._action = grammar.getTerminals()
       .concat(grammar.getTokens(), new GrammarSymbol(EOF));
@@ -138,8 +136,8 @@ export default class LRParsingTable {
 
     Object.keys(this._table).forEach(stateNumber => {
       let tableRow = this._table[stateNumber];
-      let stateLable = colors.blue(stateNumber);
-      let row = {[stateLable]: []};
+      let stateLabel = colors.blue(stateNumber);
+      let row = {[stateLabel]: []};
 
       // Action part.
       actionSymbols.forEach(actionSymbol => {
@@ -151,12 +149,12 @@ export default class LRParsingTable {
           entry = colors.green(entry);
         }
 
-        row[stateLable].push(entry);
+        row[stateLabel].push(entry);
       });
 
       // Goto part.
       nonTerminals.forEach(nonTerminal => {
-        row[stateLable].push(tableRow[nonTerminal] || '');
+        row[stateLabel].push(tableRow[nonTerminal] || '');
       });
 
       printer.push(row);

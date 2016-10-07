@@ -149,6 +149,21 @@ const parsers = {
       );
     }
   },
+
+  LL1(options) {
+    const grammar = getGrammar(options.grammar, GRAMMAR_MODE.LL1);
+
+    console.info(`\nParsing mode: ${grammar.getMode()}.`);
+
+    // LL parsing table.
+    if (options.table) {
+      const LLParsingTable = require('../dist/ll/ll-parsing-table').default;
+
+      new LLParsingTable({
+        grammar,
+      }).print();
+    }
+  },
 };
 
 function parse(string, grammar) {
