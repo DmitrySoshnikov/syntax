@@ -1,7 +1,7 @@
 /**
  * Left-factored LL(1) calculator grammar.
  *
- *   ./bin/syntax -g examples/calc.ll1 --table
+ *   ./bin/syntax -g examples/calc.ll1 --table --parse 'id + id * id' -w
  *
  * Corresponding parsing table:
  *

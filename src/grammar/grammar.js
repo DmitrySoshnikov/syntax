@@ -265,7 +265,8 @@ export default class Grammar {
    * Gets a production by number.
    */
   getProduction(number) {
-    return this._bnf[number];
+    // LL grammars do not have augmented 0-production.
+    return this._bnf[this._mode.isLL() ? number - 1 : number];
   }
 
   /**

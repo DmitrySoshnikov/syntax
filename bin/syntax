@@ -163,18 +163,26 @@ const parsers = {
         grammar,
       }).print();
     }
+
+    // Parse a string.
+    if (options.hasOwnProperty('parse')) {
+      parse(options.parse, grammar);
+    }
+
+    // Parse a file.
+    if (options.hasOwnProperty('file')) {
+      parse(fs.readFileSync(options.file, 'utf-8'), grammar);
+    }
   },
 };
 
 function parse(string, grammar) {
   console.info(`\n${colors.bold('Parsing:')}\n\n ${string}\n`);
 
-  const LRParser = require('../dist/lr/lr-parser').default;
-
   try {
-    const parsed = LRParser
-      .fromParserGenerator({grammar})
-      .parse(string);
+    const parsed = grammar.getMode().isLR()
+      ? lrParse(string, grammar)
+      : llParse(string, grammar);
 
     if (parsed.status === 'accept') {
       console.info(`${colors.green('\u2713 Accepted')}\n`);
@@ -191,6 +199,16 @@ function parse(string, grammar) {
     console.info(`${colors.red('Rejected: ' + e.message)}\n`);
     throw e;
   }
+}
+
+function lrParse(string, grammar) {
+  const LRParser = require('../dist/lr/lr-parser').default;
+  return LRParser.fromParserGenerator({grammar}).parse(string);
+}
+
+function llParse(string, grammar) {
+  const LLParser = require('../dist/ll/ll-parser').default;
+  return new LLParser({grammar}).parse(string);
 }
 
 function formatParsedOutput(output) {
