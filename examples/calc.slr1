@@ -1,0 +1,18 @@
+/**
+ * An LR(1) grammar with precedence, and assocs.
+ *
+ *   ./bin/syntax -g examples/calc.slr1 --table --parse 'id + id * id' -w
+ *
+ */
+
+%left '+' '-'
+%left '*' '/'
+
+%%
+
+E
+  : E '+' E
+  | E '*' E
+  | 'id'
+  | '(' E ')'
+  ;

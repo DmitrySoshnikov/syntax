@@ -3,8 +3,6 @@ Syntactic analysis toolkit for education, tracing the parsing process, and parse
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 
-See also [LL(1) parser](https://github.com/DmitrySoshnikov/ll1) repo (will be merged here).
-
 #### Installation
 
 The tool can be installed as an NPM module (notice, it's called `syntax-cli` there):
@@ -116,6 +114,22 @@ _Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR
 > Note: de facto standard for automatically generated parsers is usually the _LALR(1)_ parser. The _CLR(1)_ parser, being the most powerful, and able to parse wider grammar sets, can have much more states than LALR(1), and usually is suitable for educational purposes. As well as its less powerful counterparts, _LR(0)_ and _SLR(1)_ which are less used on practice (although, some production-ready grammars can also normally be parsed by _SLR(1)_, e.g. [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.ast.js)).
 
 Some grammars can be handled by one mode, but not by another. In this case a _conflict_ will be shown in the table.
+
+##### LL parsing
+
+Currently an LL(1) grammar is supposed to be already _left-factored_, and to be _non-left-recursive_. See section on [LL conflicts](https://en.wikipedia.org/wiki/LL_parser#Solutions_to_LL.281.29_Conflicts) for details.
+
+> Note: left-recursion elimination, and left-factoring process can be automated for most of the cases (excluding some edge cases, which should be done manually), and implement a transformation to a non-left-recursive grammar.
+
+A typical LL parsing table is less, than a corresponding LR-table. However, LR grammars cover more languages than LL grammars. In addiiton, an LL(1) grammar usually might look less elegant, or even less readable, than an LR grammar. As an example, take a look at the calculator grammar in the [non-left-recursive LL mode](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.ll1), [left-recursive LR mode](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator.g), and also [left-recursive, and precedence-based LR-mode](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.slr1).
+
+At the moment, LL parser only implements syntax validation, not providing semantic actions (e.g. to construct an AST). For the semantic handlers, and actual AST constrution see LR parsing.
+
+##### LR parsing
+
+LR parsing, and its the most practical version, the LALR(1), is widely used in automatically generated parsers. LR grammars usually look more readable, than corresponding LL grammars, since in contrast with the later, LR parser generators by default allow _left-recursion_, and do automatic conflict resolutions. The precedence and assoc operators alloww building more elegant grammars with smaller parsing tables.
+
+Take a look at the [example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-eval.g) with a typical _syntax-directed translation (SDT)_, using semantic actions for AST construction, direct evaluation, and any other transformation.
 
 ##### LR conflicts
 
