@@ -11,6 +11,50 @@ import colors from 'colors';
 
 /**
  * LL parsing table.
+ *
+ * Example for a left-factored calculator grammar:
+ *
+ *   1. E -> T E'
+ *
+ *   2. E' -> "+" T E'
+ *   3.     | ε
+ *
+ *   4. T -> F T'
+ *
+ *   5. T' -> "*" F T'
+ *   6.     | ε
+ *
+ *   7. F -> "id"
+ *   8.    | "(" E ")"
+ *
+ * LL(1) parsing table:
+ *
+ * ┌────┬─────┬─────┬──────┬─────┬─────┬───┐
+ * │    │ "+" │ "*" │ "id" │ "(" │ ")" │ $ │
+ * ├────┼─────┼─────┼──────┼─────┼─────┼───┤
+ * │ E  │ -   │ -   │ 1    │ 1   │ -   │ - │
+ * ├────┼─────┼─────┼──────┼─────┼─────┼───┤
+ * │ E' │ 2   │ -   │ -    │ -   │ 3   │ 3 │
+ * ├────┼─────┼─────┼──────┼─────┼─────┼───┤
+ * │ T  │ -   │ -   │ 4    │ 4   │ -   │ - │
+ * ├────┼─────┼─────┼──────┼─────┼─────┼───┤
+ * │ T' │ 6   │ 5   │ -    │ -   │ 6   │ 6 │
+ * ├────┼─────┼─────┼──────┼─────┼─────┼───┤
+ * │ F  │ -   │ -   │ 7    │ 8   │ -   │ - │
+ * └────┴─────┴─────┴──────┴─────┴─────┴───┘
+ *
+ * Notes:
+ *
+ *   - Row headers are grammar non-terminals
+ *
+ *   - Columns are the grammar tokens
+ *
+ *   - The entries are the next production number to apply
+ *     for derivation (replacing a non-terminal on the stack with
+ *     its right-hand side).
+ *
+ *   - The entries are build from "predict-sets" (combination of the
+ *     "first", and "follow" sets).
  */
 export default class LLParsingTable {
 
@@ -45,15 +89,60 @@ export default class LLParsingTable {
       let stateLabel = colors.blue(nonTerminal);
       let row = {[stateLabel]: []};
       for (let k = 0; k < tokenSymbols.length; k++) {
-        row[stateLabel].push(
-          this._table[nonTerminal][tokenSymbols[k]] || '-'
-        );
+        let entry = this._table[nonTerminal][tokenSymbols[k]] || '';
+
+        if (this._entryHasConflict(entry)) {
+          entry = colors.red(entry);
+        }
+
+        row[stateLabel].push(entry);
       }
       printer.push(row);
     }
 
     console.info(printer.toString());
     console.info('');
+  }
+
+  /**
+   * Whether the table/grammar has conflicts.
+   */
+  hasConflicts() {
+    return !!this.getConflicts();
+  }
+
+  /**
+   * Returns table/grammar conflicts.
+   */
+  getConflicts() {
+    if (!this._conflicts) {
+      this._conflicts = this._analyzeConfilcts();
+    }
+    return this._conflicts;
+  }
+
+  _analyzeConfilcts() {
+    let conflicts = {};
+
+    for (let nonTerminal in this._table) {
+      let row = this._table[nonTerminal];
+
+      for (let token in row) {
+        let entry = row[token];
+
+        if (!this._entryHasConflict(entry)) {
+          continue;
+        }
+
+        if (!conflicts[nonTerminal]) {
+          conflicts[nonTerminal] = {};
+        }
+
+        conflicts[nonTerminal][token] = entry;
+      }
+    }
+
+    return conflicts;
   }
 
   /**
@@ -88,10 +177,42 @@ export default class LLParsingTable {
         : this._setsGenerator.followOf(lhs);
 
       for (let terminal in set) {
-        table[lhsSymbol][terminal] = production.getNumber();
+        this._putProductionNumber(
+          table[lhsSymbol],
+          terminal,
+          production.getNumber(),
+        );
       }
     }
 
     return table;
+  }
+
+  _entryHasConflict(entry) {
+    return entry.includes('/');
+  }
+
+  /**
+   * If we can any conflict ("FIRST/FIRST", "FIRST/FOLLOW", "FOLLOW/FOLLOW"),
+   * the table entry records via `/`, e.g. "2/5" - conflict, ambiguous choice
+   * of the next grammar rule.
+   */
+  _putProductionNumber(row, column, entry) {
+    let previousEntry = row[column];
+
+    if (previousEntry === entry) {
+      return;
+    }
+
+    // Exclude duplicates for possibly the same conflict entry.
+    if (previousEntry) {
+      previousEntry = previousEntry.split('/');
+      if (!previousEntry.includes(entry)) {
+        previousEntry.push(entry);
+      }
+      entry = previousEntry.join('/');
+    }
+
+    row[column] = entry.toString();
   }
 };

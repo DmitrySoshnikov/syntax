@@ -25,6 +25,9 @@ export default class LLParser {
       grammar,
     });
 
+    // If there are conflicts, parsing is not possible.
+    this._validateConflicts();
+
     this._tokenizer = new Tokenizer({
       grammar,
     });
@@ -141,6 +144,30 @@ export default class LLParser {
       .getRHS()
       .slice()
       .reverse();
+  }
+
+  _validateConflicts() {
+    if (!this._table.hasConflicts()) {
+      return;
+    }
+
+    let messages = [''];
+    let conflicts = this._table.getConflicts();
+
+    for (let nonTerminal in conflicts) {
+      let conflictMessage = `${nonTerminal}: `;
+      let row = conflicts[nonTerminal];
+
+      let rowMessages = [];
+      for (let terminal in row) {
+        rowMessages.push(`${terminal} -- ${row[terminal]}`);
+      }
+
+      conflictMessage += rowMessages.join(', ');
+      messages.push(conflictMessage);
+    }
+
+    this._parseError(`Grammar has conflicts:\n${messages.join('\n- ')}`);
   }
 
   _unexpectedEndOfInput() {
