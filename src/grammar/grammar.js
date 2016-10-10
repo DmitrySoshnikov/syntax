@@ -126,7 +126,7 @@ export default class Grammar {
   static fromGrammarFile(grammarFile, mode) {
     let grammarData = this.loadGrammarData(grammarFile);
     grammarData.mode = mode;
-    return new Grammar(grammarData);``
+    return new Grammar(grammarData);
   }
 
   /**

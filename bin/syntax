@@ -301,7 +301,9 @@ function handleSets() {
   const SetsGenerator = require('../dist/sets-generator').default;
 
   let sets = options.sets;
-  let sg = new SetsGenerator({grammar: getGrammar(options.grammar)});
+  let sg = new SetsGenerator({
+    grammar: getGrammar(options.grammar, options.mode),
+  });
 
   if (sets.indexOf('first') !== -1 || sets === 'all') {
     sg.printSet(sg.getFirstSets());
