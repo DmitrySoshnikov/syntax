@@ -21,11 +21,7 @@ let yytext;
 let yyleng;
 let $$;
 
-const EOF = {
-  toString() {
-    return '$';
-  }
-};
+const EOF = '$';
 
 const ps = <<PRODUCTIONS>>;
 const tks = <<TOKENS>>;

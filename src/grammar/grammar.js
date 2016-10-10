@@ -3,10 +3,14 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import BnfParser from '../generated/bnf-parser.gen';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
+
+import fs from 'fs';
+import vm from 'vm';
 
 /**
  * Class encapsulates operations with a grammar.
@@ -113,6 +117,41 @@ export default class Grammar {
     this._tokens = Array.isArray(tokens)
       ? tokens.map(token => new GrammarSymbol(token))
       : this.getTokens();
+  }
+
+  /**
+   * Loads a grammar object from a grammar file,
+   * for the specific parsing mode.
+   */
+  static fromGrammarFile(grammarFile, mode) {
+    let grammarData = this.loadGrammarData(grammarFile);
+    grammarData.mode = mode;
+    return new Grammar(grammarData);``
+  }
+
+  /**
+   * Reads grammar file data.
+   */
+  static dataFromGrammarFile(grammarFile) {
+    let rawGrammarData = fs.readFileSync(grammarFile, 'utf-8');
+    let grammarData;
+
+    try {
+      // An object with `lex`, and `bnf`, valid JSON.
+      grammarData = JSON.parse(rawGrammarData);
+    } catch (e) {
+      // JS code.
+      try {
+        grammarData = vm.runInNewContext(`
+          (function() { return (${rawGrammarData});})()
+        `);
+      } catch (e) {
+        // A grammar in string BNF, parse it.
+        grammarData = BnfParser.parse(rawGrammarData);
+      }
+    }
+
+    return grammarData;
   }
 
   /**

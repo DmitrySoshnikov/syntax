@@ -6,15 +6,20 @@
 import Grammar from '../grammar/grammar';
 import GrammarSymbol from '../grammar/grammar-symbol';
 import LLParsingTable from './ll-parsing-table';
+import LLParserGenerator from './ll-parser-generator';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
+
+import os from 'os';
+import path from 'path';
 
 /**
  * Implements LL(1) parsing algorithm.
  */
 export default class LLParser {
-  constructor({grammar}) {
+  constructor({grammar, parserModule}) {
     this._grammar = grammar;
+    this._parserModule = parserModule;
 
     this._table = new LLParsingTable({
       grammar,
@@ -38,7 +43,27 @@ export default class LLParser {
     return this._productionNumbers;
   }
 
+  static fromParserGenerator({grammar}) {
+    // Generate parser in the temp directory.
+    const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
+
+    const parserModule = new LLParserGenerator({
+      grammar,
+      outputFile,
+    }).generate();
+
+    return new LLParser({grammar, parserModule});
+  }
+
   parse(string) {
+    // If parser module has been generated, use it.
+    if (this._parserModule) {
+      return {
+        status: 'accept',
+        value: this._parserModule.parse(string),
+      };
+    }
+
     this._tokenizer.initString(string);
 
     // Initialize the stack with the `$` at the bottom, and the start symbol.

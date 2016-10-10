@@ -54,7 +54,7 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF.toString() &&
+    return this._string[this._cursor] === EOF &&
       this._cursor === this._string.length - 1;
   },
 

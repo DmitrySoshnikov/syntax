@@ -6,7 +6,7 @@
 import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
-import ParserGenerator from './lr-parser-generator';
+import LRParserGenerator from './lr-parser-generator';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
 
@@ -52,7 +52,7 @@ export default class LRParser {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
-    const parserModule = new ParserGenerator({
+    const parserModule = new LRParserGenerator({
       grammar,
       outputFile,
       resolveConflicts: true,

@@ -21,11 +21,7 @@ let yytext;
 let yyleng;
 let $$;
 
-const EOF = {
-  toString() {
-    return '$';
-  }
-};
+const EOF = '$';
 
 const ps = [[-1, 1],
 [0, 3, ($1,$2,$3) => { 
@@ -152,7 +148,7 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF.toString() &&
+    return this._string[this._cursor] === EOF &&
       this._cursor === this._string.length - 1;
   },
 
