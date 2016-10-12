@@ -1,0 +1,31 @@
+/**
+ * LL(1): FIRST/FIRST conflict
+ *
+ * The FIRST sets of two different grammar rules for the same non-terminal
+ * intersect.
+ *
+ * FIRST(E) = {'b', ε} and FIRST(E 'a') = {'b', 'a'}, so when the table is
+ * drawn, there is conflict under terminal 'b' of production rule S.
+ *
+ * ./bin/syntax -g examples/first-first-conflict.ll1 -t
+ *
+ * ┌───┬─────┬─────┬───┐
+ * │   │ 'a' │ 'b' │ $ │
+ * ├───┼─────┼─────┼───┤
+ * │ S │ 2   │ 1/2 │   │
+ * ├───┼─────┼─────┼───┤
+ * │ E │ 4   │ 3   │ 4 │
+ * └───┴─────┴─────┴───┘
+ */
+
+%%
+
+S
+   : E
+   | E 'a'
+   ;
+
+E
+   : 'b'
+   | /* epsilon */
+   ;
