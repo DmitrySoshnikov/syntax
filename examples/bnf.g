@@ -71,7 +71,7 @@
                      ["%left OperatorList",         "operators.push(['left'].concat($2))"],
                      ["%right OperatorList",        "operators.push(['right'].concat($2))"],
                      ["%nonassoc OperatorList",     "operators.push(['nonassoc'].concat($2))"],
-                     ["%token ID",                  "tokens.push($2)"]],
+                     ["%token OperatorList",        "tokens.push(...$2)"]],
 
     "OperatorList": [["Primary",                    "$$ = [$1]"],
                      ["OperatorList Primary",       "$$ = $1; $1.push($2)"]],
