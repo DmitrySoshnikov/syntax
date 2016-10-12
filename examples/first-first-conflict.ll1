@@ -16,6 +16,11 @@
  * ├───┼─────┼─────┼───┤
  * │ E │ 4   │ 3   │ 4 │
  * └───┴─────┴─────┴───┘
+ *
+ * Note: Left Recursion is a special type of the FIRST/FIRST conflict, which
+ * is caused by all the alternative rules:
+ *
+ * E : E '+' term | alt1 | alt2
  */
 
 %%

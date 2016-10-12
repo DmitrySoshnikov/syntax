@@ -294,7 +294,7 @@ function extractMode(options) {
     return null;
   }
 
-  return mode;
+  return (options.mode = mode);
 }
 
 function handleSets() {

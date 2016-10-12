@@ -1,0 +1,29 @@
+/**
+ * LL(1): FIRST/FOLLOW conflict
+ *
+ * The FIRST and FOLLOW set of a grammar rule overlap. With an empty string (ε)
+ * in the FIRST set it is unknown which alternative to select.
+ *
+ * The FIRST set of A now is {'a', ε} and the FOLLOW set {'a'}.
+ *
+ * ./bin/syntax -g examples/first-follow-conflict.ll1 -t
+ *
+ * ┌───┬─────┬─────┬───┐
+ * │   │ 'a' │ 'b' │ $ │
+ * ├───┼─────┼─────┼───┤
+ * │ S │ 1   │     │   │
+ * ├───┼─────┼─────┼───┤
+ * │ A │ 2/3 │     │   │
+ * └───┴─────┴─────┴───┘
+ */
+
+%%
+
+S
+   : A 'a' 'b'
+   ;
+
+A
+   : 'a'
+   | /* epsilon */
+   ;
