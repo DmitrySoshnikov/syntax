@@ -21,9 +21,14 @@ export default class LexRule {
    *   [0-9]+(\.[0-9]+)? : NUMBER
    */
   constructor({matcher, tokenHandler}) {
-    this._matcher = new RegExp(`^${matcher}`);
+    this._rawMatcher = `^${matcher}`;
+    this._matcher = new RegExp(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
+  }
+
+  getRawMatcher() {
+    return this._rawMatcher;
   }
 
   getMatcher() {

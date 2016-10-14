@@ -19,7 +19,7 @@
 
 let yytext;
 let yyleng;
-let $$;
+let __;
 
 const EOF = '$';
 
@@ -63,7 +63,7 @@ const yyparse = {
 
       if (e[0] === 's') {
         s.push(
-          {symbol: t.type, semanticValue: t.value},
+          {symbol: tks[t.type], semanticValue: t.value},
           Number(e.slice(1))
         );
         st = t;
@@ -93,7 +93,7 @@ const yyparse = {
           yyleng = st ? st.value.length : null;
 
           p[2](...saa);
-          rse.semanticValue = $$;
+          rse.semanticValue = __;
         }
 
         s.push(

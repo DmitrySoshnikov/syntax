@@ -134,12 +134,21 @@ const parsers = {
 
     // Generate parser module.
     if (options.output) {
-      const LRParserGenerator =
-        require('../dist/lr/lr-parser-generator').default;
+      const outputFile = options.output;
+      const language = path.extname(outputFile).slice(1);
+
+      // Generator is language agnostic. Currently support
+      // JavaScript and Python.
+      const GENERATORS = {
+        'js': require('../dist/lr/lr-parser-generator-default.js').default,
+        'py': require('../dist/lr/lr-parser-generator-py.js').default,
+      };
+
+      const LRParserGenerator = GENERATORS[language];
 
       new LRParserGenerator({
         grammar,
-        outputFile: options.output,
+        outputFile,
         customTokenizer: options['custom-tokenizer'],
         resolveConflicts: options['resolve-conflicts'],
       }).generate();

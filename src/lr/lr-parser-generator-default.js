@@ -5,17 +5,16 @@
 
 import BaseParserGenerator from '../base-parser-generator';
 import CanonicalCollection from './canonical-collection';
-import Grammar from '../grammar/grammar';
 import LRParsingTable from './lr-parsing-table';
 import {EOF} from '../special-symbols';
 
 import fs from 'fs';
 
 /**
- * Generic template for all LR parsers.
+ * Generic JS template for all LR parsers.
  */
 const LR_PARSER_TEMPLATE = fs.readFileSync(
-`${__dirname}/../templates/lr.template`,
+`${__dirname}/../templates/lr.template.js`,
   'utf-8'
 );
 
@@ -26,7 +25,7 @@ const LR_PARSER_TEMPLATE = fs.readFileSync(
  * By default also generates code for a tokenizer, unless
  * `customTokenizer` is passed.
  */
-export default class LRParserGenerator extends BaseParserGenerator {
+export default class LRParserGeneratorDefault extends BaseParserGenerator {
 
   /**
    * Instance constructor.

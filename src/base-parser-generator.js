@@ -57,30 +57,55 @@ export default class BaseParserGenerator {
    * Generates code for semantic action.
    */
   buildSemanticAction(production) {
+    const semanticActionData = this.getSemanticActionData(production);
+
+    if (!semanticActionData) {
+      return null;
+    }
+
+    const {args, action} = semanticActionData;
+    return `(${args}) => { ${action} }`;
+  }
+
+  /**
+   * Returns semantics action data (args, and body).
+   */
+  getSemanticActionData(production) {
     let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
-    let action = production.getRawSemanticAction();
+
+    const rawAction = production.getRawSemanticAction();
+
+    if (!rawAction) {
+      return null;
+    }
+
+    let action = rawAction
+      // Replace $1, $2, ... $$ with _1, _2, ... __ for languages
+      // which do not support $ in variable names.
+      .replace(/\$(\d+)/g, '_$1')
+      .replace(/\$\$/g, '__');
 
     if (!action) {
       return null;
     }
     // Builds a string of args: '$1, $2, $3...'
     let args = [...Array(RHSLength)]
-      .map((_, i) => `$${i + 1}`)
+      .map((_, i) => `_${i + 1}`)
       .join(',');
 
-    return `(${args}) => { ${action} }`;
+    return {args, action};
   }
 
   /**
    * Generates parser code and writes it to disk as a reusable module.
    */
   generate() {
+    this.generateParserData();
     fs.writeFileSync(
       this._outputFile,
-      this._generateParserData(),
+      this._resultData,
       'utf-8'
     );
-    return require(this._outputFile);
   }
 
   getEncodedToken(token) {
@@ -121,19 +146,19 @@ export default class BaseParserGenerator {
   /**
    * Generates parser parts.
    */
-  _generateParserData() {
+  generateParserData() {
     // Arbitrary code included to the module.
     this._generateModuleInclude();
 
     // Lexical grammar.
-    this._generateTokenizer();
+    this.generateTokenizer();
 
     // Syntactic grammar.
-    this._generateProductions();
+    this.generateProductions();
 
     // Tables.
-    this._generateTokensTable();
-    this._generateParseTable();
+    this.generateTokensTable();
+    this.generateParseTable();
 
     return this._resultData;
   }
@@ -149,25 +174,25 @@ export default class BaseParserGenerator {
     this._nonTerminals = {};
     this._grammar
       .getNonTerminals()
-      .forEach(symbol => this._nonTerminals[symbol.getSymbol()] = index++);
+      .forEach(symbol => this._nonTerminals[symbol.getSymbol()] = '' + index++);
 
     this._tokens = {};
     this._grammar
       .getTokens()
       .concat(this._grammar.getTerminals())
-      .forEach(symbol => this._tokens[symbol.getSymbol()] = index++);
+      .forEach(symbol => this._tokens[symbol.getSymbol()] = '' + index++);
 
-    this._tokens[EOF] = index;
+    this._tokens[EOF] = '' + index;
   }
 
   /**
    * Generates code for a built-in or a custom tokenizer.
    */
-  _generateTokenizer() {
+  generateTokenizer() {
     if (!this._customTokenizer) {
       // Built-in tokenizer.
-      this._generateBuiltInTokenizer();
-      this._generateLexRules();
+      this.generateBuiltInTokenizer();
+      this.generateLexRules();
     } else {
       // Require custom tokenizer if was provided.
       this.writeData(
@@ -187,9 +212,9 @@ export default class BaseParserGenerator {
   /**
    * Generates built-in tokenizer instance.
    */
-  _generateBuiltInTokenizer() {
+  generateBuiltInTokenizer() {
     let tokenizerCode = fs.readFileSync(
-      `${__dirname}/./templates/tokenizer.template`,
+      `${__dirname}/./templates/tokenizer.template.js`,
       'utf-8'
     );
     this.writeData('<<TOKENIZER>>', tokenizerCode);
@@ -198,14 +223,14 @@ export default class BaseParserGenerator {
   /**
    * Generates rules for tokenizer.
    */
-  _generateLexRules() {
+  generateLexRules() {
     let lexRules = this._grammar.getLexRules().map(lexRule => {
-      return `[${lexRule.getMatcher()}, () => { ${lexRule.getRawHandler()} }]`;
+      return `[/${lexRule.getRawMatcher()}/, () => { ${lexRule.getRawHandler()} }]`;
     });
     this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
   }
 
-  _generateProductions() {
+  generateProductions() {
     this.writeData(
       '<<PRODUCTIONS>>',
       `[${this.generateProductionsData().join(',\n')}]`
@@ -221,14 +246,14 @@ export default class BaseParserGenerator {
     );
   }
 
-  _generateTokensTable() {
+  generateTokensTable() {
     this.writeData('<<TOKENS>>', JSON.stringify(this._tokens));
   }
 
   /**
    * Actual parsing table.
    */
-  _generateParseTable() {
+  generateParseTable() {
     this.writeData(
       '<<TABLE>>',
       JSON.stringify(this.generateParseTableData()),
