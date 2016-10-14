@@ -50,7 +50,14 @@ export default class LexRule {
    */
   _buildHandler(tokenHandler) {
     let yytext, yyleng;
-    let tokenFn = eval(`(function() { ${tokenHandler} })`);
+    let tokenFn;
+
+    try {
+      /* Generate the function handler only for JS language */
+      eval(`(function() { ${tokenHandler} })`);
+    } catch (e) {
+      /* And skip for other languages, which use raw handler in generator */
+    }
     return (_yytext) => {
       yytext = _yytext;
       yyleng = _yytext.length;

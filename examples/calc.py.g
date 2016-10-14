@@ -1,7 +1,7 @@
 /**
  * Generated parser in python.
  *
- * ./bin/syntax -g examples/calc.py.g -m lalr1 -o 'calcparser.py'
+ * ./bin/syntax -g examples/calc.py.g -m lalr1 -o calcparser.py
  *
  * >>> import calcparser
  * >>> calcparser.parse('2 + 2 * 2')
@@ -11,7 +11,7 @@
 {
   "lex": {
     "rules": [
-      ["\\s+",  ""],
+      ["\\s+",  "# skip whitespace"],
       ["\\d+",  "return 'NUMBER'"],
       ["\\*",   "return '*'"],
       ["\\+",   "return '+'"],
