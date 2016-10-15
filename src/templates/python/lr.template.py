@@ -80,7 +80,7 @@ def parse(string):
 
         elif e[0] == 'r':
             p = ps[int(e[1:])]
-            hsa = p[2] != None
+            hsa = len(p) > 2
             saa = [] if hsa else None
 
             if p[1] != 0:
@@ -88,13 +88,13 @@ def parse(string):
                 while rhsl > 0:
                     s.pop()
                     se = s.pop()
-                    if hsa != None:
+                    if hsa:
                         saa.insert(0, se['semantic_value'])
                     rhsl = rhsl - 1
 
             rse = {'symbol': p[0]}
 
-            if hsa != None:
+            if hsa:
                 yytext = st != None and st['value'] or None
                 yyleng = st != None and len(st['value']) or 0
 
@@ -114,7 +114,7 @@ def parse(string):
                 on_parse_end(parsed['semantic_value'])
                 return parsed['semantic_value']
 
-            on_parse_end()
+            on_parse_end(True)
             return True
 
         if not _tokenizer.has_more_tokens() and len(s) <= 1:
