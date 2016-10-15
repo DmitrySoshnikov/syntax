@@ -3,7 +3,7 @@ Syntactic analysis toolkit for education, tracing the parsing process, and parse
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 
-#### Installation
+### Installation
 
 The tool can be installed as an NPM module (notice, it's called `syntax-cli` there):
 
@@ -30,13 +30,13 @@ For development one can also use the `watch` command:
 npm run watch
 ```
 
-#### CLI usage example:
+### CLI usage example:
 
 ```
 ./bin/syntax --grammar examples/grammar.lr0 --parse "aabb" --mode lr0 --table --collection
 ```
 
-#### Parser generation
+### Parser generation
 
 To generate a parser module, specify the `--output` option, which is a path to the output parser file. Once generated, the module can normally be required, and used for parsing strings based on a given grammar.
 
@@ -58,7 +58,27 @@ let value = JSONParser.parse('{"x": 10, "y": [1, 2]}');
 console.log(value); // JS object: {x: 10, y: [1, 2]}
 ```
 
-#### Using custom tokenizer
+### Language agnostic parser generator
+
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports JavaScript, and Python.
+
+The target language is determined by the output file extension. For example, this is how to use the same [calculator grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.py.g) example to generate parser module in Python:
+
+```
+./bin/syntax -g examples/calc.py.g -m lalr1 -o calcparser.py
+```
+
+The `calcparser` module then can be required normally in Python for parsing:
+
+```python
+>>> import calcparser
+>>> calcparser.parse('2 + 2 * 2')
+>>> 6
+```
+
+[Another example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.py.g) shows how to use parser hooks (such as `on_parse_being`, `on_parse_end`, and other) in Python. They are discussed below in the [module include](https://github.com/DmitrySoshnikov/syntax#module-include-and-parser-events) section.
+
+### Using custom tokenizer
 
 > NOTE: built-in tokenizer uses underlying regexp implementation to extract stream of tokens.
 
@@ -107,7 +127,7 @@ const MyTokenizer = {
 module.exports = MyTokenizer;
 ```
 
-#### Parsing modes
+### Parsing modes
 
 _Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR(1)_ as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controlled via the `--mode` option, e.g. `--mode slr1`.
 
@@ -115,7 +135,7 @@ _Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR
 
 Some grammars can be handled by one mode, but not by another. In this case a _conflict_ will be shown in the table.
 
-##### LL parsing
+#### LL parsing
 
 Currently an LL(1) grammar is supposed to be already _left-factored_, and to be _non-left-recursive_. See section on [LL conflicts](https://en.wikipedia.org/wiki/LL_parser#Solutions_to_LL.281.29_Conflicts) for details.
 
@@ -125,13 +145,13 @@ A typical LL parsing table is less, than a corresponding LR-table. However, LR g
 
 At the moment, LL parser only implements syntax validation, not providing semantic actions (e.g. to construct an AST). For the semantic handlers, and actual AST construction see LR parsing.
 
-##### LR parsing
+#### LR parsing
 
 LR parsing, and its the most practical version, the LALR(1), is widely used in automatically generated parsers. LR grammars usually look more readable, than corresponding LL grammars, since in contrast with the later, LR parser generators by default allow _left-recursion_, and do automatic conflict resolutions. The precedence and assoc operators allow building more elegant grammars with smaller parsing tables.
 
 Take a look at the [example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-eval.g) with a typical _syntax-directed translation (SDT)_, using semantic actions for AST construction, direct evaluation, and any other transformation.
 
-##### LR conflicts
+#### LR conflicts
 
 In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conflict, and _"reduce-reduce" (r/r)_ conflict. Taking as an example grammar from `examples/example1.slr1`, we see that the parsing table is normally constructed for `SLR(1)` mode, but has a "shift-reduce" conflict if ran in the `LR(0)` mode:
 
@@ -146,7 +166,7 @@ In LR parsing there are two main types of conflicts: _"shift-reduce" (s/r)_ conf
 ![sl1-grammar](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_9168334335.png)
 ![sl1-grammar-lr0-m](http://dmitrysoshnikov.com/wp-content/uploads/2015/12/imageedit_2_6530197571.png)
 
-##### Conflicts resolution
+#### Conflicts resolution
 
 Sometimes changing parsing mode is not enough for fixing conflicts: for some grammars conflicts may stay and in the _LALR(1)_, and even the _CLR(1)_ modes. LR conflicts can be resolved though automatically and semi-automatically by specifying precedence and associativity of operators.
 
@@ -205,7 +225,7 @@ Parsing: id * id + id
 ✓ Accepted
 ```
 
-##### Module include, and parser events
+#### Module include, and parser events
 
 The `moduleInclude` directive allows injecting an arbitrary code to the generated parser file. This is usually code to require needed dependencies, or to define them inline. As an example, see [the corresponding example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.g.js), which defines all classes for AST nodes inline, and then uses them in the rule handlers.
 
