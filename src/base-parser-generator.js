@@ -148,7 +148,7 @@ export default class BaseParserGenerator {
    */
   generateParserData() {
     // Arbitrary code included to the module.
-    this._generateModuleInclude();
+    this.generateModuleInclude();
 
     // Lexical grammar.
     this.generateTokenizer();
@@ -205,7 +205,7 @@ export default class BaseParserGenerator {
   /**
    * Injects the code passed in the module include directive.
    */
-  _generateModuleInclude() {
+  generateModuleInclude() {
     this.writeData('<<MODULE_INCLUDE>>', this._grammar.getModuleInclude());
   }
 

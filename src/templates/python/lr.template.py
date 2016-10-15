@@ -21,6 +21,14 @@ __ = None
 
 EOF = '$'
 
+def on_parse_begin(string):
+    pass
+
+def on_parse_end(parsed):
+    pass
+
+<<MODULE_INCLUDE>>
+
 <<PRODUCTION_HANDLERS>>
 
 ps = <<PRODUCTIONS>>
@@ -37,12 +45,6 @@ def set_tokenizer(custom_tokenizer):
 
 def get_tokenizer():
     return _tokenizer
-
-def on_parse_begin(string):
-    pass
-
-def on_parse_end(parsed):
-    pass
 
 def parse(string):
     on_parse_begin(string)
@@ -117,8 +119,6 @@ def parse(string):
 
         if not _tokenizer.has_more_tokens() and len(s) <= 1:
             break
-
-<<MODULE_INCLUDE>>
 
 def _unexpected_token(token):
     if token['value'] == EOF:

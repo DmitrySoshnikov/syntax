@@ -14,9 +14,24 @@ const PY_TOKENIZER_TEMPLATE = fs.readFileSync(
 );
 
 /**
+ * Standard Python's indentation.
+ */
+const STANDARD_SPACES = ' '.repeat(4);
+
+/**
  * The trait is used by parser generators (LL/LR) for Python.
  */
 const PythonParserGeneratorTrait = {
+
+  /**
+   * Module include code.
+   */
+  generateModuleInclude() {
+    this.writeData(
+      '<<MODULE_INCLUDE>>',
+      this._formatIndent(this._grammar.getModuleInclude(), /* no ident */''),
+    );
+  },
 
   /**
    * Since Python's lambdas are one-liners, we use normal `def`
@@ -82,28 +97,41 @@ const PythonParserGeneratorTrait = {
    * Generates Python's `def` function declarations for handlers.
    */
   _generateHandlers(handlers, name) {
-    const standardSpaces = ' '.repeat(4);
     return handlers.map(({args, action}, index) => {
-      const lines = action.split('\n')
-        .filter(line => line.trim() != '');
-
-      // First line defines indentation.
-      const spaceMatch = (lines[0] || '').match(/^\s+/);
-      const spacesCount = spaceMatch ? spaceMatch[0].length : 0;
-
-      const formatted = lines.map(line => {
-        // Replace arbitrary number of spaces with standard Python's 4.
-        return standardSpaces + line.substring(spacesCount);
-      });
-
-      if (formatted.length === 0) {
-        formatted.push(`${standardSpaces}pass`);
-      }
-
+      const formatted = this._formatIndent(action);
       return `def ${name}${index + 1}(${args}):\n` +
-        `${standardSpaces}global __, yytext, yyleng\n` + formatted;
+        `${STANDARD_SPACES}global __, yytext, yyleng\n` + formatted;
     });
   },
+
+  /**
+   * Formats Python's indentation.
+   */
+  _formatIndent(code, indent = STANDARD_SPACES) {
+    const lines = code.split('\n');
+    let firstNonEmptyLine;
+
+    for (let line of lines) {
+      if (line.trim() !== '') {
+        firstNonEmptyLine = line;
+        break;
+      }
+    }
+
+    // First line defines indentation.
+    const spaceMatch = (firstNonEmptyLine || '').match(/^\s+/);
+    const spacesCount = spaceMatch ? spaceMatch[0].length : 0;
+
+    const formatted = lines.map(line => {
+      return indent + line.substring(spacesCount);
+    });
+
+    if (formatted.length === 0) {
+      formatted.push(`${STANDARD_SPACES}pass`);
+    }
+
+    return formatted.join('\n');
+  }
 };
 
 module.exports = PythonParserGeneratorTrait;

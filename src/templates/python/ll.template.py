@@ -21,6 +21,14 @@ __ = None
 
 EOF = '$'
 
+def on_parse_begin(string):
+    pass
+
+def on_parse_end(parsed):
+    pass
+
+<<MODULE_INCLUDE>>
+
 <<PRODUCTION_HANDLERS>>
 
 ps = <<PRODUCTIONS>>
@@ -37,12 +45,6 @@ def set_tokenizer(custom_tokenizer):
 
 def get_tokenizer():
     return _tokenizer
-
-def on_parse_begin(string):
-    pass
-
-def on_parse_end(parsed):
-    pass
 
 def parse(string):
     global s
@@ -80,8 +82,6 @@ def parse(string):
         _parse_error('stack is not empty: ' + str(s) + ', ' + str(t['value']))
 
     return True
-
-<<MODULE_INCLUDE>>
 
 def der(to, t, tt):
     npn = tbl[to][tt]
