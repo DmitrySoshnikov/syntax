@@ -14,7 +14,7 @@ import fs from 'fs';
  * Template for LL(1) parser.
  */
 const LL_PARSER_TEMPLATE = fs.readFileSync(
-`${__dirname}/../templates/ll.template`,
+`${__dirname}/../templates/ll.template.js`,
   'utf-8'
 );
 
@@ -25,7 +25,7 @@ const LL_PARSER_TEMPLATE = fs.readFileSync(
  * By default also generates code for a tokenizer, unless
  * `customTokenizer` is passed.
  */
-export default class LLParserGenerator extends BaseParserGenerator {
+export default class LLParserGeneratorDefault extends BaseParserGenerator {
 
   /**
    * Instance constructor.
@@ -34,11 +34,16 @@ export default class LLParserGenerator extends BaseParserGenerator {
     if (!grammar.getMode().isLL()) {
       throw new Error(`LL parser generator: LL(1) grammar is expected.`);
     }
-
     super({grammar, outputFile, customTokenizer})
       .setTable(new LLParsingTable({grammar}))
       .setTemplate(LL_PARSER_TEMPLATE);
+  }
 
+  /**
+   * Generates parser data.
+   */
+  generateParserData() {
+    super.generateParserData();
     this._generateStartSymbol();
   }
 
@@ -53,13 +58,13 @@ export default class LLParserGenerator extends BaseParserGenerator {
       let reversedRHS = [];
       if (!production.isEpsilon()) {
         reversedRHS = production.getRHS().map(symbol => {
-          return this.getEncodedSymbol(symbol.getSymbol())
+          return this.getEncodedSymbol(symbol.getSymbol()).toString();
         }).reverse();
       }
 
       let semanticAction = this.buildSemanticAction(production);
 
-      return `[[${reversedRHS}]` +
+      return `[${JSON.stringify(reversedRHS)}` +
         (semanticAction ? `, ${semanticAction}` : '') + ']';
     });
 
@@ -94,6 +99,6 @@ export default class LLParserGenerator extends BaseParserGenerator {
     let startSymbol = this.getEncodedNonTerminal(
       this.getGrammar().getStartSymbol(),
     );
-    this.writeData('<<START>>', startSymbol);
+    this.writeData('<<START>>', `'${startSymbol}'`);
   }
 };

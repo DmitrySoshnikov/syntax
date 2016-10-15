@@ -141,7 +141,7 @@ const parsers = {
       // JavaScript and Python.
       const GENERATORS = {
         'js': require('../dist/lr/lr-parser-generator-default.js').default,
-        'py': require('../dist/lr/lr-parser-generator-py.js').default,
+        'py': require('../dist/lr/python/lr-parser-generator-py.js').default,
       };
 
       const LRParserGenerator = GENERATORS[language];
@@ -186,12 +186,21 @@ const parsers = {
 
     // Generate parser module.
     if (options.output) {
-      const LLParserGenerator =
-        require('../dist/ll/ll-parser-generator').default;
+      const outputFile = options.output;
+      const language = path.extname(outputFile).slice(1);
+
+      // Generator is language agnostic. Currently support
+      // JavaScript and Python.
+      const GENERATORS = {
+        'js': require('../dist/ll/ll-parser-generator-default.js').default,
+        'py': require('../dist/ll/python/ll-parser-generator-py.js').default,
+      };
+
+      const LLParserGenerator = GENERATORS[language];
 
       new LLParserGenerator({
         grammar,
-        outputFile: options.output,
+        outputFile,
         customTokenizer: options['custom-tokenizer'],
       }).generate();
 
@@ -252,7 +261,7 @@ function getGrammar(grammarFile, mode) {
     if (!grammarData.lex) {
       grammarData.lex = {rules: []};
     }
-    grammarData.lex.rules.unshift(['\\s+', '/* skip whitespace */']);
+    grammarData.lex.rules.unshift(['\\s+', /* skip whitespace */'']);
   }
 
   grammarData.mode = mode;

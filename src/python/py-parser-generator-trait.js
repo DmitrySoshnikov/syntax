@@ -3,59 +3,20 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import LRParserGeneratorDefault from './lr-parser-generator-default';
-import LRParsingTable from './lr-parsing-table';
-import {EOF} from '../special-symbols';
-
 import fs from 'fs';
-import path from 'path';
 
 /**
- * Generic Python template for all LR parsers.
+ * Python tokenizer template.
  */
-const LR_PARSER_TEMPLATE_PY = template('lr.template.py');
+const PY_TOKENIZER_TEMPLATE = fs.readFileSync(
+`${__dirname}/../templates/python/tokenizer.template.py`,
+  'utf-8'
+);
 
 /**
- * Tokenizer template for Python.
+ * The trait is used by parser generators (LL/LR) for Python.
  */
-const TOKENIZER_TEMPLATE = template('tokenizer.template.py');
-
-function template(name) {
-  return fs.readFileSync(
-  `${__dirname}/../templates/${name}`,
-    'utf-8'
-  );
-}
-
-/**
- * LR parser generator for Python.
- */
-export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
-
-  /**
-   * Instance constructor.
-   */
-  constructor({
-    grammar,
-    outputFile,
-    customTokenizer = null,
-    resolveConflicts = false,
-  }) {
-    super({grammar, outputFile, customTokenizer})
-      .setTemplate(LR_PARSER_TEMPLATE_PY);
-
-    this._lexHandlers = [];
-    this._productionHandlers = [];
-  }
-
-  /**
-   * Generates parser code.
-   */
-  generateParserData() {
-    super.generateParserData();
-    this._generateLexHandlers();
-    this._generateProductionHandlers();
-  }
+const PythonParserGeneratorTrait = {
 
   /**
    * Since Python's lambdas are one-liners, we use normal `def`
@@ -71,14 +32,14 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
     // Save the action, they are injected later.
     this._productionHandlers.push(semanticActionData);
     return `_handler${this._productionHandlers.length}`;
-  }
+  },
 
   /**
    * Generates built-in tokenizer instance.
    */
   generateBuiltInTokenizer() {
-    this.writeData('<<TOKENIZER>>', TOKENIZER_TEMPLATE);
-  }
+    this.writeData('<<TOKENIZER>>', PY_TOKENIZER_TEMPLATE);
+  },
 
   /**
    * Generates rules for tokenizer.
@@ -93,7 +54,7 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
     });
 
     this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
-  }
+  },
 
   /**
    * Python-specific lex rules handler declarations.
@@ -104,7 +65,7 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
       '_lex_rule',
     );
     this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
-  }
+  },
 
   /**
    * Python-specific handler declarations.
@@ -115,8 +76,11 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
       '_handler',
     );
     this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
-  }
+  },
 
+  /**
+   * Generates Python's `def` function declarations for handlers.
+   */
   _generateHandlers(handlers, name) {
     const standardSpaces = ' '.repeat(4);
     return handlers.map(({args, action}, index) => {
@@ -137,7 +101,9 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
       }
 
       return `def ${name}${index + 1}(${args}):\n` +
-        `${standardSpaces}global __\n` + formatted;
+        `${standardSpaces}global __, yytext, yyleng\n` + formatted;
     });
-  }
+  },
 };
+
+module.exports = PythonParserGeneratorTrait;
