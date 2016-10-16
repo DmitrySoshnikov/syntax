@@ -14,7 +14,7 @@ import fs from 'fs';
  * Generic JS template for all LR parsers.
  */
 const LR_PARSER_TEMPLATE = fs.readFileSync(
-`${__dirname}/../templates/lr.template.js`,
+  `${__dirname}/../templates/lr.template.js`,
   'utf-8'
 );
 

@@ -3,6 +3,9 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+// To require local modules from root.
+global.ROOT = __dirname + '/';
+
 // Tokenizer.
 export {default as Tokenizer} from './tokenizer';
 

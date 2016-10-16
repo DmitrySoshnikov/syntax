@@ -51,25 +51,35 @@
     class PrimaryExpression(Node):
         def __init__(self, value):
             super(PrimaryExpression, self).__init__('Primary')
-            self.value = value
+            self.value = int(value)
 
     # Standard hook on parse beging, and end:
 
+    _string = None
+
     def on_parse_begin(string):
+        global _string
+        _string = string
         print('Custom hook on parse begin. Parsing:', string)
 
     def on_parse_end(value):
         print('Custom hook on parse end. Parsed:', value)
 
+        if _string != '2 + 2 * 2':
+            return
+
         assert isinstance(value, BinaryExpression)
         assert value.op == '+'
 
         assert isinstance(value.left, PrimaryExpression)
+        assert value.left.value == 2
         assert isinstance(value.right, BinaryExpression)
 
         assert value.right.op == '*'
         assert isinstance(value.right.left, PrimaryExpression)
         assert isinstance(value.right.right, PrimaryExpression)
+        assert value.right.left.value == 2
+        assert value.right.right.value == 2
 
         print('All assertions are passed!')
   `,

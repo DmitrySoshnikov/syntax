@@ -9,7 +9,7 @@ import fs from 'fs';
  * Python tokenizer template.
  */
 const PY_TOKENIZER_TEMPLATE = fs.readFileSync(
-`${__dirname}/../templates/python/tokenizer.template.py`,
+  `${__dirname}/templates/tokenizer.template.py`,
   'utf-8'
 );
 

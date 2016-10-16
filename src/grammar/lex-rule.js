@@ -54,7 +54,7 @@ export default class LexRule {
 
     try {
       /* Generate the function handler only for JS language */
-      eval(`(function() { ${tokenHandler} })`);
+      tokenFn = eval(`(function() { ${tokenHandler} })`);
     } catch (e) {
       /* And skip for other languages, which use raw handler in generator */
     }

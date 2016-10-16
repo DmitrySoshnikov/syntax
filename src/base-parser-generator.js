@@ -106,6 +106,11 @@ export default class BaseParserGenerator {
       this._resultData,
       'utf-8'
     );
+    try {
+      return require(this._outputFile);
+    } catch (e) {
+      /* skip for other languages */
+    }
   }
 
   getEncodedToken(token) {

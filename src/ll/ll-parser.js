@@ -6,7 +6,7 @@
 import Grammar from '../grammar/grammar';
 import GrammarSymbol from '../grammar/grammar-symbol';
 import LLParsingTable from './ll-parsing-table';
-import LLParserGenerator from './ll-parser-generator';
+import LLParserGeneratorDefault from './ll-parser-generator-default';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
 
@@ -50,7 +50,7 @@ export default class LLParser {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
-    const parserModule = new LLParserGenerator({
+    const parserModule = new LLParserGeneratorDefault({
       grammar,
       outputFile,
     }).generate();

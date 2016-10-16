@@ -2,13 +2,16 @@
 
 'use strict';
 
+// To require local modules from root.
+global.ROOT = __dirname + '/../dist/';
+
 const colors = require('colors');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const GRAMMAR_MODE = require('../dist/grammar/grammar-mode').MODES;
-const Grammar = require('../dist/grammar/grammar').default;
+const GRAMMAR_MODE = require(ROOT + 'grammar/grammar-mode').MODES;
+const Grammar = require(ROOT + 'grammar/grammar').default;
 
 const options = require('nomnom')
   .script('syntax')
@@ -102,7 +105,7 @@ const parsers = {
     // Canonical collection or LR items.
     if (options.collection) {
       const CanonicalCollection =
-        require('../dist/lr/canonical-collection').default;
+        require(ROOT + 'lr/canonical-collection').default;
 
       new CanonicalCollection({grammar})
         .print();
@@ -111,9 +114,9 @@ const parsers = {
     // LR parsing table.
     if (options.table) {
       const CanonicalCollection =
-        require('../dist/lr/canonical-collection').default;
+        require(ROOT + 'lr/canonical-collection').default;
 
-      const LRParsingTable = require('../dist/lr/lr-parsing-table').default;
+      const LRParsingTable = require(ROOT + 'lr/lr-parsing-table').default;
 
       new LRParsingTable({
         grammar,
@@ -140,8 +143,8 @@ const parsers = {
       // Generator is language agnostic. Currently support
       // JavaScript and Python.
       const GENERATORS = {
-        'js': require('../dist/lr/lr-parser-generator-default.js').default,
-        'py': require('../dist/lr/python/lr-parser-generator-py.js').default,
+        'js': require(ROOT + 'lr/lr-parser-generator-default.js').default,
+        'py': require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js').default,
       };
 
       const LRParserGenerator = GENERATORS[language];
@@ -167,7 +170,7 @@ const parsers = {
 
     // LL parsing table.
     if (options.table) {
-      const LLParsingTable = require('../dist/ll/ll-parsing-table').default;
+      const LLParsingTable = require(ROOT + 'll/ll-parsing-table').default;
 
       new LLParsingTable({
         grammar,
@@ -192,8 +195,8 @@ const parsers = {
       // Generator is language agnostic. Currently support
       // JavaScript and Python.
       const GENERATORS = {
-        'js': require('../dist/ll/ll-parser-generator-default.js').default,
-        'py': require('../dist/ll/python/ll-parser-generator-py.js').default,
+        'js': require(ROOT + 'll/ll-parser-generator-default.js').default,
+        'py': require(ROOT + 'plugins/python/ll/ll-parser-generator-py.js').default,
       };
 
       const LLParserGenerator = GENERATORS[language];
@@ -238,12 +241,12 @@ function parse(string, grammar) {
 }
 
 function lrParse(string, grammar) {
-  const LRParser = require('../dist/lr/lr-parser').default;
+  const LRParser = require(ROOT + 'lr/lr-parser').default;
   return LRParser.fromParserGenerator({grammar}).parse(string);
 }
 
 function llParse(string, grammar) {
-  const LLParser = require('../dist/ll/ll-parser').default;
+  const LLParser = require(ROOT + 'll/ll-parser').default;
   return new LLParser.fromParserGenerator({grammar}).parse(string);
 }
 
@@ -316,7 +319,7 @@ function extractMode(options) {
 }
 
 function handleSets() {
-  const SetsGenerator = require('../dist/sets-generator').default;
+  const SetsGenerator = require(ROOT + 'sets-generator').default;
 
   let sets = options.sets;
   let sg = new SetsGenerator({

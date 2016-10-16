@@ -3,9 +3,9 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import LRParserGeneratorDefault from '../lr-parser-generator-default';
-import LRParsingTable from '../lr-parsing-table';
-import PyParserGeneratorTrait from '../../python/py-parser-generator-trait';
+const LRParserGeneratorDefault = require(ROOT + 'lr/lr-parser-generator-default').default;
+const LRParsingTable = require(ROOT + 'lr/lr-parsing-table').default;
+const PyParserGeneratorTrait = require('../py-parser-generator-trait');
 
 import fs from 'fs';
 
@@ -13,8 +13,8 @@ import fs from 'fs';
  * Generic Python template for all LR parsers.
  */
 const PY_LR_PARSER_TEMPLATE = fs.readFileSync(
-`${__dirname}/../../templates/python/lr.template.py`,
-  'utf-8'
+  `${__dirname}/../templates/lr.template.py`,
+  'utf-8',
 );
 
 /**

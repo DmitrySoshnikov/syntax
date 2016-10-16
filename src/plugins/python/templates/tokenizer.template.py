@@ -12,34 +12,30 @@ import re as _syntax_tool_re
 
 _lex_rules = <<LEX_RULES>>
 
-_string = '';
-_cursor = 0;
-
 EOF_TOKEN = {
   'type': EOF,
   'value': EOF
 }
 
 class _tokenizer(object):
+    _string = None
+    _cursor = 0
 
     @staticmethod
     def init_string(string):
-        global _string, _cursor
-        _string = string + EOF
-        _cursor = 0
+        _tokenizer._string = string + EOF
+        _tokenizer._cursor = 0
 
     @staticmethod
     def get_next_token():
-        global _string, _cursor
-
         if not _tokenizer.has_more_tokens():
             return EOF_TOKEN
 
         elif _tokenizer.is_eof():
-            _cursor = _cursor + 1
+            _tokenizer._cursor = _tokenizer._cursor + 1
             return EOF_TOKEN
 
-        string = _string[_cursor:]
+        string = _tokenizer._string[_tokenizer._cursor:]
 
         for lex_rule in _lex_rules:
             matched = _tokenizer._match(string, lex_rule[0])
@@ -60,19 +56,19 @@ class _tokenizer(object):
 
     @staticmethod
     def is_eof():
-        return _string[_cursor] == EOF and _cursor == len(_string) - 1
+        return _tokenizer._string[_tokenizer._cursor] == EOF and \
+            _tokenizer._cursor == len(_tokenizer._string) - 1
 
     @staticmethod
     def has_more_tokens():
-        return _cursor < len(_string)
+        return _tokenizer._cursor < len(_tokenizer._string)
 
     @staticmethod
     def _match(string, regexp):
-        global _cursor
         matched = _syntax_tool_re.search(regexp, string)
 
         if matched != None:
-            _cursor += matched.end()
+            _tokenizer._cursor += matched.end()
             return matched.group(0)
 
         return None
