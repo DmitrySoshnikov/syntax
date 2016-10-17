@@ -18,7 +18,7 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
   - [LR parsing](#lr-parsing)
   - [LR conflicts](#lr-conflicts)
   - [Conflicts resolution](#conflicts-resolution)
-  - [Module include, and parser events](#module-include-and-parser-events)
+- [Module include, and parser events](#module-include-and-parser-events)
 
 
 ### Installation
@@ -267,7 +267,7 @@ Parsing: id * id + id
 ✓ Accepted
 ```
 
-#### Module include, and parser events
+### Module include, and parser events
 
 The `moduleInclude` directive allows injecting an arbitrary code to the generated parser file. This is usually code to require needed dependencies, or to define them inline. As an example, see [the corresponding example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.g.js), which defines all classes for AST nodes inline, and then uses them in the rule handlers.
 
