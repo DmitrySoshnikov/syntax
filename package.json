@@ -22,7 +22,10 @@
     "LR(1)",
     "LALR(1)",
     "SLR(1)",
-    "generator"
+    "generator",
+    "JavaScript",
+    "Python",
+    "PHP"
   ],
   "author": "Dmitry Soshnikov",
   "license": "MIT Style License",
