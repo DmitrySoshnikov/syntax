@@ -1,25 +1,25 @@
-**Table of Contents**
-
-- [syntax](#syntax)
-    - [Installation](#installation)
-    - [CLI usage example:](#cli-usage-example)
-    - [Parser generation](#parser-generation)
-    - [Language agnostic parser generator](#language-agnostic-parser-generator)
-      - [JavaScript default](#javascript-default)
-      - [Python plugin](#python-plugin)
-      - [PHP plugin](#php-plugin)
-    - [Using custom tokenizer](#using-custom-tokenizer)
-    - [Parsing modes](#parsing-modes)
-      - [LL parsing](#ll-parsing)
-      - [LR parsing](#lr-parsing)
-      - [LR conflicts](#lr-conflicts)
-      - [Conflicts resolution](#conflicts-resolution)
-      - [Module include, and parser events](#module-include-and-parser-events)
-
 # syntax
 Syntactic analysis toolkit for education, tracing the parsing process, and parsers generation.
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
+
+### Table of Contents
+
+- [Installation](#installation)
+- [CLI usage example:](#cli-usage-example)
+- [Parser generation](#parser-generation)
+- [Language agnostic parser generator](#language-agnostic-parser-generator)
+  - [JavaScript default](#javascript-default)
+  - [Python plugin](#python-plugin)
+  - [PHP plugin](#php-plugin)
+- [Using custom tokenizer](#using-custom-tokenizer)
+- [Parsing modes](#parsing-modes)
+  - [LL parsing](#ll-parsing)
+  - [LR parsing](#lr-parsing)
+  - [LR conflicts](#lr-conflicts)
+  - [Conflicts resolution](#conflicts-resolution)
+  - [Module include, and parser events](#module-include-and-parser-events)
+
 
 ### Installation
 
