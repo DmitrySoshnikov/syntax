@@ -4,22 +4,23 @@
  */
 
 const LRParserGeneratorDefault = require(ROOT + 'lr/lr-parser-generator-default').default;
-const PyParserGeneratorTrait = require('../py-parser-generator-trait');
+const PHPParserGeneratorTrait = require('../php-parser-generator-trait');
 
 import fs from 'fs';
+import path from 'path';
 
 /**
- * Generic Python template for all LR parsers.
+ * Generic PHP template for all LR parsers.
  */
-const PY_LR_PARSER_TEMPLATE = fs.readFileSync(
-  `${__dirname}/../templates/lr.template.py`,
+const PHP_LR_PARSER_TEMPLATE = fs.readFileSync(
+  `${__dirname}/../templates/lr.template.php`,
   'utf-8',
 );
 
 /**
- * LR parser generator for Python.
+ * LR parser generator for PHP.
  */
-export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
+export default class LRParserGeneratorPHP extends LRParserGeneratorDefault {
 
   /**
    * Instance constructor.
@@ -31,13 +32,18 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
     resolveConflicts = false,
   }) {
     super({grammar, outputFile, customTokenizer, resolveConflicts})
-      .setTemplate(PY_LR_PARSER_TEMPLATE);
+      .setTemplate(PHP_LR_PARSER_TEMPLATE);
 
     this._lexHandlers = [];
     this._productionHandlers = [];
 
+    this._parserClassName = path.basename(
+      outputFile,
+      path.extname(outputFile),
+    );
+
     // Trait provides methods for lex and production handlers.
-    Object.assign(this, PyParserGeneratorTrait);
+    Object.assign(this, PHPParserGeneratorTrait);
   }
 
   /**
@@ -45,7 +51,8 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
    */
   generateParserData() {
     super.generateParserData();
-    this._generateLexHandlers();
-    this._generateProductionHandlers();
+    this.generateLexHandlers();
+    this.generateProductionHandlers();
+    this.generateParserClassName(this._parserClassName);
   }
 };

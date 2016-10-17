@@ -143,8 +143,9 @@ const parsers = {
       // Generator is language agnostic. Currently support
       // JavaScript and Python.
       const GENERATORS = {
-        'js': require(ROOT + 'lr/lr-parser-generator-default.js').default,
-        'py': require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js').default,
+        'js' : require(ROOT + 'lr/lr-parser-generator-default.js').default,
+        'py' : require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js').default,
+        'php': require(ROOT + 'plugins/php/lr/lr-parser-generator-php.js').default,
       };
 
       const LRParserGenerator = GENERATORS[language];

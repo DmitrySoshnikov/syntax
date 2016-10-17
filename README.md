@@ -60,7 +60,7 @@ console.log(value); // JS object: {x: 10, y: [1, 2]}
 
 ### Language agnostic parser generator
 
-Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports JavaScript, and Python.
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports JavaScript, Python, and PHP.
 
 The target language is determined by the output file extension. For example, this is how to use the same [calculator grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.py.g) example to generate parser module in Python:
 
@@ -77,6 +77,24 @@ The `calcparser` module then can be required normally in Python for parsing:
 ```
 
 [Another example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.py.g) shows how to use parser hooks (such as `on_parse_begin`, `on_parse_end`, and other) in Python. They are discussed below in the [module include](https://github.com/DmitrySoshnikov/syntax#module-include-and-parser-events) section.
+
+For PHP the procedure is pretty much the same, take a look at the similar [example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.php.g):
+
+```
+./bin/syntax -g examples/calc.py.g -m lalr1 -o CalcParser.php
+```
+
+The output file contains the class name corresponding to the file name:
+
+```php
+<?php
+
+require('CalcParser.php');
+
+var_dump(CalcParser::parse('2 + 2 * 2')); // int(6)
+```
+
+The parser hooks for PHP can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.php.g).
 
 ### Using custom tokenizer
 

@@ -2,8 +2,15 @@ rm -rf dist
 mkdir dist
 mkdir dist/templates
 cp -r src/templates/* dist/templates/
+
+# Python plugin.
 mkdir -p dist/plugins/python/templates
 cp -r src/plugins/python/templates/* dist/plugins/python/templates/
+
+# PHP plugin.
+mkdir -p dist/plugins/php/templates
+cp -r src/plugins/php/templates/* dist/plugins/php/templates/
+
 mkdir dist/generated
 cp -r src/generated/* dist/generated/
 babel src/ --out-dir dist/ --presets es2015,stage-1,stage-2 --ignore templates/
