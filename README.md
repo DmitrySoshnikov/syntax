@@ -1,3 +1,21 @@
+**Table of Contents**
+
+- [syntax](#syntax)
+    - [Installation](#installation)
+    - [CLI usage example:](#cli-usage-example)
+    - [Parser generation](#parser-generation)
+    - [Language agnostic parser generator](#language-agnostic-parser-generator)
+      - [JavaScript default](#javascript-default)
+      - [Python plugin](#python-plugin)
+      - [PHP plugin](#php-plugin)
+    - [Using custom tokenizer](#using-custom-tokenizer)
+    - [Parsing modes](#parsing-modes)
+      - [LL parsing](#ll-parsing)
+      - [LR parsing](#lr-parsing)
+      - [LR conflicts](#lr-conflicts)
+      - [Conflicts resolution](#conflicts-resolution)
+      - [Module include, and parser events](#module-include-and-parser-events)
+
 # syntax
 Syntactic analysis toolkit for education, tracing the parsing process, and parsers generation.
 
@@ -60,9 +78,13 @@ console.log(value); // JS object: {x: 10, y: [1, 2]}
 
 ### Language agnostic parser generator
 
-Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports JavaScript, Python, and PHP.
+#### JavaScript default
 
-The target language is determined by the output file extension. For example, this is how to use the same [calculator grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.py.g) example to generate parser module in Python:
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, and _PHP_. The target language is determined by the output file extension.
+
+#### Python plugin
+
+For example, this is how to use the same [calculator grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.py.g) example to generate parser module in Python:
 
 ```
 ./bin/syntax -g examples/calc.py.g -m lalr1 -o calcparser.py
@@ -77,6 +99,8 @@ The `calcparser` module then can be required normally in Python for parsing:
 ```
 
 [Another example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.py.g) shows how to use parser hooks (such as `on_parse_begin`, `on_parse_end`, and other) in Python. They are discussed below in the [module include](https://github.com/DmitrySoshnikov/syntax#module-include-and-parser-events) section.
+
+#### PHP plugin
 
 For PHP the procedure is pretty much the same, take a look at the similar [example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.php.g):
 
