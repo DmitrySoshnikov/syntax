@@ -45,7 +45,7 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
    */
   generateParserData() {
     super.generateParserData();
-    this._generateLexHandlers();
-    this._generateProductionHandlers();
+    this.generateLexHandlers();
+    this.generateProductionHandlers();
   }
 };

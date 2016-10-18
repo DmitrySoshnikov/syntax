@@ -192,11 +192,11 @@ const parsers = {
       const outputFile = options.output;
       const language = path.extname(outputFile).slice(1);
 
-      // Generator is language agnostic. Currently support
-      // JavaScript and Python.
+      // Generator is language agnostic.
       const GENERATORS = {
         'js': require(ROOT + 'll/ll-parser-generator-default.js').default,
         'py': require(ROOT + 'plugins/python/ll/ll-parser-generator-py.js').default,
+        'php': require(ROOT + 'plugins/php/ll/ll-parser-generator-php.js').default,
       };
 
       const LLParserGenerator = GENERATORS[language];

@@ -12,7 +12,7 @@
 #   syntax-cli \
 #     --grammar ~/path-to-grammar-file \
 #     --mode LL1 \
-#     --output ~/path-to-output-parser-file.js
+#     --output ~/parsermodule.py
 ##
 
 yytext = ''

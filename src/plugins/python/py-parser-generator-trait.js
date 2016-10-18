@@ -74,7 +74,7 @@ const PythonParserGeneratorTrait = {
   /**
    * Python-specific lex rules handler declarations.
    */
-  _generateLexHandlers() {
+  generateLexHandlers() {
     const handlers = this._generateHandlers(
       this._lexHandlers,
       '_lex_rule',
@@ -85,7 +85,7 @@ const PythonParserGeneratorTrait = {
   /**
    * Python-specific handler declarations.
    */
-  _generateProductionHandlers() {
+  generateProductionHandlers() {
     const handlers = this._generateHandlers(
       this._productionHandlers,
       '_handler',
