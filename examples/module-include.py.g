@@ -94,7 +94,7 @@
       ["E + E",  "$$ = BinaryExpression($1, $3, $2)"],
       ["E * E",  "$$ = BinaryExpression($1, $3, $2)"],
       ["NUMBER", "$$ = PrimaryExpression($1)"],
-      ["( E )",  "$$ = $1"],
+      ["( E )",  "$$ = $2"],
     ],
   },
 }

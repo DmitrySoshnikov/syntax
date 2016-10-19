@@ -12,6 +12,7 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
   - [JavaScript default](#javascript-default)
   - [Python plugin](#python-plugin)
   - [PHP plugin](#php-plugin)
+  - [Ruby plugin](#ruby-plugin)
 - [Using custom tokenizer](#using-custom-tokenizer)
 - [Parsing modes](#parsing-modes)
   - [LL parsing](#ll-parsing)
@@ -105,7 +106,7 @@ The `calcparser` module then can be required normally in Python for parsing:
 For PHP the procedure is pretty much the same, take a look at the similar [example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.php.g):
 
 ```
-./bin/syntax -g examples/calc.py.g -m lalr1 -o CalcParser.php
+./bin/syntax -g examples/calc.php.g -m lalr1 -o CalcParser.php
 ```
 
 The output file contains the class name corresponding to the file name:
@@ -119,6 +120,24 @@ var_dump(CalcParser::parse('2 + 2 * 2')); // int(6)
 ```
 
 The parser hooks for PHP can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.php.g).
+
+#### Ruby plugin
+
+Ruby is another target language supported by Syntax. Its [calculator example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.rb.g) is very similar:
+
+```
+./bin/syntax -g examples/calc.rb.g -m lalr1 -o CalcParser.rb
+```
+
+And also the output file contains the class name corresponding to the file name:
+
+```ruby
+require 'CalcParser.php'
+
+puts CalcParser.parse('2 + 2 * 2') // 6
+```
+
+Ruby's parsing hooks can be found in [the following example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.rb.g).
 
 ### Using custom tokenizer
 

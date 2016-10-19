@@ -87,7 +87,7 @@
       ["E + E",  "$$ = new BinaryExpression($1, $3, $2)"],
       ["E * E",  "$$ = new BinaryExpression($1, $3, $2)"],
       ["NUMBER", "$$ = new PrimaryExpression($1)"],
-      ["( E )",  "$$ = $1"],
+      ["( E )",  "$$ = $2"],
     ],
   },
 }

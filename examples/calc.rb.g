@@ -1,19 +1,17 @@
 /**
- * Generated parser in PHP.
+ * Generated parser in Ruby.
  *
- * ./bin/syntax -g examples/calc.php.g -m lalr1 -o CalcParser.php
+ * ./bin/syntax -g examples/calc.rb.g -m lalr1 -o CalcParser.rb
  *
- * <?php
+ *   require('CalcParser.rb')
  *
- *   require('CalcParser.php');
- *
- *   var_dump(CalcParser::parse('2 + 2 * 2')); // int(6)
+ *   puts CalcParser.parse('2 + 2 * 2') # 6
  */
 
 {
   "lex": {
     "rules": [
-      ["\\s+",  "/* skip whitespace */"],
+      ["\\s+",  "# skip whitespace"],
       ["\\d+",  "return 'NUMBER'"],
       ["\\*",   "return '*'"],
       ["\\+",   "return '+'"],
@@ -31,7 +29,7 @@
     "E": [
       ["E + E",  "$$ = $1 + $3"],
       ["E * E",  "$$ = $1 * $3"],
-      ["NUMBER", "$$ = intval($1)"],
+      ["NUMBER", "$$ = $1.to_i"],
       ["( E )",  "$$ = $2"],
     ],
   },

@@ -1,5 +1,5 @@
 /**
- * Generated parser in python.
+ * Generated parser in Python.
  *
  * ./bin/syntax -g examples/calc.py.g -m lalr1 -o calcparser.py
  *
@@ -30,7 +30,7 @@
       ["E + E",  "$$ = $1 + $3"],
       ["E * E",  "$$ = $1 * $3"],
       ["NUMBER", "$$ = int($1)"],
-      ["( E )",  "$$ = $1"],
+      ["( E )",  "$$ = $2"],
     ],
   },
 }
