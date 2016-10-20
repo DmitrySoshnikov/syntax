@@ -4,35 +4,41 @@
  */
 
 const LLParserGeneratorDefault = require(ROOT + 'll/ll-parser-generator-default').default;
-const PyParserGeneratorTrait = require('../py-parser-generator-trait');
+const RubyParserGeneratorTrait = require('../ruby-parser-generator-trait');
 
 import fs from 'fs';
+import path from 'path';
 
 /**
- * Generic Python template for LL(1) parser.
+ * Generic Ruby template for LL(1) parser.
  */
-const PY_LL_PARSER_TEMPLATE = fs.readFileSync(
-  `${__dirname}/../templates/ll.template.py`,
+const RUBY_LL_PARSER_TEMPLATE = fs.readFileSync(
+  `${__dirname}/../templates/ll.template.rb`,
   'utf-8'
 );
 
 /**
- * LL parser generator for Python.
+ * LL parser generator for Ruby.
  */
-export default class LLParserGeneratorPy extends LLParserGeneratorDefault {
+export default class LLParserGeneratorRuby extends LLParserGeneratorDefault {
 
   /**
    * Instance constructor.
    */
   constructor({grammar, outputFile, customTokenizer = null}) {
     super({grammar, outputFile, customTokenizer})
-      .setTemplate(PY_LL_PARSER_TEMPLATE);
+      .setTemplate(RUBY_LL_PARSER_TEMPLATE);
 
     this._lexHandlers = [];
     this._productionHandlers = [];
 
+    this._parserClassName = path.basename(
+      outputFile,
+      path.extname(outputFile),
+    );
+
     // Trait provides methods for lex and production handlers.
-    Object.assign(this, PyParserGeneratorTrait);
+    Object.assign(this, RubyParserGeneratorTrait);
   }
 
   /**
@@ -42,5 +48,6 @@ export default class LLParserGeneratorPy extends LLParserGeneratorDefault {
     super.generateParserData();
     this.generateLexHandlers();
     this.generateProductionHandlers();
+    this.generateParserClassName(this._parserClassName);
   }
 };

@@ -198,6 +198,7 @@ const parsers = {
         'js': require(ROOT + 'll/ll-parser-generator-default.js').default,
         'py': require(ROOT + 'plugins/python/ll/ll-parser-generator-py.js').default,
         'php': require(ROOT + 'plugins/php/ll/ll-parser-generator-php.js').default,
+        'rb' : require(ROOT + 'plugins/ruby/ll/ll-parser-generator-ruby.js').default,
       };
 
       const LLParserGenerator = GENERATORS[language];

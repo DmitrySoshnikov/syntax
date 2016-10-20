@@ -109,7 +109,8 @@ const RubyParserGeneratorTrait = {
     let result = [];
     for (let k in object) {
       let value = object[k];
-      result.push("'" + k + "' => " + this._toRubyHash(value));
+      let key = k.replace(/'/g, "\\'");
+      result.push("'" + key + "' => " + this._toRubyHash(value));
     }
     return `{${result.join(', ')}}`;
   },

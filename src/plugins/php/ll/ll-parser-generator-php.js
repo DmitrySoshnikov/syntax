@@ -10,7 +10,7 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Generic PHP template for all LR parsers.
+ * Generic PHP template for LL(1) parser.
  */
 const PHP_LL_PARSER_TEMPLATE = fs.readFileSync(
   `${__dirname}/../templates/ll.template.php`,
@@ -18,7 +18,7 @@ const PHP_LL_PARSER_TEMPLATE = fs.readFileSync(
 );
 
 /**
- * LR parser generator for PHP.
+ * LL parser generator for PHP.
  */
 export default class LLParserGeneratorPHP extends LLParserGeneratorDefault {
 

@@ -110,7 +110,8 @@ const PHPParserGeneratorTrait = {
     let result = [];
     for (let k in object) {
       let value = object[k];
-      result.push("'" + k + "' => " + this._toPHPArray(value));
+      let key = k.replace(/'/g, "\\'");
+      result.push("'" + key + "' => " + this._toPHPArray(value));
     }
     return `array(${result.join(', ')})`;
   },
