@@ -88,6 +88,10 @@ const RubyParserGeneratorTrait = {
     this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
   },
 
+  generateLexRulesByStartConditions() {
+    // TODO
+  },
+
   /**
    * Replaces global vars like `yytext`, `$$`, etc. to be
    * referred from `YYParse`.

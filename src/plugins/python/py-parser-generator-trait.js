@@ -71,6 +71,10 @@ const PythonParserGeneratorTrait = {
     this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
   },
 
+  generateLexRulesByStartConditions() {
+    // TODO
+  },
+
   /**
    * Python-specific lex rules handler declarations.
    */
