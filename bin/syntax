@@ -74,6 +74,11 @@ const options = require('nomnom')
       help: 'Whether to auto-resolve conflicts with default action',
       flag: true,
     },
+    'generate-inline-parser': {
+      abbr: 'i',
+      help: 'Whether to generate a parser module for parsing a passed string',
+      flag: true,
+    },
   })
   .parse();
 
@@ -244,7 +249,12 @@ function parse(string, grammar) {
 
 function lrParse(string, grammar) {
   const LRParser = require(ROOT + 'lr/lr-parser').default;
-  return LRParser.fromParserGenerator({grammar}).parse(string);
+
+  if (options['generate-inline-parser']) {
+    return LRParser.fromParserGenerator({grammar}).parse(string);
+  }
+
+  return new LRParser({grammar}).parse(string);
 }
 
 function llParse(string, grammar) {
@@ -253,7 +263,10 @@ function llParse(string, grammar) {
 }
 
 function formatParsedOutput(output) {
-  if (Array.isArray(output) || output.constructor === Object) {
+  // Object constructor is used from another realm, so no direct
+  // constructor check, neither `instanceof` would work. Check
+  // `name` property.
+  if (Array.isArray(output) || output.constructor.name === 'Object') {
     return JSON.stringify(output, null, 2);
   }
   return output;

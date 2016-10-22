@@ -134,7 +134,7 @@ export default class Tokenizer {
     for (let lexRule of lexRulesForState) {
       let matched = this._match(string, lexRule.getMatcher());
       if (matched) {
-        let [yytext, rawToken] = lexRule.getTokenData(matched, this._yy, this);
+        let [yytext, rawToken] = lexRule.getTokenData(matched, this);
 
         // Usually whitespaces, etc.
         if (!rawToken) {

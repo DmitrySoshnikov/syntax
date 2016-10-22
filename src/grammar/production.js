@@ -2,6 +2,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CodeUnit from '../code-unit';
 import GrammarSymbol from './grammar-symbol';
 import {EPSILON} from '../special-symbols';
 
@@ -112,16 +113,17 @@ export default class Production {
     }
 
     // Builds a string of args: '$1, $2, $3...'
-    let args = [...Array(this.getRHS().length)]
+    let parameters = [...Array(this.getRHS().length)]
       .map((_, i) => `$${i + 1}`)
       .join(',');
 
-    return new Function(
-      'yytext',
-      'yyleng',
-      args,
-      `var $$; ${semanticAction}; return $$;`
-    );
+    const handler = CodeUnit.createHandler(parameters, semanticAction);
+
+    return (...args) => {
+      // Executing a handler mutates $$ variable, return it.
+      handler(...args);
+      return CodeUnit.getSandbox().$$;
+    };
   }
 
   _normalize() {

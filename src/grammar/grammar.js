@@ -198,15 +198,6 @@ export default class Grammar {
   }
 
   /**
-   * Returns a compiled module include.
-   */
-  compiledModuleInclude(yyparse) {
-    const code = `(function(yyparse) {${this.getModuleInclude()}});`;
-    const initializer = vm.runInThisContext(code);
-    initializer(yyparse);
-  }
-
-  /**
    * Returns precedence and associativity of operators.
    */
   getOperators() {

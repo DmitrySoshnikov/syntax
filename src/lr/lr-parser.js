@@ -3,6 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CodeUnit from '../code-unit';
 import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
@@ -33,12 +34,15 @@ export default class LRParser {
       grammar: this._grammar,
     });
 
+    // Parsing stack.
     this._stack = [];
 
-    // Special object used to track extra state grammar may attach.
-    // E.g. `onParseBegin`, `onParseEnd` events, etc.
-    this._yyparse = {};
-    this._grammar.compiledModuleInclude(this._yyparse);
+    // Execute module include code which may attach
+    // handlers for some events, and define needed data.
+    CodeUnit.eval(this._grammar.getModuleInclude());
+
+    // Parse object which may define handlers for parse events.
+    this._yyparse = CodeUnit.getSandbox().yyparse;
   }
 
   getGrammar() {
@@ -211,12 +215,10 @@ export default class LRParser {
     let reduceStackEntry = {symbol: symbolToReduceWith};
 
     if (hasSemanticAction) {
-      // Pass token info as well.
-      semanticActionArgs.unshift(
-        token ? token.value : null,
-        token ? token.value.length : null
-      );
-
+      CodeUnit.setBindings({
+        yytext: token ? token.value : '',
+        yyleng: token ? token.length : 0,
+      });
       // Run corresponding semantic action.
       reduceStackEntry.semanticValue = production
         .runSemanticAction(semanticActionArgs);

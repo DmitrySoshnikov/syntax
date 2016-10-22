@@ -3,6 +3,8 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CodeUnit from '../code-unit';
+
 /**
  * A lexical grammar rule.
  */
@@ -55,8 +57,8 @@ export default class LexRule {
   /**
    * Returns token data.
    */
-  getTokenData(yytext, yy, tokenizer) {
-    return this._handler(yytext, yy, tokenizer);
+  getTokenData(matched, tokenizer) {
+    return this._handler(matched, tokenizer);
   }
 
   /**
@@ -79,29 +81,22 @@ export default class LexRule {
    * (which is closured), and return a token.
    */
   _buildHandler(tokenHandler) {
-    // Matched text and its length.
-    let yytext, yyleng;
-    let tokenFn;
-    // Global `yy` object shared accross lex rules. Lex rules
-    // may track any needed state via it.
-    let yy;
-
     try {
       /* Generate the function handler only for JS language */
-      tokenFn = eval(`(function() { ${tokenHandler} })`);
+      const handler = CodeUnit.createHandler(/* no params */'', tokenHandler);
+      return (matched, tokenizer) => {
+        CodeUnit.setBindings({
+          yytext: matched,
+          yyleng: matched.length,
+        });
+        const token = handler.call(tokenizer);
+        // Handler may mutate `yytext` during execution,
+        // return a possibly updated one, along with the token.
+        return [CodeUnit.getSandbox().yytext, token];
+      };
     } catch (e) {
       /* And skip for other languages, which use raw handler in generator */
     }
-    return function(_yytext, _yy, _tokenizer) {
-      yytext = _yytext;
-      yyleng = _yytext.length;
-      yy = _yy;
-      // The `tokenFn` is called in the context of
-      // of tokenizer, in order to access its `pushState`
-      // and other methods.
-      let token = tokenFn.call(_tokenizer);
-      return [yytext, token];
-    };
   }
 
   static matcherFromTerminal(terminal) {
