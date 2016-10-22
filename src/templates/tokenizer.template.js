@@ -7,37 +7,67 @@
  */
 
 const lexRules = <<LEX_RULES>>;
+const lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
+
+const EOF_TOKEN = {
+  type: EOF,
+  value: EOF,
+};
 
 tokenizer = {
   initString(string) {
+    this._states = ['INITIAL'];
     this._string = string + EOF;
     this._cursor = 0;
     return this;
   },
 
+  /**
+   * Returns tokenizer states.
+   */
+  getStates() {
+    return this._states;
+  },
+
+  getCurrentState() {
+    return this._states[this._states.length - 1];
+  },
+
+  pushState(state) {
+    this._states.push(state);
+  },
+
+  begin(state) {
+    this.pushState(state);
+  },
+
+  popState() {
+    if (this._states.length > 1) {
+      return this._states.pop();
+    }
+    return this._states[0];
+  },
+
   getNextToken() {
     if (!this.hasMoreTokens()) {
-      return {
-        type: EOF,
-        value: EOF,
-      };
+      return EOF_TOKEN;
     } else if (this.isEOF()) {
       this._cursor++;
-      return {
-        type: EOF,
-        value: EOF,
-      };
+      return EOF_TOKEN;
     }
 
     let string = this._string.slice(this._cursor);
+    let lexRulesForState = lexRulesByConditions[this.getCurrentState()];
 
-    for (let i = 0; i < lexRules.length; i++) {
-      let lexRule = lexRules[i];
+    for (let i = 0; i < lexRulesForState.length; i++) {
+      let lexRuleIndex = lexRulesForState[i];
+      let lexRule = lexRules[lexRuleIndex];
+
       let matched = this._match(string, lexRule[0]);
       if (matched) {
         yytext = matched;
         yyleng = yytext.length;
-        let token = lexRule[1]();
+        let token = lexRule[1].call(this);
 
         if (!token) {
           return this.getNextToken();

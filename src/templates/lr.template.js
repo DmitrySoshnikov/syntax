@@ -19,6 +19,7 @@
 
 let yytext;
 let yyleng;
+let yy = {};
 let __;
 
 const EOF = '$';

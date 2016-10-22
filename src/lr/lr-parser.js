@@ -34,6 +34,11 @@ export default class LRParser {
     });
 
     this._stack = [];
+
+    // Special object used to track extra state grammar may attach.
+    // E.g. `onParseBegin`, `onParseEnd` events, etc.
+    this._yyparse = {};
+    this._grammar.compiledModuleInclude(this._yyparse);
   }
 
   getGrammar() {
@@ -68,6 +73,10 @@ export default class LRParser {
         status: 'accept',
         value: this._parserModule.parse(string),
       };
+    }
+
+    if (this._yyparse.onParseBegin) {
+      this._yyparse.onParseBegin(string);
     }
 
     this._tokenizer.initString(string);
@@ -127,6 +136,10 @@ export default class LRParser {
 
           if (parsed.hasOwnProperty('semanticValue')) {
             result.value = parsed.semanticValue;
+          }
+
+          if (this._yyparse.onParseEnd) {
+            this._yyparse.onParseEnd(result.value);
           }
 
           return result;

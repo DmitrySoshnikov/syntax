@@ -42,7 +42,16 @@ export default class Grammar {
    *       ["\\)", "return ')';"],
    *       ["\\+", "return '+';"],
    *       ["{digit}+(\\.{digit}+)?\\b", "return 'NUMBER';"],
-   *     ]
+   *
+   *       // A rule with start conditions. Such rules are matched only
+   *       // when a scanner enters these states.
+   *       [["string", "code"], '[^"]',  "return 'STRING';"],
+   *     ],
+   *
+   *     "startConditions": { https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
+   *       "string": 1, // inclusive condition %s
+   *       "code": 0,   // exclusive consition %x
+   *     },
    *   },
    *
    *   // Arbitrary code to be included in the generated parser.
@@ -88,12 +97,16 @@ export default class Grammar {
     this._originalBnf = bnf;
     this._originalLex = null;
 
+    // All lex rules by default are in the intial (inclusive) start condition.
+    this._lexerStartCondition = {INITIAL: 0};
+
     // Injecting user code, including handlers for `yyparse.onParseBegin`,
     // and `yyparse.onParseEnd`.
     this._moduleInclude = moduleInclude;
 
     if (lex) {
       this._originalLex = lex.rules;
+       Object.assign(this._lexerStartCondition, lex.startConditions);
       if (lex.macros) {
         this._extractLexMacros(lex.macros, this._originalLex);
       }
@@ -106,6 +119,7 @@ export default class Grammar {
 
     this._bnf = this._processBnf(this._originalBnf);
     this._lexRules = this._processLex(this._originalLex);
+    this._lexRulesByStartConditions = this._processLexByStartConditions();
 
     this._nonTerminals = this.getNonTerminals();
     this._terminals = this.getTerminals();
@@ -155,6 +169,13 @@ export default class Grammar {
   }
 
   /**
+   * Returns start conditions types for a lexer.
+   */
+  getLexerStartConditions() {
+    return this._lexerStartCondition;
+  }
+
+  /**
    * Returns Start symbol of this grammar (it's initialized
    * during normalization process).
    */
@@ -174,6 +195,15 @@ export default class Grammar {
    */
   getModuleInclude() {
     return this._moduleInclude;
+  }
+
+  /**
+   * Returns a compiled module include.
+   */
+  compiledModuleInclude(yyparse) {
+    const code = `(function(yyparse) {${this.getModuleInclude()}});`;
+    const initializer = vm.runInThisContext(code);
+    initializer(yyparse);
   }
 
   /**
@@ -265,6 +295,20 @@ export default class Grammar {
    */
   getLexRules() {
     return this._lexRules;
+  }
+
+  /**
+   * Returns lexical rules for a specific start condition.
+   */
+  getLexRulesForState(state) {
+    return this._lexRulesByStartConditions[state];
+  }
+
+  /**
+   * Returns rules by start conditions.
+   */
+  getLexRulesByStartConditions() {
+    return this._lexRulesByStartConditions;
   }
 
   /**
@@ -407,22 +451,65 @@ export default class Grammar {
 
     // If lexical grammar was provided, normalize and return.
     if (lex) {
-      processedLex = lex
-        .map(([matcher, tokenHandler]) => new LexRule({
+      processedLex = lex.map(tokenData => {
+        // Lex rules may specify start conditions. Such rules are
+        // executed if a tokenizer enters such state.
+
+        let startConditions;
+        let matcher;
+        let tokenHandler;
+
+        if (tokenData.length === 2) {
+          [matcher, tokenHandler] = tokenData;
+        } else if (tokenData.length === 3) {
+          [startConditions, matcher, tokenHandler] = tokenData;
+        }
+
+        return new LexRule({
+          startConditions,
           matcher,
           tokenHandler,
-        }));
+        });
+      });
     }
 
     // Also add all terminals "a" : "a" as a lex rule.
     processedLex = processedLex.concat(this.getTerminals()
       .map(terminal => new LexRule({
+        startConditions: [],
         matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
         tokenHandler: `return ${terminal.quotedTerminal()};`,
       }))
     );
 
     return processedLex;
+  }
+
+  /**
+   * Builds a map from a start condition to a list of
+   * lex rules which should be executed once a lexer
+   * enters this state.
+   */
+  _processLexByStartConditions() {
+    const lexRulesByCondition = {};
+
+    for (const condition in this._lexerStartCondition) {
+      const inclusive = this._lexerStartCondition[condition] === 0;
+
+      const rules = this._lexRules.filter(lexRule => {
+        // A rule is included if a lexer is in this state,
+        // or if a condition is inclusive, and a rule doesn't have
+        // any explicit start conditions.
+        // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
+        return (inclusive && !lexRule.hasStartConditions()) ||
+          (lexRule.hasStartConditions() &&
+           lexRule.getStartConditions().includes(condition));
+      });
+
+      lexRulesByCondition[condition] = rules;
+    }
+
+    return lexRulesByCondition;
   }
 
   _processBnf(originalBnf) {

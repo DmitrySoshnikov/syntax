@@ -148,7 +148,7 @@ const parsers = {
         'rb' : require(ROOT + 'plugins/ruby/lr/lr-parser-generator-ruby.js').default,
       };
 
-      const LRParserGenerator = GENERATORS[language];
+      const LRParserGenerator = GENERATORS[language] || GENERATORS.js;
 
       new LRParserGenerator({
         grammar,

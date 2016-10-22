@@ -198,6 +198,7 @@ export default class BaseParserGenerator {
       // Built-in tokenizer.
       this.generateBuiltInTokenizer();
       this.generateLexRules();
+      this.generateLexRulesByStartConditions();
     } else {
       // Require custom tokenizer if was provided.
       this.writeData(
@@ -229,10 +230,40 @@ export default class BaseParserGenerator {
    * Generates rules for tokenizer.
    */
   generateLexRules() {
-    let lexRules = this._grammar.getLexRules().map(lexRule => {
-      return `[/${lexRule.getRawMatcher()}/, () => { ${lexRule.getRawHandler()} }]`;
+    this._ruleToIndexMap = new Map();
+
+    let lexRules = this._grammar.getLexRules().map((lexRule, index) => {
+      this._ruleToIndexMap.set(lexRule, index);
+      return `[${lexRule.getMatcher()}, ` +
+        `function() { ${lexRule.getRawHandler()} }, ` +
+        `${
+          lexRule.hasStartConditions()
+            ? JSON.stringify(lexRule.getStartConditions())
+            : ''
+          }]`;
     });
+
     this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
+  }
+
+  /**
+   * Generates lex rule table by start conditions.
+   * conditionName: [<ruleIndex in the LEX_RULES table>, ...]
+   */
+  generateLexRulesByStartConditions() {
+    const lexRulesByConditions = this._grammar.getLexRulesByStartConditions();
+    const result = {};
+
+    for (const condition in lexRulesByConditions) {
+      result[condition] = lexRulesByConditions[condition].map(lexRule => {
+        return this._ruleToIndexMap.get(lexRule);
+      });
+    }
+
+    this.writeData(
+      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      `${JSON.stringify(result)}`,
+    );
   }
 
   generateProductions() {

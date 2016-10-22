@@ -19,28 +19,58 @@ export default class LexRule {
    * tokens, like `NUMBER`:
    *
    *   [0-9]+(\.[0-9]+)? : NUMBER
+   *
+   * The `startConditions` allows specifying lexer state, and execute
+   * a rule only if a tokenizer is within this state.
    */
-  constructor({matcher, tokenHandler}) {
+  constructor({startConditions, matcher, tokenHandler}) {
+    this._startConditions = startConditions;
     this._rawMatcher = `^${matcher}`;
     this._matcher = new RegExp(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
   }
 
+  /**
+   * Retusn raw matcher string.
+   */
   getRawMatcher() {
     return this._rawMatcher;
   }
 
+  /**
+   * Returns matcher function.
+   */
   getMatcher() {
     return this._matcher;
   }
 
+  /**
+   * Returns raw handler.
+   */
   getRawHandler() {
     return this._rawHandler;
   }
 
-  getTokenData(yytext) {
-    return this._handler(yytext);
+  /**
+   * Returns token data.
+   */
+  getTokenData(yytext, yy, tokenizer) {
+    return this._handler(yytext, yy, tokenizer);
+  }
+
+  /**
+   * Returns start conditions for this rule.
+   */
+  getStartConditions() {
+    return this._startConditions;
+  }
+
+  /**
+   * Whether this rule has start conditions.
+   */
+  hasStartConditions() {
+    return !!this._startConditions;
   }
 
   /**
@@ -49,8 +79,12 @@ export default class LexRule {
    * (which is closured), and return a token.
    */
   _buildHandler(tokenHandler) {
+    // Matched text and its length.
     let yytext, yyleng;
     let tokenFn;
+    // Global `yy` object shared accross lex rules. Lex rules
+    // may track any needed state via it.
+    let yy;
 
     try {
       /* Generate the function handler only for JS language */
@@ -58,10 +92,14 @@ export default class LexRule {
     } catch (e) {
       /* And skip for other languages, which use raw handler in generator */
     }
-    return (_yytext) => {
+    return function(_yytext, _yy, _tokenizer) {
       yytext = _yytext;
       yyleng = _yytext.length;
-      let token = tokenFn();
+      yy = _yy;
+      // The `tokenFn` is called in the context of
+      // of tokenizer, in order to access its `pushState`
+      // and other methods.
+      let token = tokenFn.call(_tokenizer);
       return [yytext, token];
     };
   }
