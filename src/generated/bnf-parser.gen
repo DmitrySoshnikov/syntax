@@ -26,14 +26,14 @@ const EOF = '$';
 
 const ps = [[-1, 1],
 [0, 3, (_1,_2,_3) => { 
-                      const spec = Object.assign({bnf: _3}, global.extra);
+                      const spec = Object.assign({bnf: _3}, extra);
 
-                      if (global.operators.length) {
-                        spec.operators = global.operators;
+                      if (operators.length) {
+                        spec.operators = operators;
                       }
 
-                      if (global.tokens.length) {
-                        spec.tokens = global.tokens.join(' ');
+                      if (tokens.length) {
+                        spec.tokens = tokens.join(' ');
                       }
 
                       __ = spec;
@@ -42,13 +42,13 @@ const ps = [[-1, 1],
 [1, 0],
 [2, 1],
 [2, 2],
-[3, 1, (_1) => { global.extra.lex = _1 }],
-[3, 1, (_1) => { global.extra.moduleInclude = _1 }],
-[3, 2, (_1,_2) => { global.extra.start = _2 }],
-[3, 2, (_1,_2) => { global.operators.push(['left'].concat(_2)) }],
-[3, 2, (_1,_2) => { global.operators.push(['right'].concat(_2)) }],
-[3, 2, (_1,_2) => { global.operators.push(['nonassoc'].concat(_2)) }],
-[3, 2, (_1,_2) => { global.tokens.push(..._2) }],
+[3, 1, (_1) => { extra.lex = _1 }],
+[3, 1, (_1) => { extra.moduleInclude = _1 }],
+[3, 2, (_1,_2) => { extra.start = _2 }],
+[3, 2, (_1,_2) => { operators.push(['left'].concat(_2)) }],
+[3, 2, (_1,_2) => { operators.push(['right'].concat(_2)) }],
+[3, 2, (_1,_2) => { operators.push(['nonassoc'].concat(_2)) }],
+[3, 2, (_1,_2) => { tokens.push(..._2) }],
 [4, 1, (_1) => { __ = [_1] }],
 [4, 2, (_1,_2) => { __ = _1; _1.push(_2) }],
 [5, 2, (_1,_2) => { __ = _1; __[_2[0]] = _2[1] }],
@@ -118,7 +118,7 @@ const lexRules = [[/^\/\/.*/, function() { /* skip comments */ }, ],
 [/^\{\{[\w\W]*?\}\}/, function() { yytext = yytext.slice(2, -2); return 'CODE'; }, ],
 [/^%[a-zA-Z]+[^\r\n]*/, function() { /* skip unrecognized options */ }, ],
 [/^(?:"|')([^"']*)(?:"|')/, function() { return 'STRING' }, ]];
-const lexRulesByConditions = {"INITIAL":[0,1,2,3,4,5,6,7,8,18,19,20,21,22,23,24,25,26,27,28,29],"action":[9,10,11,12,13,14,15,16,17]};
+const lexRulesByConditions = {"*":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29],"INITIAL":[0,1,2,3,4,5,6,7,8,18,19,20,21,22,23,24,25,26,27,28,29],"action":[9,10,11,12,13,14,15,16,17]};
 
 const EOF_TOKEN = {
   type: EOF,
@@ -317,10 +317,14 @@ const yyparse = {
 };
 
 
+    let tokens;
+    let operators;
+    let extra;
+
     yyparse.onParseBegin = () => {
-      global.tokens = [];
-      global.operators = [];
-      global.extra = {};
+      tokens = [];
+      operators = [];
+      extra = {};
     };
   
 

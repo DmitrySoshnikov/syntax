@@ -55,23 +55,27 @@
   },
 
   "moduleInclude": `
+    let tokens;
+    let operators;
+    let extra;
+
     yyparse.onParseBegin = () => {
-      global.tokens = [];
-      global.operators = [];
-      global.extra = {};
+      tokens = [];
+      operators = [];
+      extra = {};
     };
   `,
 
   "bnf": {
     "Spec":         [["DeclList %% Productions", `
-                      const spec = Object.assign({bnf: $3}, global.extra);
+                      const spec = Object.assign({bnf: $3}, extra);
 
-                      if (global.operators.length) {
-                        spec.operators = global.operators;
+                      if (operators.length) {
+                        spec.operators = operators;
                       }
 
-                      if (global.tokens.length) {
-                        spec.tokens = global.tokens.join(' ');
+                      if (tokens.length) {
+                        spec.tokens = tokens.join(' ');
                       }
 
                       $$ = spec;
@@ -83,13 +87,13 @@
     "Declarations": ["Declaration",
                      "Declarations Declaration"],
 
-    "Declaration":  [["LEX_BLOCK",                  "global.extra.lex = $1"],
-                     ["MODULE_INCLUDE",             "global.extra.moduleInclude = $1"],
-                     ["%start LHS",                 "global.extra.start = $2"],
-                     ["%left OperatorList",         "global.operators.push(['left'].concat($2))"],
-                     ["%right OperatorList",        "global.operators.push(['right'].concat($2))"],
-                     ["%nonassoc OperatorList",     "global.operators.push(['nonassoc'].concat($2))"],
-                     ["%token OperatorList",        "global.tokens.push(...$2)"]],
+    "Declaration":  [["LEX_BLOCK",                  "extra.lex = $1"],
+                     ["MODULE_INCLUDE",             "extra.moduleInclude = $1"],
+                     ["%start LHS",                 "extra.start = $2"],
+                     ["%left OperatorList",         "operators.push(['left'].concat($2))"],
+                     ["%right OperatorList",        "operators.push(['right'].concat($2))"],
+                     ["%nonassoc OperatorList",     "operators.push(['nonassoc'].concat($2))"],
+                     ["%token OperatorList",        "tokens.push(...$2)"]],
 
     "OperatorList": [["Primary",                    "$$ = [$1]"],
                      ["OperatorList Primary",       "$$ = $1; $1.push($2)"]],

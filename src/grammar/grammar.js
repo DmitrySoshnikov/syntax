@@ -482,7 +482,10 @@ export default class Grammar {
    * enters this state.
    */
   _processLexByStartConditions() {
-    const lexRulesByCondition = {};
+    const lexRulesByCondition = {
+      // Start condition that always matches.
+      '*': [...this._lexRules],
+    };
 
     for (const condition in this._lexerStartCondition) {
       const inclusive = this._lexerStartCondition[condition] === 0;
