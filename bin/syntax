@@ -266,7 +266,10 @@ function formatParsedOutput(output) {
   // Object constructor is used from another realm, so no direct
   // constructor check, neither `instanceof` would work. Check
   // `name` property.
-  if (Array.isArray(output) || output.constructor.name === 'Object') {
+  if (
+    Array.isArray(output) ||
+    (output && output.constructor && output.constructor.name === 'Object')
+  ) {
     return JSON.stringify(output, null, 2);
   }
   return output;
