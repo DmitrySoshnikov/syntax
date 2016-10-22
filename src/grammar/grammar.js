@@ -482,10 +482,7 @@ export default class Grammar {
    * enters this state.
    */
   _processLexByStartConditions() {
-    const lexRulesByCondition = {
-      // Start condition that always matches.
-      '*': [...this._lexRules],
-    };
+    const lexRulesByCondition = {};
 
     for (const condition in this._lexerStartCondition) {
       const inclusive = this._lexerStartCondition[condition] === 0;
@@ -493,11 +490,12 @@ export default class Grammar {
       const rules = this._lexRules.filter(lexRule => {
         // A rule is included if a lexer is in this state,
         // or if a condition is inclusive, and a rule doesn't have
-        // any explicit start conditions.
+        // any explicit start conditions. Also if the condition is `*`.
         // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
         return (inclusive && !lexRule.hasStartConditions()) ||
           (lexRule.hasStartConditions() &&
-           lexRule.getStartConditions().includes(condition));
+           (lexRule.getStartConditions().includes(condition) ||
+            lexRule.getStartConditions().includes('*')));
       });
 
       lexRulesByCondition[condition] = rules;
