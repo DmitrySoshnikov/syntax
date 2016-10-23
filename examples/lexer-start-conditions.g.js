@@ -34,7 +34,7 @@
  * In the grammar below we has `comment` tokenizer state, which allows us
  * to skip all the comment characters, but still to count number of lines.
  *
- *   ./bin/syntax -g examples/lexer-start-conditions.g -f ~/test.js
+ *   ./bin/syntax -g examples/lexer-start-conditions.g -m slr1 -f ~/test.js
  */
 
 // Example of ~/test.js
@@ -79,7 +79,7 @@
 
       // On `/*` we enter the comment state:
 
-      ["\\/\\*", "this.pushState('comment'); /* skip comments */"],
+      ["\\/\\*", "this.pushState('comment');      /* skip comments */"],
 
       // On `*/` being in `comment` state we return to the initial state:
 
@@ -88,22 +88,19 @@
       // Being inside the `comment` state, skip all chars, except new lines
       // which we count.
 
-      [["comment"], "[^*\\n]*",                    "/* skip comments */"],
-      [["comment"], "\\*+[^*/\\n]*",               "/* skip comments */"],
+      [["comment"], "[^*\\n]*",                  "/* skip comments */"],
+      [["comment"], "\\*+[^*/\\n]*",             "/* skip comments */"],
 
       // Count lines in comments.
-      [["comment"], "\\n",  "lines++;               /* skip new lines in comments */"],
+      [["comment"], "\\n",  "lines++;             /* skip new lines in comments */"],
 
       // In INITIAL state, count line numbers as well:
-      ["\\n",               "lines++          /* skip new lines */"],
+      ["\\n",               "lines++              /* skip new lines */"],
 
-      [["*"], " +",                          "/* skip spaces in any state */"],
+      [["*"], " +",                              "/* skip spaces in any state */"],
 
       // Main program consisting only of one word "Main"
-      ["Main",          "return 'MAIN'"],
-
-      // EOF
-      [["*"], "\\$",    "return 'EOF'"],
+      ["Main", "return 'MAIN'"],
     ],
   },
 
