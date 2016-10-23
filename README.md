@@ -14,6 +14,7 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
 - [Using custom tokenizer](#using-custom-tokenizer)
+- [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
 - [Parsing modes](#parsing-modes)
   - [LL parsing](#ll-parsing)
   - [LR parsing](#lr-parsing)
@@ -187,6 +188,39 @@ const MyTokenizer = {
 
 module.exports = MyTokenizer;
 ```
+
+### Start conditions of lex rules, and tokenizer states
+
+Built-in tokenizer supports _stateful tokenization_. This means the same lex rule can applied in different states, and result to a different token. For lex rules it's known as _start conditions_.
+
+Rules with explicit start conditions are executed _only_ when lexer enters the state corresponding to their names. Start conditions can be _inclusive_ (`%s`, 0), and _exclusive_ (`%x`, 1). Inclusive conditions also include rules _without_ any start conditions, and exclusive conditions do not include other rules when the parser enter their state. The rules with `*` start condition are always included.
+
+```js
+"lex": {
+  "startConditions": {
+    "comment": 1, // exclusive
+    "string": 1   // exclusive
+  },
+
+  "rules": [
+    ...
+
+    // On `/*` enter `comment` state:
+    ["\\/\\*", "this.pushState('comment');"],
+
+    // The rule is executed only when tokenizers enters `comment`, or `string` state:
+    [["comment, string"], "\\n", "lines++; return 'NL';"],
+
+    ...
+  ],
+}
+```
+
+More information on the topic can be found in [this gist](https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a).
+
+As an example take a look at [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lexer-start-conditions.g.js), which calculates line numbers in a source file, including line numbers in comments. The comments themselves are skipped during tokenization, however the new lines are handled within comments separately to count those line numbers as well.
+
+Another example is the [grammar for BNF](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g) itself, which we use to parse BNF grammars represented as strings, rather than in JSON format. There we have `action` start condition to correctly parse `{` and `}` of JS code, being inside an actual handler for a grammar rule, which is itself surrounded by  `{` and `}` braces.
 
 ### Parsing modes
 

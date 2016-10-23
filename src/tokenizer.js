@@ -40,12 +40,6 @@ export default class Tokenizer {
      */
     this._states = ['INITIAL'];
 
-    /**
-     * The `yy` object is shared across the lex rules.
-     * The lex rules can track any needed state through it.
-     */
-    this._yy = {};
-
     if (string) {
       this.initString(string);
     }
