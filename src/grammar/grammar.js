@@ -467,7 +467,7 @@ export default class Grammar {
     // Also add all terminals "a" : "a" as a lex rule.
     processedLex = processedLex.concat(this.getTerminals()
       .map(terminal => new LexRule({
-        startConditions: [],
+        startConditions: null,
         matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
         tokenHandler: `return ${terminal.quotedTerminal()};`,
       }))
