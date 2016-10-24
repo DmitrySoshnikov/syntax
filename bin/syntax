@@ -27,6 +27,12 @@ const options = require('nomnom')
       required: true,
       metavar: 'FILE'
     },
+    lex: {
+      abbr: 'l',
+      help: 'File containing lexical grammar',
+      required: false,
+      metavar: 'FILE'
+    },
     table: {
       abbr: 't',
       help: 'Generate and output parsing table',
@@ -276,7 +282,12 @@ function formatParsedOutput(output) {
 }
 
 function getGrammar(grammarFile, mode) {
-  let grammarData = Grammar.dataFromGrammarFile(grammarFile);
+  let grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf');
+
+  // If explicit lexical grammar file was passed, use it.
+  if (options.lex) {
+    grammarData.lex = Grammar.dataFromGrammarFile(options.lex, 'lex');
+  }
 
   if (options['ignore-whitespaces']) {
     if (!grammarData.lex) {

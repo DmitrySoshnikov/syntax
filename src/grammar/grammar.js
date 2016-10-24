@@ -144,14 +144,15 @@ export default class Grammar {
   }
 
   /**
-   * Reads grammar file data.
+   * Reads grammar file data. Supports reading `bnf`,
+   * and `lex` grammars based on mode.
    */
-  static dataFromGrammarFile(grammarFile) {
+  static dataFromGrammarFile(grammarFile, grammarType = 'bnf') {
     let rawGrammarData = fs.readFileSync(grammarFile, 'utf-8');
-    let grammarData;
+    let grammarData = null;
 
     try {
-      // An object with `lex`, and `bnf`, valid JSON.
+      // Pure JSON representation.
       grammarData = JSON.parse(rawGrammarData);
     } catch (e) {
       // JS code.
@@ -160,8 +161,10 @@ export default class Grammar {
           (function() { return (${rawGrammarData});})()
         `);
       } catch (e) {
-        // A grammar in string BNF, parse it.
-        grammarData = BnfParser.parse(rawGrammarData);
+        // A grammar as a string, for BNF, and lex.
+        if (grammarType) {
+          grammarData = BnfParser.parse(rawGrammarData);
+        }
       }
     }
 
