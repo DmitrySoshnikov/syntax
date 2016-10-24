@@ -47,6 +47,7 @@
       ["\\{\\{[\\w\\W]*?\\}\\}",                    "yytext = yytext.slice(2, -2); return 'CODE';"],
       ["%[a-zA-Z]+[^\\r\\n]*",                      "/* skip unrecognized options */"],
       ["(?:\"|')([^\"']*)(?:\"|')",                 "return 'STRING'"],
+      ["[\-+!%$#@&*(){}\~`^|\\\\:;/]+",             "return 'SPECIAL_CHAR'"],
     ],
 
     "startConditions": {
@@ -120,6 +121,7 @@
                      ["Primary",                    "$$ = $1"]],
 
     "Primary":      [["ID",                         "$$ = $1"],
+                     ["SPECIAL_CHAR",               "$$ = $1"],
                      ["STRING",                     "$$ = $1"]],
 
     "Action":       [["{ ActionBody }",             "$$ = $2"],
