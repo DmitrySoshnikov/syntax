@@ -52,7 +52,7 @@ class __SyntaxToolTokenizer {
       }
     }
 
-    throw new Exception('Unexpected token: ' . $string[0]);
+    throw new \Exception('Unexpected token: ' . $string[0]);
   }
 
   public function isEOF() {
