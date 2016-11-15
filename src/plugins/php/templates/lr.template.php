@@ -104,7 +104,7 @@ class yyparse {
         $pn = intval(substr($e, 1));
         $p = $ps[$pn];
         $hsa = count($p) > 2;
-        $saa = hsa ? [] : null;
+        $saa = $hsa ? [] : null;
 
         if ($p[1] !== 0) {
           $rhsl = $p[1];
@@ -177,4 +177,3 @@ class yyparse {
 <<TOKENIZER>>
 
 class <<PARSER_CLASS_NAME>> extends yyparse {}
-
