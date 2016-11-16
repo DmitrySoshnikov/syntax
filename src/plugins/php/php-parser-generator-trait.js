@@ -77,9 +77,12 @@ const PHPParserGeneratorTrait = {
    * Generates rules for tokenizer.
    */
   generateLexRules() {
-    let lexRules = this._grammar.getLexRules().map(lexRule => {
+    this._ruleToIndexMap = new Map();
+
+    let lexRules = this._grammar.getLexRules().map((lexRule, index) => {
       const action = this._scopeVars(lexRule.getRawHandler()) + ';';
       this._lexHandlers.push({args: '', action});
+      this._ruleToIndexMap.set(lexRule, index);
 
       return `['/${lexRule.getRawMatcher()}/', ` +
         `'_lex_rule${this._lexHandlers.length}']`;
@@ -89,7 +92,19 @@ const PHPParserGeneratorTrait = {
   },
 
   generateLexRulesByStartConditions() {
-    // TODO
+    const lexRulesByConditions = this._grammar.getLexRulesByStartConditions();
+    const result = [];
+
+    for (const condition in lexRulesByConditions) {
+      result[condition] = lexRulesByConditions[condition].map(lexRule => {
+        return this._ruleToIndexMap.get(lexRule);
+      });
+    }
+
+    this.writeData(
+      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      `${this._toPHPArray(result)}`,
+    );
   },
 
   /**
@@ -127,6 +142,7 @@ const PHPParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._lexHandlers,
       '_lex_rule',
+      false
     );
     this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
   },
@@ -138,6 +154,7 @@ const PHPParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._productionHandlers,
       '_handler',
+      true
     );
     this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
   },
@@ -145,10 +162,10 @@ const PHPParserGeneratorTrait = {
   /**
    * Generates Python's `def` function declarations for handlers.
    */
-  _generateHandlers(handlers, name) {
+  _generateHandlers(handlers, name, isStatic) {
     return handlers.map(({args, action}, index) => {
-      return `private static function ${name}${index + 1}(${args}) {\n` +
-        `${action}\n}`
+      return `private ${isStatic ? 'static ': ''}function ${name}${index + 1}` +
+        `(${args}) {\n${action}\n}`
     });
   },
 };
