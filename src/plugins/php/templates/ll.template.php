@@ -64,7 +64,7 @@ class yyparse {
     $tokenizer = self::getTokenizer();
 
     if (!$tokenizer) {
-      throw new Exception(`Tokenizer instance wasn't specified.`);
+      throw new \Exception(`Tokenizer instance wasn't specified.`);
     }
 
     $tokenizer->initString($string);
@@ -125,11 +125,10 @@ class yyparse {
   }
 
   private static function parseError($message) {
-    throw new Exception('Parse error: '.$message);
+    throw new \Exception('Parse error: '.$message);
   }
 }
 
 <<TOKENIZER>>
 
 class <<PARSER_CLASS_NAME>> extends yyparse {}
-

@@ -9,7 +9,9 @@
 
 class __SyntaxToolTokenizer {
   private static $lexRules = <<LEX_RULES>>;
+  private static $lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
 
+  private $states = array();
   private $string = '';
   private $cursor = 0;
 
@@ -21,8 +23,32 @@ class __SyntaxToolTokenizer {
   <<LEX_RULE_HANDLERS>>
 
   public function initString($string) {
+    $this->states = array('INITIAL');
     $this->string = $string.yyparse::EOF;
     $this->cursor = 0;
+  }
+
+  public function getStates() {
+    return $this->states;
+  }
+
+  public function getCurrentState() {
+    return $this->states[count($this->states) - 1];
+  }
+
+  public function pushState($state) {
+    $this->states[] = $state;
+  }
+
+  public function begin($state) {
+    $this->pushState(state);
+  }
+
+  public function popState() {
+    if (count($this->states) > 1) {
+      return array_pop($this->states);
+    }
+    return $this->states[0];
   }
 
   public function getNextToken() {
@@ -34,13 +60,16 @@ class __SyntaxToolTokenizer {
     }
 
     $string = substr($this->string, $this->cursor);
+    $lexRulesForState = static::$lexRulesByConditions[$this->getCurrentState()];
 
-    foreach (self::$lexRules as $lex_rule) {
+    foreach ($lexRulesForState as $lex_rule_index) {
+      $lex_rule = self::$lexRules[$lex_rule_index];
+
       $matched = $this->match($string, $lex_rule[0]);
       if ($matched) {
         yyparse::$yytext = $matched;
         yyparse::$yyleng = strlen($matched);
-        $token = forward_static_call(array('self', $lex_rule[1]));
+        $token = call_user_func(array($this, $lex_rule[1]));
         if (!$token) {
           return $this->getNextToken();
         }
@@ -52,7 +81,7 @@ class __SyntaxToolTokenizer {
       }
     }
 
-    throw new Exception('Unexpected token: ' . $string[0]);
+    throw new \Exception('Unexpected token: ' . $string[0]);
   }
 
   public function isEOF() {
