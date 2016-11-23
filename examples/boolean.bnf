@@ -1,0 +1,68 @@
+/**
+ * Boolean expressions.
+ *
+ * ./bin/syntax -g examples/boolean.bnf -m slr1 -p '5 == 5' true
+ *
+ * ... -p '5 > 2 and 5 < 10'    true
+ *     -p 'x or y'              x
+ *     -p '5 == 5 or  2 < 1'    true
+ *     -p '5 == 5 and 2 < 1'    false
+ *     -p 'true and false'      false
+ *     -p 'false or true'       true
+ *     -p 'true'                true
+ *     -p 'false'               false
+ *     -p 'not true'            false
+ *     -p 'not false'           true
+ *     -p 'not not true'        true
+ */
+
+{
+  "lex": {
+    "rules": [
+      ["\\s+",        "/* skip whitespace */"],
+
+      ["or",          "return 'or'"],
+      ["and",         "return 'and'"],
+      ["not",         "return 'not'"],
+
+      ["true",        "return 'true'"],
+      ["false",       "return 'false'"],
+
+      ["<=",          "return '<='"],
+      [">=",          "return '>='"],
+      ["<",           "return '<'"],
+      [">",           "return '>'"],
+      ["==",          "return '=='"],
+
+      ["\\(",         "return '('"],
+      ["\\)",         "return ')'"],
+
+      ["\\d+",        "return 'NUMBER'"],
+      ["[a-zA-Z0-9]", "return 'ID'"],
+    ]
+  },
+
+  "bnf": {
+    "Or":      [["Or or And",          "$$ = $1 || $3"],
+                ["And",                "$$ = $1"]],
+
+    "And":     [["And and Compare",    "$$ = $1 && $3"],
+                ["Compare",            "$$ = $1"]],
+
+    "Compare": [["Value <= Value",     "$$ = $1 <= $3"],
+                ["Value >= Value",     "$$ = $1 >= $3"],
+                ["Value <  Value",     "$$ = $1 < $3"],
+                ["Value >  Value",     "$$ = $1 > $3"],
+                ["Value == Value",     "$$ = $1 == $3"],
+                ["Value",              "$$ = $1"]],
+
+    "Value":   [["not Value",          "$$ = !$2"],
+                ["Primary",            "$$ = $1"]],
+
+    "Primary": [["NUMBER",      "$$ = Number($1)"],
+                ["ID",          "$$ = $1"],
+                ["true",        "$$ = true"],
+                ["false",       "$$ = false"],
+                ["( Or )",  "$$ = $2"]],
+  }
+}
