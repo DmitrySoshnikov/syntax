@@ -117,7 +117,7 @@ export default class LLParsingTable {
   getConflicts() {
     if (!this._conflicts) {
       this._conflicts = this._analyzeConfilcts();
-      this._hasConflicts = (Object.keys(this._conflicts) !== 0);
+      this._hasConflicts = (Object.keys(this._conflicts).length !== 0);
     }
     return this._conflicts;
   }
