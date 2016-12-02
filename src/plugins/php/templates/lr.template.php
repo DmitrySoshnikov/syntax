@@ -89,7 +89,7 @@ class yyparse {
       $e = $tbl[$sta][$clm];
 
       if (!$e) {
-        self::unexpectedToken(t);
+        self::unexpectedToken($t);
       }
 
       if ($e[0] === 's') {
