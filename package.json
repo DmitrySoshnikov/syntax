@@ -1,6 +1,6 @@
 {
   "name": "syntax-cli",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "description": "Syntactic analysis toolkit for education, tracing, and parsers generation",
   "repository": {
     "type": "git",
