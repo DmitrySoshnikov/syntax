@@ -30,5 +30,5 @@ console.info('Done.\n');
 console.info('Transpiling JS code...\n');
 mkdir('dist/generated');
 exec(`"node_modules/.bin/babel" src/generated/bnf-parser.gen -o dist/generated/bnf-parser.gen --presets es2015,stage-1,stage-2`);
-exec(`"node_modules/.bin/babel" ${process.argv[2]} src/ --out-dir dist/ --presets es2015,stage-1,stage-2 --ignore templates/`);
+exec(`"node_modules/.bin/babel" ${process.argv[2] || ''} src/ --out-dir dist/ --presets es2015,stage-1,stage-2 --ignore templates/`);
 console.info('\nAll done.');
