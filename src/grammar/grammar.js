@@ -539,10 +539,11 @@ export default class Grammar {
 
           if (typeof RHS[1] === 'string') {
             semanticAction = RHS[1];
-          } else if (RHS[1] && typeof RHS[1] === 'object') {
+            if (RHS[2] !== null && typeof RHS[2] === 'object') {
+              precedenceTag = RHS[2].prec;
+            }
+          } else if (RHS[1] !== null && typeof RHS[1] === 'object') {
             precedenceTag = RHS[1].prec;
-          } else if (RHS[2]) {
-            precedenceTag = RHS[2].prec;
           }
 
           RHS = RHS[0];

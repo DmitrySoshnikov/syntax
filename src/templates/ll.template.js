@@ -90,7 +90,7 @@ const yyparse = {
 function der(to, t, tt) {
   let npn = tbl[to][tt];
   if (!npn) {
-    _unexpectedToken(t);
+    unexpectedToken(t);
   }
   s.push(...ps[npn][0]);
 }

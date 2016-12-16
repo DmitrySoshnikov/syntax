@@ -64,7 +64,7 @@ class yyparse {
     $tokenizer = self::getTokenizer();
 
     if (!$tokenizer) {
-      throw new Exception(`Tokenizer instance wasn't specified.`);
+      throw new \Exception(`Tokenizer instance wasn't specified.`);
     }
 
     $tokenizer->initString($string);
@@ -89,7 +89,7 @@ class yyparse {
       $e = $tbl[$sta][$clm];
 
       if (!$e) {
-        self::unexpectedToken(t);
+        self::unexpectedToken($t);
       }
 
       if ($e[0] === 's') {
@@ -104,7 +104,7 @@ class yyparse {
         $pn = intval(substr($e, 1));
         $p = $ps[$pn];
         $hsa = count($p) > 2;
-        $saa = hsa ? [] : null;
+        $saa = $hsa ? [] : null;
 
         if ($p[1] !== 0) {
           $rhsl = $p[1];
@@ -170,11 +170,10 @@ class yyparse {
   }
 
   private static function parseError($message) {
-    throw new Exception('Parse error: '.$message);
+    throw new \Exception('Parse error: '.$message);
   }
 }
 
 <<TOKENIZER>>
 
 class <<PARSER_CLASS_NAME>> extends yyparse {}
-

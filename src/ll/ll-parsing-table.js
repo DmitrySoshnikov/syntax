@@ -108,7 +108,7 @@ export default class LLParsingTable {
    * Whether the table/grammar has conflicts.
    */
   hasConflicts() {
-    return !!this.getConflicts();
+    return this._hasConflicts;
   }
 
   /**
@@ -117,12 +117,13 @@ export default class LLParsingTable {
   getConflicts() {
     if (!this._conflicts) {
       this._conflicts = this._analyzeConfilcts();
+      this._hasConflicts = (Object.keys(this._conflicts).length !== 0);
     }
     return this._conflicts;
   }
 
   _analyzeConfilcts() {
-    let conflicts = {};
+    let conflicts = Object.create(null);
 
     for (let nonTerminal in this._table) {
       let row = this._table[nonTerminal];
