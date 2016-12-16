@@ -1,3 +1,0 @@
-cp -r src/templates/* dist/templates/
-cp -r src/generated/* dist/generated/
-babel src/ --out-dir dist/ --watch --presets es2015,stage-1,stage-2  --ignore templates/

@@ -9,8 +9,8 @@
   "bugs": "https://github.com/DmitrySoshnikov/syntax/issues",
   "main": "index.js",
   "scripts": {
-    "build": "./scripts/build",
-    "watch": "./scripts/watch",
+    "build": "node scripts/build.js",
+    "watch": "node scripts/build.js --watch",
     "prepublish": "npm run build"
   },
   "bin": {
@@ -39,6 +39,7 @@
     "colors": "^1.1.2"
   },
   "devDependencies": {
-    "babel": "^6.2.0"
+    "babel": "^6.2.0",
+    "shelljs": "^0.7.5"
   }
 }
