@@ -18,6 +18,7 @@ const PLUGINS = [
   'python',
   'php',
   'ruby',
+  'csharp',
 ];
 
 console.info('Installing plugins...')

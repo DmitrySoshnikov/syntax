@@ -69,8 +69,9 @@ export default class BaseParserGenerator {
 
   /**
    * Returns semantics action data (args, and body).
+   * If optional `argType` is passed, it's used as the type of arguments.
    */
-  getSemanticActionData(production) {
+  getSemanticActionData(production, argType = '') {
     let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
 
     const rawAction = production.getRawSemanticAction();
@@ -90,8 +91,8 @@ export default class BaseParserGenerator {
     }
     // Builds a string of args: '$1, $2, $3...'
     let args = [...Array(RHSLength)]
-      .map((_, i) => `_${i + 1}`)
-      .join(',');
+      .map((_, i) => `${argType} _${i + 1}`)
+      .join(', ');
 
     return {args, action};
   }

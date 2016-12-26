@@ -157,6 +157,7 @@ const parsers = {
         'py' : require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js').default,
         'php': require(ROOT + 'plugins/php/lr/lr-parser-generator-php.js').default,
         'rb' : require(ROOT + 'plugins/ruby/lr/lr-parser-generator-ruby.js').default,
+        'cs' : require(ROOT + 'plugins/csharp/lr/lr-parser-generator-csharp.js').default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;

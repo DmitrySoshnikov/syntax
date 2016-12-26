@@ -52,17 +52,25 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
   }
 
   /**
+   * Default format in the [ ] array notation.
+   */
+  generateProductionsData() {
+    return this.generateRawProductionsData()
+      .map(data => `[${data}]`);
+  }
+
+  /**
    * Format of the production is:
    * [Non-terminal index, RHS.length, semanticAction]
    */
-  generateProductionsData() {
+  generateRawProductionsData() {
     return this.getGrammar().getProductions().map(production => {
       let LHS = production.getLHS().getSymbol().replace(/'/g, "\\'");
       let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
       let semanticAction = this.buildSemanticAction(production);
 
-      return `[${this.getEncodedNonTerminal(LHS)}, ${RHSLength}` +
-        (semanticAction ? `, ${semanticAction}` : '') + ']';
+      return `${this.getEncodedNonTerminal(LHS)}, ${RHSLength}` +
+        (semanticAction ? `, ${semanticAction}` : '');
     });
   }
 

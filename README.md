@@ -13,6 +13,7 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
   - [Python plugin](#python-plugin)
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
+  - [C# plugin](#c-plugin)
 - [Using custom tokenizer](#using-custom-tokenizer)
 - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
 - [Parsing modes](#parsing-modes)
@@ -140,6 +141,27 @@ puts CalcParser.parse('2 + 2 * 2') // 6
 
 Ruby's parsing hooks can be found in [the following example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.rb.g).
 
+#### C# plugin
+
+Syntax supports as well C# as a target language. See its [calculator example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.cs.g):
+
+```
+./bin/syntax -g examples/calc.cs.g -m lalr1 -o CalcParser.cs
+```
+
+Then callers can use the module as:
+
+```cs
+using SyntaxParser;
+
+...
+
+var parser = new CalcParser();
+Console.WriteLine(CalcParser.parse('2 + 2 * 2')); // 6
+```
+
+Parsing hooks example in C# format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.cs.g).
+
 ### Using custom tokenizer
 
 > NOTE: built-in tokenizer uses underlying regexp implementation to extract stream of tokens.
@@ -209,7 +231,7 @@ Rules with explicit start conditions are executed _only_ when lexer enters the s
     ["\\/\\*", "this.pushState('comment');"],
 
     // The rule is executed only when tokenizers enters `comment`, or `string` state:
-    [["comment, string"], "\\n", "lines++; return 'NL';"],
+    [["comment", "string"], "\\n", "lines++; return 'NL';"],
 
     ...
   ],
