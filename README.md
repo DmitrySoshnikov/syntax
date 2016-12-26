@@ -157,7 +157,7 @@ using SyntaxParser;
 ...
 
 var parser = new CalcParser();
-Console.WriteLine(parser.parse('2 + 2 * 2')); // 6
+Console.WriteLine(parser.parse("2 + 2 * 2")); // 6
 ```
 
 Parsing hooks example in C# format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.cs.g).
