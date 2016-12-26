@@ -83,7 +83,7 @@ console.log(value); // JS object: {x: 10, y: [1, 2]}
 
 #### JavaScript default
 
-Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, and _PHP_. The target language is determined by the output file extension.
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, _PHP_, and _C#_. The target language is determined by the output file extension.
 
 #### Python plugin
 
