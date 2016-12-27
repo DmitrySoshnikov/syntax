@@ -15,6 +15,7 @@ cp('-r', 'src/templates/*', 'dist/templates/');
 console.info('Done.\n');
 
 const PLUGINS = [
+  'example',
   'python',
   'php',
   'ruby',

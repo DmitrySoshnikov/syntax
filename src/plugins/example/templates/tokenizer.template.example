@@ -1,0 +1,307 @@
+/**
+ * Generic tokenizer used by the parser in the Syntax tool.
+ *
+ * https://www.npmjs.com/package/syntax-cli
+ *
+ * See `--custom-tokinzer` to skip this generation, and use a custom one.
+ */
+
+/**
+ * Implementation notes:
+ *
+ * 1. NOTE: the tokenizer file is included into the output parser file which
+ * also defines `yyparse` class. The tokenizer file may thus access `yyparse`'s
+ * data, and global constants defined there, e.g. `EOF`, etc.
+ *
+ * 2. NOTE: template files can define any needed template placeholders, such as
+ * LEX_RULES, TABLE, etc. These placeholders are further replaced by
+ * the parser generator class. You can name placeholders anything you want,
+ * however, we encourage you to stick with conventional names for the standard
+ * placeholders, such as LEX_RULES, etc. You can add any extra placeholders,
+ * and handle them in the parser generator.
+ *
+ * 3. NOTE: Data structure formats. In this example we use JavaScript to
+ * implement the parser; all the examples of data structures are in the JS
+ * format. However, we try not to use in this example *very JS specific*
+ * constructs, but instead constructs which can easily be ported to other
+ * languages. I.e. when we have a JS object, such as {foo: 10, bar: 20}, this
+ * means an abstract "map" data structure, which can be represented by any
+ * data structure in a needed language. Similarly, JS arrays: [10, 20], which
+ * can be represented as a List, array, etc in other languages.
+ */
+
+// --------------------------------------------------------------
+
+/**
+ * Token class: encapsulates token type, and the matched value.
+ */
+class Token {
+  constructor({type, value}) {
+    this.type = type;
+    this.value = value;
+  }
+}
+
+// --------------------------------------------------------------
+
+/**
+ * Tokens map.
+ *
+ * Maps a string name of a token type to its encoded number (the first
+ * token number starts after all numbers for non-terminal).
+ *
+ * Example (assuming non-terminals reserved numbers 0-4, so token
+ * numbers start from 5):
+ *
+ * const tokensMap = {
+ *   "+": 5,
+ *   "*": 6,
+ *   "NUMBER": 7,
+ *   [EOF]: 8,
+ *   ...
+ * };
+ *
+ * This map is written by the parser generator, which replaces the TOKENS
+ * placeholder.
+ */
+const tokensMap = <<TOKENS>>;
+
+/**
+ * Special "end of file" token.
+ */
+const EOF_TOKEN = new Token({
+  type: Number(tokensMap[EOF]),
+  value: EOF,
+});
+
+/**
+ * The `yytext` global variable stores the actual matched text for a token.
+ * Here we made it an actual module-level global variable which can be accessed
+ * from any place in the tokenizer, and yyparse, however, you may choose to
+ * store it e.g. as a class property on `yyparse.yytext`.
+ */
+let yytext = "";
+
+/**
+ * The length of the `yytext`.
+ */
+let yyleng = 0;
+
+// --------------------------------------------------------------
+
+/**
+ * Lex rules.
+ *
+ * The lexical rules are used for actual tokenization of a string. The format
+ * we choose here is an "array of arrays", where each element array contains
+ * a regexp, and its corresponding handler.
+ *
+ * Example:
+ *
+ * const lexRules = [
+ *   ["^\s+", "_lexRule1"],
+ *   ["^\d+", "_lexRule2"],
+ *   ...
+ * ];
+ *
+ * The parser generator replaces LEX_RULES placeholder with actual data
+ * received from Syntax tool.
+ */
+const lexRules = <<LEX_RULES>>;
+
+// --------------------------------------------------------------
+
+/**
+ * Lexical rules grouped by start condition.
+ *
+ * If your tokenizer needs to support starting states, it should implement
+ * this map of the start conditions to the list of rule indices in the
+ * `lexRules` array.
+ *
+ * Example:
+ *
+ * const lexRulesByConditions = {
+ *   "INITIAL": [0,5,6,7],
+ *   "comment": [1,2,3,4,6],
+ *   ...
+ * };
+ *
+ * The parser generator replaces LEX_RULES_BY_START_CONDITIONS placeholder
+ * with actual data received from Syntax tool.
+ *
+ */
+const lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
+
+// --------------------------------------------------------------
+
+/**
+ * Tokenizer.
+ *
+ * Regexp-based tokenizer. Applies lexical rules in order, until gets
+ * a match; otherwise, throws the "Unexpected token" exception.
+ *
+ * Tokenizer should implement at least the following API:
+ *
+ * - getNextToken(): Token
+ * - hasMoreTokens(): boolean
+ * - isEOF(): boolean
+ *
+ * For state-based tokenizer, also:
+ *
+ * - getCurrentState(): number
+ * - pushState(string stateName): void
+ * - popState(): void
+ * - begin(string stateName): void - alias for pushState
+ */
+class Tokenizer {
+
+  constructor(tokenizingString) {
+    this.initString(tokenizingString);
+  }
+
+  // --------------------------------------------
+  // Init.
+
+  /**
+   * Parser calls `tokenizer.initString("...")` to initialize a parsing string.
+   */
+  initString(tokenizingString) {
+
+    /**
+     * A tokenizing string, always followed by the `EOF` symbol.
+     */
+    this._string = tokenizingString + EOF;
+
+    /**
+     * Stack of the tokenizer states. Initialized to the `INITIAL` state.
+     */
+    this._states = ['INITIAL'];
+
+    /**
+     *  Cursor tracking current position.
+     */
+    this._cursor = 0;
+
+    return this;
+  }
+
+  // --------------------------------------------
+  // Lexical rule handlers.
+
+  /**
+   * The handlers are inserted by the parser generator into the
+   * LEX_RULE_HANDLERS placeholder.
+   *
+   * Example:
+   *
+   * _lexRule1() {
+   *   // skip whitespace
+   *   return null;
+   * }
+   *
+   * _lexRule2() {
+   *   return "NUMBER";
+   * }
+   */
+  <<LEX_RULE_HANDLERS>>
+
+  // --------------------------------------------
+  // States.
+
+  getCurrentState() {
+    return this._states[this._states.length - 1];
+  }
+
+  pushState(state) {
+    this._states.push(state);
+  }
+
+  // Alias for `pushState`.
+  begin(state) {
+    this.pushState(state);
+  }
+
+  popState() {
+    if (this._states.length > 1) {
+      return this._states.pop();
+    }
+    return this._states[0];
+  }
+
+  // --------------------------------------------
+  // Tokenizing.
+
+  getNextToken() {
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    } else if (this.isEOF()) {
+      this._cursor++;
+      return EOF_TOKEN;
+    }
+
+    // Get the rest of the string which is not analyzed yet.
+    let string = this._string.slice(this._cursor);
+
+    // This tokenizer supports states, so get the lexical rules
+    // for the current state.
+    let lexRulesForState = lexRulesByConditions[this.getCurrentState()];
+
+    for (let i = 0; i < lexRulesForState.length; i++) {
+
+      // Get the actual lexical rule.
+      let lexRuleIndex = lexRulesForState[i];
+      let lexRule = lexRules[lexRuleIndex];
+
+      let matched = this._match(string, lexRule[0]);
+      if (matched) {
+
+        // Update global vars (they can be modified by the rule handler).
+        yytext = matched;
+        yyleng = yytext.length;
+
+        // Call the handler, the `lexRule[1]` contains handler name.
+        // Use any reflection method in your language to get an actual method.
+        // In JavaScript it's done by `this[lexRule[1]]` to get the method.
+
+        let tokenHandler = this[lexRule[1]];
+        let tokenType = tokenHandler.call(this);
+
+        // A handler may return `null` (e.g. skip whitespace not returning
+        // any token. Continue in this case.
+        if (!tokenType) {
+          return this.getNextToken();
+        }
+
+        // Finally return an actual matched token.
+        return new Token({
+          type: tokensMap[tokenType],
+          value: yytext,
+        });
+      }
+    }
+
+    throw new Error(`Unexpected token: "${string[0]}".`);
+  }
+
+  isEOF() {
+    return this._string[this._cursor] === EOF &&
+      this._cursor === this._string.length - 1;
+  }
+
+  hasMoreTokens() {
+    return this._cursor < this._string.length;
+  }
+
+  /**
+   * Tries to match a string to the regexp, and advances the cursor
+   * in case of success.
+   */
+  _match(string, regexp) {
+    let matched = string.match(regexp);
+    if (matched) {
+      this._cursor += matched[0].length;
+      return matched[0];
+    }
+    return null;
+  }
+}

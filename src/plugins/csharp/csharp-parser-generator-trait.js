@@ -204,7 +204,7 @@ const CSharpParserGeneratorTrait = {
   },
 
   /**
-   * Python-specific lex rules handler declarations.
+   * C#-specific lex rules handler declarations.
    */
   generateLexHandlers() {
     const handlers = this._generateHandlers(
