@@ -93,7 +93,7 @@ You'll need to add your new plugin to the:
 
 Run `npm run build` to copy your templates files, and transpile code. You can also use `npm run watch` for faster development (notice though, it only transpiles code, and doesn't copy the templates; for that you'll have to use `build` command).
 
-### 5. How to test?
+### 5. How to test
 
 Port `examples/calc.example.g` to your language, and execute the `syntax` command on it. Example:
 
@@ -114,6 +114,6 @@ console.log(parser.parse("(2 + 2) * 2")); // 8
 
 ### 6. Submit a PR :)
 
-If you built a plugin for a new language which Syntax yet doesn't supported, please submit a pull request, we'll be glad to review, and accept it.
+If you built a plugin for a language which Syntax doesn't yet support, please submit a pull request, we'll be glad to review, and accept it.
 
 Good luck with parser generators!
