@@ -80,7 +80,7 @@ You need to implement `<your-language>-parser-generator-trait.js`.
 
 The trait file contains the most specific to the target language functionality, and code generation. For example, it generates code for lex rule, and production handlers, code for the parsing table in the target language format, etc. Read the "Implementation notes" section for guidelines.
 
-#### 3.3 LL generator trait
+#### 3.3 LL parser generator
 
 If needed, implement `ll/ll-parser-generator-<your-language>.js`. Follow the instructions for the LR parser generator above, and do a similar implementation.
 
