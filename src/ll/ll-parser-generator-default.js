@@ -49,10 +49,11 @@ export default class LLParserGeneratorDefault extends BaseParserGenerator {
 
   /**
    * Format of the production is:
-   * [Non-terminal index, RHS.reverse().map(index), semanticAction]
+   * [RHS.reverse().map(index)]
    * The RHS is reversed to push onto the stack at derivation.
+   * LL parser doesn't implement yet semantic action.
    */
-  generateProductionsData() {
+  generateRawProductionsData() {
     let productionsData = this.getGrammar().getProductions().map(production => {
       // RHS for derivation.
       let reversedRHS = [];
@@ -61,16 +62,17 @@ export default class LLParserGeneratorDefault extends BaseParserGenerator {
           return this.getEncodedSymbol(symbol.getSymbol()).toString();
         }).reverse();
       }
-
-      let semanticAction = this.buildSemanticAction(production);
-
-      return `[${JSON.stringify(reversedRHS)}` +
-        (semanticAction ? `, ${semanticAction}` : '') + ']';
+      return [reversedRHS];
     });
 
     // For 1-based index production.
-    productionsData.unshift(`[-1]`);
+    productionsData.unshift([-1]);
     return productionsData;
+  }
+
+  generateProductionsData() {
+    return this.generateRawProductionsData()
+      .map(data => JSON.stringify(data));
   }
 
   /**

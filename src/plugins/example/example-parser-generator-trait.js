@@ -96,7 +96,7 @@ const ExampleParserGeneratorTrait = {
     // Save the action, they are injected later.
     // "_handler1", "_handler2", etc.
     this._productionHandlers.push(semanticActionData);
-    return `"_handler${this._productionHandlers.length}"`;
+    return `_handler${this._productionHandlers.length}`;
   },
 
   /**
@@ -125,8 +125,9 @@ const ExampleParserGeneratorTrait = {
    * ]
    */
   generateProductionsData() {
+    console.log(this.generateRawProductionsData());
     return this.generateRawProductionsData()
-      .map(data => `[${data}]`);
+      .map(data => JSON.stringify(data));
   },
 
   /**

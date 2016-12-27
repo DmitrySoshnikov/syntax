@@ -69,8 +69,16 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
       let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
       let semanticAction = this.buildSemanticAction(production);
 
-      return `${this.getEncodedNonTerminal(LHS)}, ${RHSLength}` +
-        (semanticAction ? `, ${semanticAction}` : '');
+      let result = [
+        this.getEncodedNonTerminal(LHS),
+        RHSLength,
+      ];
+
+      if (semanticAction) {
+        result.push(semanticAction);
+      }
+
+      return result;
     });
   }
 
