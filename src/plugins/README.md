@@ -42,9 +42,9 @@ Parsing algorithms (LR/LL) are already also implemented, and can be found in the
 
 Basically we'll need to implement:
 
-- **tokenizer.template.<ext>** -- an actual tokenizer;
-- **lr.template.<ext>** -- LR parser, mostly used on practice;
-- **ll.template.<ext>** -- in case you need to support LL parser.
+- `tokenizer.template.<ext>` -- an actual tokenizer;
+- `lr.template.<ext>` -- LR parser, mostly used on practice;
+- `ll.template.<ext>` -- in case you need to support LL parser.
 
 where `<ext>` is the extension of the filename of your language.
 
