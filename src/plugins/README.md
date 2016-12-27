@@ -66,7 +66,7 @@ If needed, port the LL-parser template from the `src/plugins/example/templates/l
 
 ### 3. Parser generator
 
-Once you have the templates ported, you need to implement an actual _parser generator_. This is done per parsing mode (LR/LL), and also by implementing a _generator trait_. The the trait usually contains _very specific_ things related to the porting target language.
+Once you have the templates ported, you need to implement an actual _parser generator_. This is done per parsing mode (LR/LL), and also by implementing a _generator trait_. The trait usually contains _very specific_ things related to the target language.
 
 #### 3.1. LR parser generator
 
