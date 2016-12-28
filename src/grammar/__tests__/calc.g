@@ -4,7 +4,7 @@
 
 {
   "lex": [
-    ["\d+", "return 'NUMBER'"],
+    ["\\d+", "return 'NUMBER'"],
     ["\\(", "return '('"],
     ["\\)", "return ')'"],
     ["\\+", "return '+'"],
