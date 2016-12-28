@@ -231,6 +231,17 @@ export default class Grammar {
   }
 
   /**
+   * Returns terminal symbols.
+   */
+  getTerminalSymbols() {
+    if (!this._terminalSymbols) {
+      this._terminalSymbols = this.getTerminals()
+        .map(symbol => symbol.getSymbol());
+    }
+    return this._terminalSymbols;
+  }
+
+  /**
    * Returns list of non-terminals in this grammar.
    */
   getNonTerminals() {
@@ -252,6 +263,17 @@ export default class Grammar {
     }
 
     return this._nonTerminals;
+  }
+
+  /**
+   * Returns list of non-terminal symbols.
+   */
+  getNonTerminalSymbols() {
+    if (!this._nonTerminalSymbols) {
+      this._nonTerminalSymbols = this.getNonTerminals()
+        .map(symbol => symbol.getSymbol());
+    }
+    return this._nonTerminalSymbols;
   }
 
   /**
@@ -281,6 +303,17 @@ export default class Grammar {
     }
 
     return this._tokens;
+  }
+
+  /**
+   * Returns token symbols.
+   */
+  getTokenSymbols() {
+    if (!this._tokenSymbols) {
+      this._tokenSymbols = this.getTokens()
+        .map(symbol => symbol.getSymbol());
+    }
+    return this._tokenSymbols;
   }
 
   /**
