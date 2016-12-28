@@ -79,7 +79,7 @@
             }
         }
 
-        // Setup of the parser hooks is done via `Init.run();`.
+        // Setup of the parser hooks is done via Init.run();
         public class Init
         {
             public static void run()
