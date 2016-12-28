@@ -24,4 +24,8 @@
           ["NUMBER", "$$ = $1"],
           ["( E )",  "$$ = $2"]],
   },
+
+  "moduleInclude": `
+    (() => "module include code")();
+  `
 }

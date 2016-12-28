@@ -2,6 +2,10 @@
  * An LR(1) grammar with precedence, and assocs.
  */
 
+%{
+  (() => 'module include code')();
+%}
+
 %left '+' '-'
 %left '*' '/'
 
