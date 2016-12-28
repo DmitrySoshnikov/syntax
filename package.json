@@ -11,7 +11,8 @@
   "scripts": {
     "build": "node scripts/build.js",
     "watch": "node scripts/build.js --watch",
-    "prepublish": "npm run build"
+    "prepublish": "npm run test && npm run build",
+    "test": "node node_modules/jest-cli/bin/jest.js"
   },
   "bin": {
     "syntax-cli": "./bin/syntax"
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "babel": "^6.2.0",
-    "shelljs": "^0.7.5"
+    "shelljs": "^0.7.5",
+    "jest-cli": "^17.0.3"
   }
 }

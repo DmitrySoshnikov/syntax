@@ -137,8 +137,8 @@ export default class Grammar {
    * Loads a grammar object from a grammar file,
    * for the specific parsing mode.
    */
-  static fromGrammarFile(grammarFile, mode) {
-    let grammarData = this.loadGrammarData(grammarFile);
+  static fromGrammarFile(grammarFile, mode, grammarType = 'bnf') {
+    let grammarData = Grammar.dataFromGrammarFile(grammarFile, grammarType);
     grammarData.mode = mode;
     return new Grammar(grammarData);
   }

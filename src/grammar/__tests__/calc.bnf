@@ -1,0 +1,15 @@
+/**
+ * An LR(1) grammar with precedence, and assocs.
+ */
+
+%left '+' '-'
+%left '*' '/'
+
+%%
+
+E
+  : E '+' E
+  | E '*' E
+  | 'id'
+  | '(' E ')'
+  ;
