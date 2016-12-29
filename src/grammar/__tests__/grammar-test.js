@@ -8,40 +8,68 @@ jest.disableAutomock();
 import Grammar from '../grammar';
 import GrammarMode from '../grammar-mode';
 import GrammarSymbol from '../grammar-symbol';
+import LexRule from '../lex-rule';
 import Production from '../production';
 import {MODES as GRAMMAR_MODE} from '../grammar-mode';
 import fs from 'fs';
 
 const Grammars = {
+
   BNF_FORMAT: {
     filename: __dirname + '/calc.bnf',
     mode: GRAMMAR_MODE.SLR1,
+
     startSymbol: 'E',
     nonTerminalSymbols: ['E'],
     terminalSymbols: [ "'+'", "'*'", "'id'", "'('", "')'"],
     tokenSymbols: [],
+
     operators: {
       "'*'": {assoc: "left", precedence: 2},
       "'+'": {assoc: "left", precedence: 1},
       "'-'": {assoc: "left", precedence: 1},
       "'/'": {assoc: "left", precedence: 2},
-    }
+    },
+
+    lexerStartConditions: {INITIAL: 0},
+
+    lexRulesData: [
+      ["\\+", `return "'+'";`],
+      ["\\*", `return "'*'";`],
+      ["id",  `return "'id'";`],
+      ["\\(", `return "'('";`],
+      ["\\)", `return "')'";`],
+    ],
   },
 
   JS_FORMAT: {
     filename: __dirname + '/calc.g',
     mode: GRAMMAR_MODE.LALR1,
+
     startSymbol: 'E',
     nonTerminalSymbols: ['E'],
     terminalSymbols: [],
     tokenSymbols: ['+', '*', '-', '/', 'NUMBER', '(', ')'],
+
     operators: {
       "*": {assoc: "left", precedence: 2},
       "+": {assoc: "left", precedence: 1},
       "-": {assoc: "left", precedence: 1},
       "/": {assoc: "left", precedence: 2},
-    }
-  }
+    },
+
+    lexerStartConditions: {INITIAL: 0, comment: 1},
+
+    lexRulesData: [
+      ["\\d+", "return 'NUMBER'"],
+      ["\\(", "return '('"],
+      ["\\)", "return ')'"],
+      ["\\+", "return '+'"],
+      ["\\*", "return '*'"],
+      ["\\/\\*", "this.pushState('comment');"],
+      [["comment"], "\\*+\\/", "this.popState();"],
+    ],
+  },
 };
 
 describe('grammar-test', () => {
@@ -127,6 +155,34 @@ describe('grammar-test', () => {
       expect(grammar.getAugmentedProduction().getLHS().getSymbol())
         .toBe('$accept');
     }
+
+    // -------------------------------------------------------------
+    // Lexer start conditions.
+
+    expect(grammar.getLexerStartConditions())
+      .toEqual(grammarData.lexerStartConditions);
+
+    // -------------------------------------------------------------
+    // Lex rules.
+
+    const lexRulesData = [];
+
+    grammar.getLexRules().forEach(lexRule => {
+      expect(lexRule instanceof LexRule);
+
+      const data = [
+        lexRule.getOriginalMatcher(),
+        lexRule.getRawHandler(),
+      ];
+
+      if (lexRule.hasStartConditions()) {
+        data.unshift(lexRule.getStartConditions());
+      }
+
+      lexRulesData.push(data);
+    });
+
+    expect(lexRulesData).toEqual(grammarData.lexRulesData);
   }
 
 });

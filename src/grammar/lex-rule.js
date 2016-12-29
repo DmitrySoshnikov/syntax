@@ -27,10 +27,18 @@ export default class LexRule {
    */
   constructor({startConditions, matcher, tokenHandler}) {
     this._startConditions = startConditions;
+    this._originalMatcher = matcher;
     this._rawMatcher = `^${matcher}`;
     this._matcher = new RegExp(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
+  }
+
+  /**
+   * Retusn original matcher string.
+   */
+  getOriginalMatcher() {
+    return this._originalMatcher;
   }
 
   /**

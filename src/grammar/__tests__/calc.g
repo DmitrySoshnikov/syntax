@@ -3,13 +3,22 @@
  */
 
 {
-  "lex": [
-    ["\\d+", "return 'NUMBER'"],
-    ["\\(", "return '('"],
-    ["\\)", "return ')'"],
-    ["\\+", "return '+'"],
-    ["\\*", "return '*'"],
-  ],
+  "lex": {
+    "startConditions": {
+      "comment": 1, // exclusive
+    },
+
+    "rules": [
+      ["\\d+", "return 'NUMBER'"],
+      ["\\(", "return '('"],
+      ["\\)", "return ')'"],
+      ["\\+", "return '+'"],
+      ["\\*", "return '*'"],
+
+      ["\\/\\*", "this.pushState('comment');"],
+      [["comment"], "\\*+\\/", "this.popState();"],
+    ],
+  },
 
   "operators": [
     ["left", "+", "-"],
