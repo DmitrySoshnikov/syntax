@@ -23,6 +23,7 @@ const Grammars = {
     nonTerminalSymbols: ['E'],
     terminalSymbols: [ "'+'", "'*'", "'id'", "'('", "')'"],
     tokenSymbols: [],
+    moduleIncludeResult: 'module include code',
 
     operators: {
       "'*'": {assoc: "left", precedence: 2},
@@ -40,6 +41,25 @@ const Grammars = {
       ["\\(", `return "'('";`],
       ["\\)", `return "')'";`],
     ],
+
+    grammarToString: `
+      $accept -> E
+
+      E -> E '+' E
+         | E '*' E
+         | 'id'
+         | '(' E ')'
+    `,
+
+    productionsFor: {
+      symbol: 'E',
+      count: 4,
+    },
+
+    productionsWith: {
+      symbol: 'E',
+      count: 3,
+    },
   },
 
   JS_FORMAT: {
@@ -50,6 +70,7 @@ const Grammars = {
     nonTerminalSymbols: ['E'],
     terminalSymbols: [],
     tokenSymbols: ['+', '*', '-', '/', 'NUMBER', '(', ')'],
+    moduleIncludeResult: 'module include code',
 
     operators: {
       "*": {assoc: "left", precedence: 2},
@@ -69,120 +90,192 @@ const Grammars = {
       ["\\/\\*", "this.pushState('comment');"],
       [["comment"], "\\*+\\/", "this.popState();"],
     ],
+
+    grammarToString: `
+      $accept -> E
+
+      E -> E + E
+         | E * E
+         | E - E
+         | E / E
+         | NUMBER
+         | ( E )
+    `,
+
+    productionsFor: {
+      symbol: 'E',
+      count: 6,
+    },
+
+    productionsWith: {
+      symbol: 'E',
+      count: 5,
+    },
   },
 };
 
-describe('grammar-test', () => {
+describe('grammar', () => {
 
-  it('validates grammar from BNF format', () => {
+  describe('from BNF format', () => {
     validate(Grammars.BNF_FORMAT);
   });
 
-  it('validates grammar from JSON/JS format', () => {
+  describe('from JSON/JS format', () => {
     validate(Grammars.JS_FORMAT);
   });
 
   function validate(grammarData) {
+    let grammar;
 
     // -------------------------------------------------------------
     // Load grammar from file.
 
-    const grammar = Grammar.fromGrammarFile(
-      grammarData.filename,
-      grammarData.mode,
-    );
-
-    expect(grammar instanceof Grammar).toBe(true);
+    it('loads grammar', () => {
+      grammar = Grammar.fromGrammarFile(
+        grammarData.filename,
+        grammarData.mode,
+      );
+      expect(grammar instanceof Grammar).toBe(true);
+    });
 
     // -------------------------------------------------------------
     // Non-terminals.
 
-    grammar.getNonTerminals().forEach(
-      nonTerminal => expect(nonTerminal instanceof GrammarSymbol)
-    );
+    it('non-terminals', () => {
+      grammar.getNonTerminals().forEach(
+        nonTerminal => expect(nonTerminal instanceof GrammarSymbol)
+      );
 
-    expect(grammar.getNonTerminalSymbols())
-      .toEqual(grammarData.nonTerminalSymbols);
+      expect(grammar.getNonTerminalSymbols())
+        .toEqual(grammarData.nonTerminalSymbols);
+    });
 
     // -------------------------------------------------------------
     // Terminals (implicit raw strings in production rules).
 
-    grammar.getTerminals().forEach(
-      terminal => expect(terminal instanceof GrammarSymbol)
-    );
+    it('terminals', () => {
+      grammar.getTerminals().forEach(
+        terminal => expect(terminal instanceof GrammarSymbol)
+      );
 
-    expect(grammar.getTerminalSymbols())
-      .toEqual(grammarData.terminalSymbols);
+      expect(grammar.getTerminalSymbols())
+        .toEqual(grammarData.terminalSymbols);
+    });
 
     // -------------------------------------------------------------
     // Tokens (explicit tokens from the lexical grammar).
 
-    grammar.getTokens().forEach(
-      token => expect(token instanceof GrammarSymbol)
-    );
+    it('tokens', () => {
+      grammar.getTokens().forEach(
+        token => expect(token instanceof GrammarSymbol)
+      );
 
-    expect(grammar.getTokenSymbols())
-      .toEqual(grammarData.tokenSymbols);
+      expect(grammar.getTokenSymbols())
+        .toEqual(grammarData.tokenSymbols);
+    });
 
     // -------------------------------------------------------------
     // Mode.
 
-    expect(grammar.getMode() instanceof GrammarMode).toBe(true);
-    expect(grammar.getMode().getRaw()).toBe(grammarData.mode);
+    it('mode', () => {
+      expect(grammar.getMode() instanceof GrammarMode).toBe(true);
+      expect(grammar.getMode().getRaw()).toBe(grammarData.mode);
+    });
 
     // -------------------------------------------------------------
     // Module include code.
 
-    expect(eval(grammar.getModuleInclude())).toBe('module include code');
+    it('module include', () => {
+      expect(eval(grammar.getModuleInclude()))
+        .toBe(grammarData.moduleIncludeResult);
+    });
 
     // -------------------------------------------------------------
     // Operators.
 
-    expect(grammar.getOperators()).toEqual(grammarData.operators);
+    it('operators', () => {
+      expect(grammar.getOperators()).toEqual(grammarData.operators);
+    });
 
     // -------------------------------------------------------------
     // Start symbol.
 
-    expect(grammar.getStartSymbol()).toBe(grammarData.startSymbol);
+    it('start symbol', () => {
+      expect(grammar.getStartSymbol()).toBe(grammarData.startSymbol);
+    });
 
     // -------------------------------------------------------------
     // Augmented production (only for LR parsers).
 
-    if (grammar.getMode().isLR()) {
-      expect(grammar.getAugmentedProduction() instanceof Production)
-        .toBe(true);
+    it('augmented production', () => {
+      if (grammar.getMode().isLR()) {
+        expect(grammar.getAugmentedProduction() instanceof Production)
+          .toBe(true);
 
-      expect(grammar.getAugmentedProduction().getLHS().getSymbol())
-        .toBe('$accept');
-    }
+        expect(grammar.getAugmentedProduction().getLHS().getSymbol())
+          .toBe('$accept');
+      }
+    });
 
     // -------------------------------------------------------------
     // Lexer start conditions.
 
-    expect(grammar.getLexerStartConditions())
-      .toEqual(grammarData.lexerStartConditions);
+    it('lexer start conditions', () => {
+      expect(grammar.getLexerStartConditions())
+        .toEqual(grammarData.lexerStartConditions);
+    });
 
     // -------------------------------------------------------------
     // Lex rules.
 
-    const lexRulesData = [];
+    it('lex rules', () => {
+      const lexRulesData = [];
 
-    grammar.getLexRules().forEach(lexRule => {
-      expect(lexRule instanceof LexRule);
+      grammar.getLexRules().forEach(lexRule => {
+        expect(lexRule instanceof LexRule);
 
-      const data = [
-        lexRule.getOriginalMatcher(),
-        lexRule.getRawHandler(),
-      ];
+        const data = [
+          lexRule.getOriginalMatcher(),
+          lexRule.getRawHandler(),
+        ];
 
-      if (lexRule.hasStartConditions()) {
-        data.unshift(lexRule.getStartConditions());
-      }
+        if (lexRule.hasStartConditions()) {
+          data.unshift(lexRule.getStartConditions());
+        }
 
-      lexRulesData.push(data);
+        lexRulesData.push(data);
+      });
+
+      expect(lexRulesData).toEqual(grammarData.lexRulesData);
     });
 
-    expect(lexRulesData).toEqual(grammarData.lexRulesData);
+    // -------------------------------------------------------------
+    // Productions.
+
+    it('productions', () => {
+      const grammarOutput = [];
+
+      grammar.getProductions().forEach(production => {
+        expect(production instanceof Production).toBe(true);
+        grammarOutput.push(production.toString().trim());
+      });
+
+      const expectedOuput = grammarData.grammarToString
+        .split('\n')
+        .map(productionStr => productionStr.trim())
+        .filter(productionStr => !!productionStr)
+        .join('\n');
+
+      expect(grammarOutput.join('\n')).toEqual(expectedOuput);
+
+      const productionsFor = grammarData.productionsFor;
+      expect(grammar.getProductionsForSymbol(productionsFor.symbol).length)
+        .toBe(productionsFor.count);
+
+      const productionsWith = grammarData.productionsFor;
+      expect(grammar.getProductionsForSymbol(productionsWith.symbol).length)
+        .toBe(productionsWith.count);
+    });
   }
 
 });
