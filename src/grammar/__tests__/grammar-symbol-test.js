@@ -5,7 +5,6 @@
 
 jest.disableAutomock();
 
-import Grammar from '../grammar';
 import GrammarSymbol from '../grammar-symbol';
 
 describe('grammar-symbol', () => {

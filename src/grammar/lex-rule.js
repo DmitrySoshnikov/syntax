@@ -63,6 +63,13 @@ export default class LexRule {
   }
 
   /**
+   * Returns handler.
+   */
+  getHandler() {
+    return this._handler;
+  }
+
+  /**
    * Returns token data.
    */
   getTokenData(matched, tokenizer) {
@@ -97,10 +104,19 @@ export default class LexRule {
           yytext: matched,
           yyleng: matched.length,
         });
+
+        // Call the handler.
         const token = handler.call(tokenizer);
-        // Handler may mutate `yytext` during execution,
+        const yytext = CodeUnit.getSandbox().yytext;
+
+        // Update the `yyleng` in case `yytext` was modified.
+        CodeUnit.setBindings({
+          yyleng: yytext.length,
+        });
+
+        // The handler may mutate `yytext` during execution,
         // return a possibly updated one, along with the token.
-        return [CodeUnit.getSandbox().yytext, token];
+        return [yytext, token];
       };
     } catch (e) {
       /* And skip for other languages, which use raw handler in generator */
