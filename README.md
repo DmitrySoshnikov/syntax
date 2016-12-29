@@ -34,10 +34,19 @@ npm install -g syntax-cli
 syntax-cli --help
 ```
 
-Or for development, from the github repository. Run `build` command to transpile ES6 code:
+### Developement
+
+1. Fork the https://github.com/DmitrySoshnikov/syntax repo
+2. Make your changes
+3. Make sure `npm run test` passes (add new tests if needed)
+4. Submit a PR
+
+> NOTE: If you need to implement a Syntax plugin for a new target programming language, address [this instruction](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/README.md).
+
+For development from the github repository, run `build` command to transpile ES6 code:
 
 ```
-git clone https://github.com/DmitrySoshnikov/syntax.git
+git clone https://github.com/<your-github-account>/syntax.git
 cd syntax
 npm install
 npm run build
@@ -45,7 +54,7 @@ npm run build
 ./bin/syntax --help
 ```
 
-For development one can also use the `watch` command:
+Or for faster development cycle, one can also use `watch` command (notice though, it doesn't copy template files, but only transpiles ES6 code; for templates copying you have to use `build` command):
 
 ```
 npm run watch
