@@ -6,6 +6,7 @@ Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wik
 ### Table of Contents
 
 - [Installation](#installation)
+- [Developement](#developement)
 - [CLI usage example](#cli-usage-example)
 - [Parser generation](#parser-generation)
 - [Language agnostic parser generator](#language-agnostic-parser-generator)
