@@ -11,7 +11,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "watch": "node scripts/build.js --watch",
-    "prepublish": "npm run test && npm run build",
+    "prepublish": "npm test && npm run build",
     "test": "node node_modules/jest-cli/bin/jest.js"
   },
   "bin": {

@@ -39,7 +39,7 @@ syntax-cli --help
 
 1. Fork the https://github.com/DmitrySoshnikov/syntax repo
 2. Make your changes
-3. Make sure `npm run test` passes (add new tests if needed)
+3. Make sure `npm test` passes (add new tests if needed)
 4. Submit a PR
 
 > NOTE: If you need to implement a Syntax plugin for a new target programming language, address [this instruction](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/README.md).
