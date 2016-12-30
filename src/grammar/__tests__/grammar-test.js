@@ -3,8 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-jest.disableAutomock();
-
 import Grammar from '../grammar';
 import GrammarMode from '../grammar-mode';
 import GrammarSymbol from '../grammar-symbol';

@@ -3,8 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-jest.disableAutomock();
-
 import CodeUnit from '../../code-unit';
 import LexRule from '../lex-rule';
 

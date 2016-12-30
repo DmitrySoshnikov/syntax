@@ -3,9 +3,8 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-jest.disableAutomock();
-
 import GrammarSymbol from '../grammar-symbol';
+import {EOF, EPSILON} from '../../special-symbols';
 
 describe('grammar-symbol', () => {
 
@@ -51,6 +50,11 @@ describe('grammar-symbol', () => {
     expect((new GrammarSymbol(`'a'`)).isSymbol(`'b'`)).toBe(false);
     expect((new GrammarSymbol(`'a'`)).isSymbol(`"b"`)).toBe(false);
     expect((new GrammarSymbol(`'a'`)).isSymbol('A')).toBe(false);
+  });
+
+  it('special symbols', () => {
+    expect((new GrammarSymbol(EOF)).isEOF()).toBe(true);
+    expect((new GrammarSymbol(EPSILON)).isEpsilon()).toBe(true);
   });
 
 });
