@@ -1,5 +1,5 @@
 # syntax
-Syntactic analysis toolkit for education, tracing the parsing process, and parsers generation.
+Syntactic analysis toolkit, language agnostic parsers generator.
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 

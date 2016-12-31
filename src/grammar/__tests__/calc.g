@@ -9,14 +9,16 @@
     },
 
     "rules": [
+      [["*"],  "\\s+", "/*skip whitespace*/"],
       ["\\d+", "return 'NUMBER'"],
-      ["\\(", "return '('"],
-      ["\\)", "return ')'"],
-      ["\\+", "return '+'"],
-      ["\\*", "return '*'"],
+      ["\\(",  "return '('"],
+      ["\\)",  "return ')'"],
+      ["\\+",  "return '+'"],
+      ["\\*",  "return '*'"],
 
       ["\\/\\*", "this.pushState('comment');"],
       [["comment"], "\\*+\\/", "this.popState();"],
+      [["comment"], "\\d+", "return 'NUMBER_IN_COMMENT'"],
     ],
   },
 

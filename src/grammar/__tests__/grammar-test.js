@@ -80,6 +80,7 @@ const Grammars = {
     lexerStartConditions: {INITIAL: 0, comment: 1},
 
     lexRulesData: [
+      [["*"], "\\s+", "/*skip whitespace*/"],
       ["\\d+", "return 'NUMBER'"],
       ["\\(", "return '('"],
       ["\\)", "return ')'"],
@@ -87,6 +88,7 @@ const Grammars = {
       ["\\*", "return '*'"],
       ["\\/\\*", "this.pushState('comment');"],
       [["comment"], "\\*+\\/", "this.popState();"],
+      [["comment"], "\\d+", "return 'NUMBER_IN_COMMENT'"],
     ],
 
     grammarToString: `

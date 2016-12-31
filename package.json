@@ -1,7 +1,7 @@
 {
   "name": "syntax-cli",
   "version": "0.0.41",
-  "description": "Syntactic analysis toolkit for education, tracing, and parsers generation",
+  "description": "Syntactic analysis toolkit, language agnostic parsers generator.",
   "repository": {
     "type": "git",
     "url": "https://github.com/DmitrySoshnikov/syntax.git"
@@ -26,7 +26,9 @@
     "generator",
     "JavaScript",
     "Python",
-    "PHP"
+    "PHP",
+    "Ruby",
+    "C#"
   ],
   "author": "Dmitry Soshnikov",
   "license": "MIT Style License",
