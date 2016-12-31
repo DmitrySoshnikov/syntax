@@ -30,8 +30,6 @@ const Grammars = {
       "'/'": {assoc: "left", precedence: 2},
     },
 
-    lexerStartConditions: {INITIAL: 0},
-
     lexRulesData: [
       ["\\+", `return "'+'";`],
       ["\\*", `return "'*'";`],
@@ -39,6 +37,13 @@ const Grammars = {
       ["\\(", `return "'('";`],
       ["\\)", `return "')'";`],
     ],
+
+    lexerStartConditions: {INITIAL: 0},
+
+    // Indices from the `lexRulesData`.
+    lexRulesByStartConditions: {
+      INITIAL: [0, 1, 2, 3, 4],
+    },
 
     grammarToString: `
       $accept -> E
@@ -77,8 +82,6 @@ const Grammars = {
       "/": {assoc: "left", precedence: 2},
     },
 
-    lexerStartConditions: {INITIAL: 0, comment: 1},
-
     lexRulesData: [
       [["*"], "\\s+", "/*skip whitespace*/"],
       ["\\d+", "return 'NUMBER'"],
@@ -90,6 +93,14 @@ const Grammars = {
       [["comment"], "\\*+\\/", "this.popState();"],
       [["comment"], "\\d+", "return 'NUMBER_IN_COMMENT'"],
     ],
+
+    lexerStartConditions: {INITIAL: 0, comment: 1},
+
+    // Indices from the `lexRulesData`.
+    lexRulesByStartConditions: {
+      INITIAL: [0, 1, 2, 3, 4, 5, 6],
+      comment: [0, 7, 8],
+    },
 
     grammarToString: `
       $accept -> E
@@ -225,29 +236,87 @@ describe('grammar', () => {
         .toEqual(grammarData.lexerStartConditions);
     });
 
+    const lexDataFromRule = (lexRule) => {
+      expect(lexRule instanceof LexRule);
+
+      const data = [
+        lexRule.getOriginalMatcher(),
+        lexRule.getRawHandler(),
+      ];
+
+      if (lexRule.hasStartConditions()) {
+        data.unshift(lexRule.getStartConditions());
+      }
+
+      return data;
+    };
+
     // -------------------------------------------------------------
     // Lex rules.
 
     it('lex rules', () => {
-      const lexRulesData = [];
-
-      grammar.getLexRules().forEach(lexRule => {
-        expect(lexRule instanceof LexRule);
-
-        const data = [
-          lexRule.getOriginalMatcher(),
-          lexRule.getRawHandler(),
-        ];
-
-        if (lexRule.hasStartConditions()) {
-          data.unshift(lexRule.getStartConditions());
-        }
-
-        lexRulesData.push(data);
-      });
-
+      const lexRulesData = grammar.getLexRules().map(
+        lexRule => lexDataFromRule(lexRule)
+      );
       expect(lexRulesData).toEqual(grammarData.lexRulesData);
     });
+
+    const rulesToIndices = (lexRules, lexRulesToIndexMap) => {
+      // Get index of the rule from the.
+      return lexRules.map(lexRule => lexRulesToIndexMap.get(lexRule));
+    };
+
+    // -------------------------------------------------------------
+    // Lexer rules by start conditions.
+
+    it('lexer rules by start conditions', () => {
+      // Indices of the lex rules by rules map.
+      const lexRulesToIndexMap = new Map();
+
+      grammar.getLexRules().forEach((rule, index) => {
+        lexRulesToIndexMap.set(rule, index);
+      });
+
+      const lexRulesByStartConditions = grammar.getLexRulesByStartConditions();
+      const rulesByConditionsData = {};
+
+      Object.keys(lexRulesByStartConditions).forEach(startCondition => {
+        const lexRules = lexRulesByStartConditions[startCondition];
+        rulesByConditionsData[startCondition] = rulesToIndices(
+          lexRules,
+          lexRulesToIndexMap,
+        );
+      });
+
+      expect(rulesByConditionsData)
+        .toEqual(grammarData.lexRulesByStartConditions);
+    });
+
+    // -------------------------------------------------------------
+    // Lexer rules for start conditions.
+
+    it('lexer rules for start conditions', () => {
+      // Indices of the lex rules by rules map.
+      const lexRulesToIndexMap = new Map();
+
+      grammar.getLexRules().forEach((rule, index) => {
+        lexRulesToIndexMap.set(rule, index);
+      });
+
+      const rulesByConditionsData = grammarData.lexRulesByStartConditions;
+
+      Object.keys(rulesByConditionsData).forEach(startCondition => {
+        const expectedLexRules = rulesByConditionsData[startCondition];
+
+        const lexRules = rulesToIndices(
+          grammar.getLexRulesForState(startCondition),
+          lexRulesToIndexMap,
+        );
+
+        expect(lexRules).toEqual(expectedLexRules);
+      });
+    });
+
 
     // -------------------------------------------------------------
     // Productions.
