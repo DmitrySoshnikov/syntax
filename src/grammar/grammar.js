@@ -9,6 +9,7 @@ import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
 
+import colors from 'colors';
 import fs from 'fs';
 import vm from 'vm';
 
@@ -160,10 +161,22 @@ export default class Grammar {
         grammarData = vm.runInNewContext(`
           (function() { return (${rawGrammarData});})()
         `);
-      } catch (e) {
+      } catch (jsEx) {
+        const jsError = jsEx.stack;
         // A grammar as a string, for BNF, and lex.
         if (grammarType) {
-          grammarData = BnfParser.parse(rawGrammarData);
+          try {
+            grammarData = BnfParser.parse(rawGrammarData);
+          } catch (bnfEx) {
+            console.error(
+              colors.red('\nParsing grammar in JS-format failed:\n\n') +
+              jsError +'\n',
+            );
+            console.error(
+              colors.red('\nParsing grammar in BNF-format failed:\n\n'),
+            );
+            throw bnfEx;
+          }
         }
       }
     }

@@ -18,7 +18,6 @@ describe('code-unit', () => {
     expect(typeof environment.yyparse.onParseBegin).toBe('function');
     expect(typeof environment.yyparse.onParseEnd).toBe('function');
 
-
     expect(environment.$$).toBe(null);
     expect(typeof environment.require).toBe('function');
   });

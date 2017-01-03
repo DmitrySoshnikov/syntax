@@ -217,7 +217,7 @@ export default class LRParser {
     if (hasSemanticAction) {
       CodeUnit.setBindings({
         yytext: token ? token.value : '',
-        yyleng: token ? token.length : 0,
+        yyleng: token ? token.value.length : 0,
       });
       // Run corresponding semantic action.
       reduceStackEntry.semanticValue = production

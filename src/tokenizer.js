@@ -6,6 +6,8 @@
 import GrammarSymbol from './grammar/grammar-symbol';
 import {EOF} from './special-symbols';
 
+import colors from 'colors';
+
 const EOF_TOKEN = {
   type: EOF,
   value: EOF,
@@ -128,7 +130,17 @@ export default class Tokenizer {
     for (let lexRule of lexRulesForState) {
       let matched = this._match(string, lexRule.getMatcher());
       if (matched) {
-        let [yytext, rawToken] = lexRule.getTokenData(matched, this);
+        let yytext, rawToken;
+
+        try {
+          [yytext, rawToken] = lexRule.getTokenData(matched, this);
+        } catch (e) {
+          console.error(
+            colors.red('\nError in handler:\n\n') +
+            lexRule.getRawHandler() + '\n',
+          );
+          throw e;
+        }
 
         // Usually whitespaces, etc.
         if (!rawToken) {

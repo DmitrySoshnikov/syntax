@@ -6,6 +6,8 @@ import CodeUnit from '../code-unit';
 import GrammarSymbol from './grammar-symbol';
 import {EPSILON} from '../special-symbols';
 
+import colors from 'colors';
+
 /**
  * A produciton in BNF grammar.
  */
@@ -121,7 +123,15 @@ export default class Production {
 
     return (...args) => {
       // Executing a handler mutates $$ variable, return it.
-      handler(...args);
+      try {
+        handler(...args);
+      } catch (e) {
+        console.error(
+          colors.red('\nError in handler:\n\n') +
+          this.getRawSemanticAction() + '\n',
+        );
+        throw e;
+      }
       return CodeUnit.getSandbox().$$;
     };
   }
