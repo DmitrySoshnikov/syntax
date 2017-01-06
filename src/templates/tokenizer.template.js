@@ -19,6 +19,7 @@ tokenizer = {
     this._states = ['INITIAL'];
     this._string = string + EOF;
     this._cursor = 0;
+    this._tokensQueue = [];
     return this;
   },
 
@@ -49,6 +50,11 @@ tokenizer = {
   },
 
   getNextToken() {
+    // Something was queued, return it.
+    if (this._tokensQueue.length > 0) {
+      return this._toToken(this._tokensQueue.shift());
+    }
+
     if (!this.hasMoreTokens()) {
       return EOF_TOKEN;
     } else if (this.isEOF()) {
@@ -73,14 +79,29 @@ tokenizer = {
           return this.getNextToken();
         }
 
-        return {
-          type: token,
-          value: yytext,
-        };
+        // If multiple tokens are returned, save them to return
+        // on next `getNextToken` call.
+
+        if (Array.isArray(token)) {
+          const tokensToQueue = token.slice(1);
+          token = token[0];
+          if (tokensToQueue.length > 0) {
+            this._tokensQueue.unshift(...tokensToQueue);
+          }
+        }
+
+        return this._toToken(token, yytext);
       }
     }
 
     throw new Error(`Unexpected token: "${string[0]}".`);
+  },
+
+  _toToken(token, yytext = '') {
+    return {
+      type: token,
+      value: yytext,
+    };
   },
 
   isEOF() {

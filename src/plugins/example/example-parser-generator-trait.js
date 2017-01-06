@@ -125,7 +125,6 @@ const ExampleParserGeneratorTrait = {
    * ]
    */
   generateProductionsData() {
-    console.log(this.generateRawProductionsData());
     return this.generateRawProductionsData()
       .map(data => JSON.stringify(data));
   },

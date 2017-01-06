@@ -25,9 +25,15 @@ class _tokenizer(object):
     def init_string(string):
         _tokenizer._string = string + EOF
         _tokenizer._cursor = 0
+        _tokenizer._tokens_queue = []
 
     @staticmethod
     def get_next_token():
+        global __, yytext, yyleng
+
+        if len(_tokenizer._tokens_queue) > 0:
+            return _tokenizer._to_token(_tokenizer._tokens_queue.pop(0))
+
         if not _tokenizer.has_more_tokens():
             return EOF_TOKEN
 
@@ -46,13 +52,22 @@ class _tokenizer(object):
                 if token is None:
                     return _tokenizer.get_next_token()
 
-                return {
-                    'type': token,
-                    'value': yytext
-                }
+                if isinstance(token, list):
+                    tokens_to_queue = token[1:]
+                    token = token[0]
+                    if len(tokens_to_queue) > 0:
+                        _tokenizer._tokens_queue.extend(tokens_to_queue)
+
+                return _tokenizer._to_token(token, yytext)
 
         raise Exception('Unexpected token: ' + str(string[0]))
 
+    @staticmethod
+    def _to_token(token, yytext=''):
+        return {
+            'type': token,
+            'value': yytext
+        }
 
     @staticmethod
     def is_eof():

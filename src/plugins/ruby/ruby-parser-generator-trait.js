@@ -81,7 +81,10 @@ const RubyParserGeneratorTrait = {
       const action = this._scopeVars(lexRule.getRawHandler());
       this._lexHandlers.push({args: '', action});
 
-      return `[/${lexRule.getRawMatcher()}/, ` +
+      // NOTE: Ruby's beginning of a string `^` symbol matches beginning of
+      // every line, so use `\A` instead for it.
+
+      return `[/\\A${lexRule.getOriginalMatcher()}/, ` +
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 

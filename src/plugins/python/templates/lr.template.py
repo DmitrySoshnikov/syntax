@@ -47,6 +47,8 @@ def get_tokenizer():
     return _tokenizer
 
 def parse(string):
+    global __, yytext, yyleng
+
     on_parse_begin(string)
 
     if _tokenizer is None:

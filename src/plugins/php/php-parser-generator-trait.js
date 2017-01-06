@@ -113,8 +113,8 @@ const PHPParserGeneratorTrait = {
    */
   _scopeVars(code) {
     return code
-      .replace(/yytext/g, 'yyparse::$yytext')
-      .replace(/yyleng/g, 'yyparse::$yyleng')
+      .replace(/\$?yytext/g, 'yyparse::$yytext')
+      .replace(/\$?yyleng/g, 'yyparse::$yyleng')
       .replace(/\b__\b/g, 'yyparse::$__')
       .replace(/\b_(\d+)/g, '$_$1');
   },

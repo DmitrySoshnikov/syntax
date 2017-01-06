@@ -14,6 +14,7 @@ class __SyntaxToolTokenizer {
   private $states = array();
   private $string = '';
   private $cursor = 0;
+  private $tokensQueue = array();
 
   private static $EOF_TOKEN = array(
     'type' => yyparse::EOF,
@@ -26,6 +27,7 @@ class __SyntaxToolTokenizer {
     $this->states = array('INITIAL');
     $this->string = $string.yyparse::EOF;
     $this->cursor = 0;
+    $this->tokensQueue = array();
   }
 
   public function getStates() {
@@ -52,6 +54,10 @@ class __SyntaxToolTokenizer {
   }
 
   public function getNextToken() {
+    if (count($this->tokensQueue) > 0) {
+      return $this->toToken(array_shift($this->tokensQueue));
+    }
+
     if (!$this->hasMoreTokens()) {
       return self::$EOF_TOKEN;
     } else if ($this->isEOF()) {
@@ -74,14 +80,28 @@ class __SyntaxToolTokenizer {
           return $this->getNextToken();
         }
 
-        return array(
-          'type' => $token,
-          'value' => $matched
-        );
+        // If multiple tokens are returned, save them to return
+        // on next `getNextToken` call.
+        if (is_array($token)) {
+          $tokens_to_queue = array_slice($token, 1);
+          $token = $token[0];
+          if (count($tokens_to_queue) > 0) {
+            array_unshift($this->tokensQueue, ...$tokens_to_queue);
+          }
+        }
+
+        return $this->toToken($token, $matched);
       }
     }
 
     throw new \Exception('Unexpected token: ' . $string[0]);
+  }
+
+  private function toToken($token, $yytext = '') {
+    return array(
+      'type' => $token,
+      'value' => $yytext,
+    );
   }
 
   public function isEOF() {

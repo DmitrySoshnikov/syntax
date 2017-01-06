@@ -115,6 +115,14 @@ namespace SyntaxParser
         private int mCursor = 0;
 
         /**
+         * In case if a token handler returns multiple tokens from one rule,
+         * we still return tokens one by one in the `getNextToken`, putting
+         * other "fake" tokens into the queue. If there is still something in
+         * this queue, it's just returned.
+         */
+        private Queue<string> mTokensQueue = null;
+
+        /**
          * Lex rule handlers.
          *
          * Example:
@@ -152,6 +160,8 @@ namespace SyntaxParser
 
             mStates = new Stack<string>();
             begin("INITIAL");
+
+            mTokensQueue = new Queue<string>();
         }
 
         // --------------------------------------------
@@ -186,6 +196,12 @@ namespace SyntaxParser
 
         public Token getNextToken()
         {
+            // Something was queued, return it.
+            if (mTokensQueue.Count > 0)
+            {
+                return toToken(mTokensQueue.Dequeue(), "");
+            }
+
             if (!hasMoreTokens())
             {
                 return EOF_TOKEN;
@@ -216,11 +232,30 @@ namespace SyntaxParser
                         return getNextToken();
                     }
 
-                    return new Token(mTokensMap[(string)tokenType], matched);
+                    Type tokenDataType = tokenType.GetType();
+
+                    if (tokenType.GetType().IsArray)
+                    {
+                        var tokensArray = (string[])tokenType;
+                        tokenType = (string)tokensArray[0];
+                        if (tokensArray.Length > 1) {
+                            for (var j = 1; j < tokensArray.Length; j++)
+                            {
+                                mTokensQueue.Enqueue(tokensArray[j]);
+                            }
+                        }
+                    }
+
+                    return toToken((string)tokenType, matched);
                 }
             }
 
             throw new Exception("Unexpected token: " + str[0]);
+        }
+
+        private Token toToken(string tokenType, string yytext)
+        {
+            return new Token(mTokensMap[tokenType], yytext);
         }
 
         public bool hasMoreTokens()

@@ -182,6 +182,14 @@ class Tokenizer {
      */
     this._cursor = 0;
 
+    /**
+     * In case if a token handler returns multiple tokens from one rule,
+     * we still return tokens one by one in the `getNextToken`, putting
+     * other "fake" tokens into the queue. If there is still something in
+     * this queue, it's just returned.
+     */
+    this._tokensQueue = [];
+
     return this;
   }
 
@@ -232,6 +240,11 @@ class Tokenizer {
   // Tokenizing.
 
   getNextToken() {
+    // Something was queued, return it.
+    if (this._tokensQueue.length > 0) {
+      return this._toToken(this._tokensQueue.shift());
+    }
+
     if (!this.hasMoreTokens()) {
       return EOF_TOKEN;
     } else if (this.isEOF()) {
@@ -272,15 +285,30 @@ class Tokenizer {
           return this.getNextToken();
         }
 
+        // If multiple tokens are returned, save them to return
+        // on next `getNextToken` call.
+
+        if (Array.isArray(tokenType)) {
+          const tokensToQueue = tokenType.slice(1);
+          tokenType = tokenType[0];
+          if (tokensToQueue.length > 0) {
+            this._tokensQueue.unshift(...tokensToQueue);
+          }
+        }
+
         // Finally return an actual matched token.
-        return new Token({
-          type: tokensMap[tokenType],
-          value: yytext,
-        });
+        return this._toToken(tokenType, yytext);
       }
     }
 
     throw new Error(`Unexpected token: "${string[0]}".`);
+  }
+
+  _toToken(tokenType, yytext = '') {
+    return new Token({
+      type: tokensMap[tokenType],
+      value: yytext,
+    });
   }
 
   isEOF() {

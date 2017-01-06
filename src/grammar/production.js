@@ -114,26 +114,31 @@ export default class Production {
       return null;
     }
 
-    // Builds a string of args: '$1, $2, $3...'
-    let parameters = [...Array(this.getRHS().length)]
-      .map((_, i) => `$${i + 1}`)
-      .join(',');
+    // Generate the function handler only for JS language
+    try {
+      // Builds a string of args: '$1, $2, $3...'
+      let parameters = [...Array(this.getRHS().length)]
+        .map((_, i) => `$${i + 1}`)
+        .join(',');
 
-    const handler = CodeUnit.createHandler(parameters, semanticAction);
+      const handler = CodeUnit.createHandler(parameters, semanticAction);
 
-    return (...args) => {
-      // Executing a handler mutates $$ variable, return it.
-      try {
-        handler(...args);
-      } catch (e) {
-        console.error(
-          colors.red('\nError in handler:\n\n') +
-          this.getRawSemanticAction() + '\n',
-        );
-        throw e;
-      }
-      return CodeUnit.getSandbox().$$;
-    };
+      return (...args) => {
+        // Executing a handler mutates $$ variable, return it.
+        try {
+          handler(...args);
+        } catch (e) {
+          console.error(
+            colors.red('\nError in handler:\n\n') +
+            this.getRawSemanticAction() + '\n',
+          );
+          throw e;
+        }
+        return CodeUnit.getSandbox().$$;
+      };
+    } catch (e) {
+      /* And skip for other languages, which use raw handler in generator */
+    }
   }
 
   _normalize() {

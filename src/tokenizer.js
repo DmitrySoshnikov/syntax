@@ -42,6 +42,14 @@ export default class Tokenizer {
      */
     this._states = ['INITIAL'];
 
+    /**
+     * In case if a token handler returns multiple tokens from one rule,
+     * we still return tokens one by one in the `getNextToken`, putting
+     * other "fake" tokens into the queue. If there is still something in
+     * this queue, it's just returned.
+     */
+    this._tokensQueue = [];
+
     if (string) {
       this.initString(string);
     }
@@ -111,6 +119,11 @@ export default class Tokenizer {
    * Returns next token.
    */
   getNextToken() {
+    // Something was queued, return it.
+    if (this._tokensQueue.length > 0) {
+      return this._toToken(this._tokensQueue.shift());
+    }
+
     if (!this.hasMoreTokens()) {
       return EOF_TOKEN;
     } else if (this.isEOF()) {
@@ -147,18 +160,33 @@ export default class Tokenizer {
           return this.getNextToken();
         }
 
-        let token = new GrammarSymbol(rawToken);
+        // If multiple tokens are returned, save them to return
+        // on next `getNextToken` call.
 
-        return {
-          type: token.getSymbol(),
-          value: token.isTerminal()
-            ? token.getSymbol()
-            : yytext,
-        };
+        if (Array.isArray(rawToken)) {
+          const tokensToQueue = rawToken.slice(1);
+          rawToken = rawToken[0];
+          if (tokensToQueue.length > 0) {
+            this._tokensQueue.unshift(...tokensToQueue);
+          }
+        }
+
+        return this._toToken(rawToken, yytext);
       }
     }
 
     throw new Error(`Unexpected token: "${string[0]}".`);
+  }
+
+  _toToken(rawToken, yytext = '') {
+    let token = new GrammarSymbol(rawToken);
+
+    return {
+      type: token.getSymbol(),
+      value: token.isTerminal()
+        ? token.getSymbol()
+        : yytext,
+    };
   }
 
   isEOF() {

@@ -53,7 +53,7 @@ const CSharpParserGeneratorTrait = {
    */
   _buildTable(table) {
     const entries = [];
-    Object.keys(table).sort().forEach(state => {
+    Object.keys(table).forEach(state => {
       entries.push(
         'new Dictionary<int, string>() ' +
         this._toCSharpDictionary(table[state], 'number', 'string')
@@ -210,7 +210,7 @@ const CSharpParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._lexHandlers,
       '_lexRule',
-      'string'
+      'object'
     );
     this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
   },
@@ -245,20 +245,24 @@ const CSharpParserGeneratorTrait = {
   generateModuleInclude() {
     let moduleInclude = this._grammar.getModuleInclude();
 
+    const defaultModuleInclude = `
+      namespace SyntaxParser
+      {
+          public class Init
+          {
+              public static void run()
+              {
+                  // Put init code here.
+                  // E.g. yyparse.onParseBegin = (string code) => { ... };
+              }
+          }
+      }
+    `;
+
     if (!moduleInclude) {
-      moduleInclude = `
-        namespace SyntaxParser
-        {
-            public class Init
-            {
-                public static void run()
-                {
-                    // Put init code here.
-                    // E.g. yyparse.onParseBegin = (string code) => { ... };
-                }
-            }
-        }
-      `;
+      moduleInclude = defaultModuleInclude;
+    } else if (!/class Init\s+{/.test(moduleInclude)) {
+      moduleInclude += defaultModuleInclude;
     }
 
     this.writeData('<<MODULE_INCLUDE>>', moduleInclude);

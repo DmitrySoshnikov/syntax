@@ -43,6 +43,9 @@
  *     "nine",
  *     "ten"
  *   ]
+ *
+ * See also `examples/indent-explicit.g.js` for explicit INDENT, and DEDENT
+ * tokens handling.
  */
 
 {

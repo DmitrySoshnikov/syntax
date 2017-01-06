@@ -138,4 +138,35 @@ describe('tokenizer', () => {
     expect(tokenizer.getCurrentState()).toBe('INITIAL');
   });
 
+  it('multiple tokens', () => {
+    const grammar = new Grammar({
+      lex: {
+        rules: [
+          [`\\d+`, `return ['NUMBER', 'NL']`], // return 2 tokens
+          [`\\s+`, `/*skip whitespace*/`],
+        ],
+      },
+      bnf: {
+        // Numbers, separated by "fake" NL token
+        Numbers: [[`NUMBER`,            `$$ = [$1]`]
+                  [`Numbers NL NUMBER`, `$$ = $1; $1.push($3)`]],
+      }
+    });
+
+    const tokenizer = new Tokenizer({
+      string: '1 2 3',
+      grammar,
+    });
+
+    expect(tokenizer.getTokens()).toEqual([
+      {type: 'NUMBER', value: '1'},
+      {type: 'NL', value: ''},
+      {type: 'NUMBER', value: '2'},
+      {type: 'NL', value: ''},
+      {type: 'NUMBER', value: '3'},
+      {type: 'NL', value: ''},
+      {"type": EOF, "value": EOF},
+    ]);
+  });
+
 })
