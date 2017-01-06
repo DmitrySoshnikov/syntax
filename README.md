@@ -1,4 +1,5 @@
-# syntax
+# syntax [![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax)
+
 Syntactic analysis toolkit, language agnostic parsers generator.
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
