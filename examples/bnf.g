@@ -47,7 +47,7 @@
       ["\\{\\{[\\w\\W]*?\\}\\}",                    "yytext = yytext.slice(2, -2); return 'CODE';"],
       ["%[a-zA-Z]+[^\\r\\n]*",                      "/* skip unrecognized options */"],
       ["(?:\"|')([^\"']*)(?:\"|')",                 "return 'STRING'"],
-      ["[\-+!%$#@&*(){}\~`^|\\\\:;/]+",             "return 'SPECIAL_CHAR'"],
+      ["[\-+!%$#@&*(){}\~`^|\\\\:;/,]+",            "return 'SPECIAL_CHAR'"],
     ],
 
     "startConditions": {
