@@ -183,9 +183,7 @@ export default class Tokenizer {
 
     return {
       type: token.getSymbol(),
-      value: token.isTerminal()
-        ? token.getSymbol()
-        : yytext,
+      value: yytext,
     };
   }
 

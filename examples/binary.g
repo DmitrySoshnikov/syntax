@@ -3,7 +3,7 @@
  *
  * Example:
  *
- *   ./bin/syntax --parse '101001101' --table --mode slr1
+ *   ./bin/syntax -g examples/binary.g -p '101001101' -t -m slr1
  */
 
 %%

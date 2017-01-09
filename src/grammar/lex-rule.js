@@ -125,7 +125,7 @@ export default class LexRule {
 
   static matcherFromTerminal(terminal) {
     return terminal
-      .slice(1, terminal.length - 1)
+      .slice(1, -1)
       .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
   }
 };
