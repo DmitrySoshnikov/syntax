@@ -4,6 +4,8 @@ Syntactic analysis toolkit, language agnostic parsers generator.
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 
+You can get an introductory overview of the tool in [this article](https://medium.com/@DmitrySoshnikov/syntax-language-agnostic-parser-generator-bd24468d7cfc).
+
 ### Table of Contents
 
 - [Installation](#installation)
