@@ -91,6 +91,23 @@ export default class LexRule {
   }
 
   /**
+   * Generates a data array like used in lex grammar files
+   * from the LexRule instance.
+   */
+  toData() {
+    const data = [
+      this.getOriginalMatcher(),
+      this.getRawHandler(),
+    ];
+
+    if (this.hasStartConditions()) {
+      data.unshift(this.getStartConditions());
+    }
+
+    return data;
+  }
+
+  /**
    * Builds a wrapper function on top of the handler.
    * This is in order to be able directly modify `yytext`,
    * (which is closured), and return a token.

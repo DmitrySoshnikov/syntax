@@ -1,0 +1,202 @@
+/**
+ * The MIT License (MIT)
+ * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
+ */
+
+import BnfParser from '../generated/bnf-parser.gen';
+import GrammarMode from './grammar-mode';
+import GrammarSymbol from './grammar-symbol';
+import LexRule from './lex-rule';
+import Production from './production';
+
+import colors from 'colors';
+import fs from 'fs';
+import vm from 'vm';
+
+/**
+ * Class encapsulates operations with a lexical grammar.
+ */
+export default class LexGrammar {
+  /**
+   * A lexical grammar is used for a string tokenization. An example of the
+   * lexical grammar data:
+   *
+   * {
+   *   "macros": {
+   *     "digit": "[0-9]",
+   *   },
+   *
+   *   "rules": [
+   *     ["a", "return 'a';"],
+   *     ["\\(", "return '(';"],
+   *     ["\\)", "return ')';"],
+   *     ["\\+", "return '+';"],
+   *     ["{digit}+(\\.{digit}+)?\\b", "return 'NUMBER';"],
+   *
+   *     // A rule with start conditions. Such rules are matched only
+   *     // when a scanner enters these states.
+   *     [["string", "code"], '[^"]',  "return 'STRING';"],
+   *   ],
+   *
+   *   // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
+   *   "startConditions": {
+   *     "string": 1, // inclusive condition %s
+   *     "code": 0,   // exclusive consition %x
+   *   },
+   * }
+   */
+  constructor({
+    macros,
+    rules,
+    startConditions,
+  }) {
+    this._macros = macros;
+    this._originalRules = rules;
+    this._extractMacros(macros, this._originalRules);
+
+    this._rules = this._processRules(this._originalRules);
+    this._rulesToIndexMap = this._createRulesToIndexMap();
+
+    this._startConditions = Object.assign({INITIAL: 0}, startConditions);
+    this._rulesByStartConditions = this._processRulesByStartConditions();
+  }
+
+  /**
+   * Returns start conditions types for a lexer.
+   */
+  getStartConditions() {
+    return this._startConditions;
+  }
+
+  /**
+   * Returns lexical rules.
+   */
+  getRules() {
+    return this._rules;
+  }
+
+  /**
+   * Returns a rule by index.
+   */
+  getRuleByIndex(index) {
+    return this._rules[index];
+  }
+
+  /**
+   * Returns rule's index.
+   */
+  getRuleIndex(rule) {
+    return this._rulesToIndexMap.get(rule);
+  }
+
+  /**
+   * Returns original lexical rules data.
+   */
+  getOriginalRules() {
+    return this._originalRules;
+  }
+
+  /**
+   * Returns macros.
+   */
+  getMacros() {
+    return this._macros;
+  }
+
+  /**
+   * Returns lexical rules for a specific start condition.
+   */
+  getRulesForState(state) {
+    return this._rulesByStartConditions[state];
+  }
+
+  /**
+   * Returns rules by start conditions.
+   */
+  getRulesByStartConditions() {
+    return this._rulesByStartConditions;
+  }
+
+  /**
+   * Creates rules to index map.
+   */
+  _createRulesToIndexMap() {
+    const rulesToIndexMap = new Map();
+    this.getRules().forEach((rule, index) => {
+      rulesToIndexMap.set(rule, index);
+    });
+    return rulesToIndexMap;
+  }
+
+  /**
+   * Processes lexical rules data, creating `LexRule` instances for each.
+   */
+  _processRules(rules) {
+    return rules.map(tokenData => {
+      // Lex rules may specify start conditions. Such rules are
+      // executed if a tokenizer enters such state.
+
+      let startConditions;
+      let matcher;
+      let tokenHandler;
+
+      if (tokenData.length === 2) {
+        [matcher, tokenHandler] = tokenData;
+      } else if (tokenData.length === 3) {
+        [startConditions, matcher, tokenHandler] = tokenData;
+      }
+
+      return new LexRule({
+        startConditions,
+        matcher,
+        tokenHandler,
+      });
+    });
+  }
+
+  /**
+   * Builds a map from a start condition to a list of
+   * lex rules which should be executed once a lexer
+   * enters this state.
+   */
+  _processRulesByStartConditions() {
+    const rulesByConditions = {};
+
+    for (const condition in this._startConditions) {
+      const inclusive = this._startConditions[condition] === 0;
+
+      const rules = this._rules.filter(lexRule => {
+        // A rule is included if a lexer is in this state,
+        // or if a condition is inclusive, and a rule doesn't have
+        // any explicit start conditions. Also if the condition is `*`.
+        // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
+        return (inclusive && !lexRule.hasStartConditions()) ||
+          (lexRule.hasStartConditions() &&
+           (lexRule.getStartConditions().includes(condition) ||
+            lexRule.getStartConditions().includes('*')));
+      });
+
+      rulesByConditions[condition] = rules;
+    }
+
+    return rulesByConditions;
+  }
+
+  /**
+   * If lexical grammar provides "macros" property, and has e.g entry:
+   * "digit": "[0-9]", with later usage of {digit} in the lex rules,
+   * this functions expands it to [0-9].
+   */
+  _extractMacros(macros, rules) {
+    rules.forEach(lexData => {
+      Object.keys(macros).forEach(macro => {
+        if (lexData[0].indexOf(`{${macro}}`) !== -1) {
+          lexData[0] = lexData[0].replace(
+            new RegExp(`\\{${macro}\\}`, 'g'),
+            macros[macro],
+          );
+        }
+      })
+    });
+  }
+};

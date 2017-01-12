@@ -236,27 +236,12 @@ describe('grammar', () => {
         .toEqual(grammarData.lexerStartConditions);
     });
 
-    const lexDataFromRule = (lexRule) => {
-      expect(lexRule instanceof LexRule);
-
-      const data = [
-        lexRule.getOriginalMatcher(),
-        lexRule.getRawHandler(),
-      ];
-
-      if (lexRule.hasStartConditions()) {
-        data.unshift(lexRule.getStartConditions());
-      }
-
-      return data;
-    };
-
     // -------------------------------------------------------------
     // Lex rules.
 
     it('lex rules', () => {
       const lexRulesData = grammar.getLexRules().map(
-        lexRule => lexDataFromRule(lexRule)
+        lexRule => lexRule.toData()
       );
       expect(lexRulesData).toEqual(grammarData.lexRulesData);
     });
