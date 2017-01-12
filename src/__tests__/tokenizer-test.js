@@ -4,19 +4,18 @@
  */
 
 import Tokenizer from '../tokenizer';
-import Grammar from '../grammar/grammar';
+import LexGrammar from '../grammar/lex-grammar';
 import {EOF} from '../special-symbols';
 
-const grammar = Grammar.fromGrammarFile(
-  __dirname + '/../grammar/__tests__/calc.g',
-);
+const lexGrammarData = require(__dirname + '/../grammar/__tests__/calc.lex');
+const lexGrammar = new LexGrammar(lexGrammarData);
 
 describe('tokenizer', () => {
 
   it('all tokens', () => {
     const tokenizer = new Tokenizer({
-      string: '(2 + 134) * 15',
-      grammar,
+      string: '(2 + 134) * R',
+      lexGrammar,
     });
 
     expect(tokenizer.getTokens()).toEqual([
@@ -26,7 +25,7 @@ describe('tokenizer', () => {
       {type: 'NUMBER', value: '134'},
       {type: ')', value: ')'},
       {type: '*', value: '*'},
-      {type: 'NUMBER', value: '15'},
+      {type: 'IDENTIFIER', value: 'R'},
       {"type": EOF, "value": EOF}
     ]);
   });
@@ -34,7 +33,7 @@ describe('tokenizer', () => {
   it('get next token', () => {
     const tokenizer = new Tokenizer({
       string: '(2 + 134) * 15',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getNextToken()).toEqual({type: '(', value: '('});
@@ -54,7 +53,7 @@ describe('tokenizer', () => {
   it('EOF', () => {
     const tokenizer = new Tokenizer({
       string: '5',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getNextToken()).toEqual({type: 'NUMBER', value: '5'});
@@ -64,7 +63,7 @@ describe('tokenizer', () => {
   it('has more tokens', () => {
     const tokenizer = new Tokenizer({
       string: '5',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getNextToken()).toEqual({type: 'NUMBER', value: '5'});
@@ -77,7 +76,7 @@ describe('tokenizer', () => {
   it('initial state', () => {
     const tokenizer = new Tokenizer({
       string: '5',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getCurrentState()).toBe('INITIAL');
@@ -86,7 +85,7 @@ describe('tokenizer', () => {
   it('state transitions', () => {
     const tokenizer = new Tokenizer({
       string: '1 /* 2 */ 3',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getCurrentState()).toBe('INITIAL');
@@ -110,7 +109,7 @@ describe('tokenizer', () => {
   it('states stack', () => {
     const tokenizer = new Tokenizer({
       string: '1',
-      grammar,
+      lexGrammar,
     });
 
     tokenizer.pushState('first');
@@ -139,23 +138,16 @@ describe('tokenizer', () => {
   });
 
   it('multiple tokens', () => {
-    const grammar = new Grammar({
-      lex: {
-        rules: [
-          [`\\d+`, `return ['NUMBER', 'NL']`], // return 2 tokens
-          [`\\s+`, `/*skip whitespace*/`],
-        ],
-      },
-      bnf: {
-        // Numbers, separated by "fake" NL token
-        Numbers: [[`NUMBER`,            `$$ = [$1]`]
-                  [`Numbers NL NUMBER`, `$$ = $1; $1.push($3)`]],
-      }
+    const lexGrammar = new LexGrammar({
+      rules: [
+        [`\\d+`, `return ['NUMBER', 'NL']`], // return 2 tokens
+        [`\\s+`, `/*skip whitespace*/`],
+      ],
     });
 
     const tokenizer = new Tokenizer({
       string: '1 2 3',
-      grammar,
+      lexGrammar,
     });
 
     expect(tokenizer.getTokens()).toEqual([

@@ -6,6 +6,7 @@
 import BnfParser from '../generated/bnf-parser.gen';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
+import LexGrammar from './lex-grammar';
 import LexRule from './lex-rule';
 import Production from './production';
 
@@ -95,32 +96,19 @@ export default class Grammar {
     mode,
     moduleInclude = '',
   }) {
-    this._originalBnf = bnf;
-    this._originalLex = null;
+    this._mode = new GrammarMode(mode);
+    this._startSymbol = start;
 
-    // All lex rules by default are in the intial (inclusive) start condition.
-    this._lexerStartCondition = {INITIAL: 0};
+    // Operators and precedence.
+    this._operators = this._processOperators(operators);
+
+    // Actual BNF grammar.
+    this._originalBnf = bnf;
+    this._bnf = this._processBnf(this._originalBnf);
 
     // Injecting user code, including handlers for `yyparse.onParseBegin`,
     // and `yyparse.onParseEnd`.
     this._moduleInclude = moduleInclude;
-
-    if (lex) {
-      this._originalLex = lex.rules;
-       Object.assign(this._lexerStartCondition, lex.startConditions);
-      if (lex.macros) {
-        this._extractLexMacros(lex.macros, this._originalLex);
-      }
-    }
-    this._startSymbol = start;
-
-    this._mode = new GrammarMode(mode);
-
-    this._operators = this._processOperators(operators);
-
-    this._bnf = this._processBnf(this._originalBnf);
-    this._lexRules = this._processLex(this._originalLex);
-    this._lexRulesByStartConditions = this._processLexByStartConditions();
 
     this._nonTerminals = this.getNonTerminals();
     this._terminals = this.getTerminals();
@@ -132,6 +120,10 @@ export default class Grammar {
     this._tokens = Array.isArray(tokens)
       ? tokens.map(token => new GrammarSymbol(token))
       : this.getTokens();
+
+    // Lexical grammar.
+    this._lexGrammar = this._createLexGrammar(lex);
+    this._tokens = this._processTokens(tokens);
   }
 
   /**
@@ -185,10 +177,10 @@ export default class Grammar {
   }
 
   /**
-   * Returns start conditions types for a lexer.
+   * Returns associated lexical grammar.
    */
-  getLexerStartConditions() {
-    return this._lexerStartCondition;
+  getLexGrammar() {
+    return this._lexGrammar;
   }
 
   /**
@@ -330,28 +322,6 @@ export default class Grammar {
   }
 
   /**
-   * Returns lexical rules for tokenizer. If they were not provided
-   * by a user, calculates automatically from terminals of BNF grammar.
-   */
-  getLexRules() {
-    return this._lexRules;
-  }
-
-  /**
-   * Returns lexical rules for a specific start condition.
-   */
-  getLexRulesForState(state) {
-    return this._lexRulesByStartConditions[state];
-  }
-
-  /**
-   * Returns rules by start conditions.
-   */
-  getLexRulesByStartConditions() {
-    return this._lexRulesByStartConditions;
-  }
-
-  /**
    * Returns grammar productions.
    */
   getProductions() {
@@ -451,24 +421,6 @@ export default class Grammar {
     return spaces + value;
   }
 
-  /**
-   * If lexical grammar provides "macros" property, and has e.g entry:
-   * "digit": "[0-9]", with later usage of {digit} in the lex rules,
-   * this functions expands it to [0-9].
-   */
-  _extractLexMacros(macros, lex) {
-    lex.forEach(lexData => {
-      Object.keys(macros).forEach(macro => {
-        if (lexData[0].indexOf(`{${macro}}`) !== -1) {
-          lexData[0] = lexData[0].replace(
-            new RegExp(`\\{${macro}\\}`, 'g'),
-            macros[macro],
-          );
-        }
-      })
-    });
-  }
-
   _processOperators(operators) {
     let processedOperators = {};
 
@@ -486,71 +438,44 @@ export default class Grammar {
     return processedOperators;
   }
 
-  _processLex(lex) {
-    let processedLex = [];
-
-    // If lexical grammar was provided, normalize and return.
-    if (lex) {
-      processedLex = lex.map(tokenData => {
-        // Lex rules may specify start conditions. Such rules are
-        // executed if a tokenizer enters such state.
-
-        let startConditions;
-        let matcher;
-        let tokenHandler;
-
-        if (tokenData.length === 2) {
-          [matcher, tokenHandler] = tokenData;
-        } else if (tokenData.length === 3) {
-          [startConditions, matcher, tokenHandler] = tokenData;
-        }
-
-        return new LexRule({
-          startConditions,
-          matcher,
-          tokenHandler,
-        });
-      });
-    }
-
-    // Also add all terminals "a" : "a" as a lex rule.
-    processedLex = processedLex.concat(this.getTerminals()
-      .map(terminal => new LexRule({
-        startConditions: null,
-        matcher: LexRule.matcherFromTerminal(terminal.getSymbol()),
-        tokenHandler: `return ${terminal.quotedTerminal()};`,
-      }))
-    );
-
-    return processedLex;
+  /**
+   * Generates data arrays for lex rules inferred from terminals.
+   */
+  _generateLexRulesDataForTerminals() {
+    return this.getTerminals().map(terminal => [
+      LexRule.matcherFromTerminal(terminal.getSymbol()), // matcher
+      `return ${terminal.quotedTerminal()};`, // token handler
+    ]);
   }
 
   /**
-   * Builds a map from a start condition to a list of
-   * lex rules which should be executed once a lexer
-   * enters this state.
+   * Creates lex grammar instance.
    */
-  _processLexByStartConditions() {
-    const lexRulesByCondition = {};
-
-    for (const condition in this._lexerStartCondition) {
-      const inclusive = this._lexerStartCondition[condition] === 0;
-
-      const rules = this._lexRules.filter(lexRule => {
-        // A rule is included if a lexer is in this state,
-        // or if a condition is inclusive, and a rule doesn't have
-        // any explicit start conditions. Also if the condition is `*`.
-        // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
-        return (inclusive && !lexRule.hasStartConditions()) ||
-          (lexRule.hasStartConditions() &&
-           (lexRule.getStartConditions().includes(condition) ||
-            lexRule.getStartConditions().includes('*')));
-      });
-
-      lexRulesByCondition[condition] = rules;
+  _createLexGrammar(lex) {
+    if (!lex) {
+      lex = {
+        rules: [],
+      };
     }
 
-    return lexRulesByCondition;
+    // Infer automatic lex-rules from raw terminals
+    // (symbols in quotes) in BNF productions RHS.
+    lex.rules.push(...this._generateLexRulesDataForTerminals());
+
+    return new LexGrammar(lex);
+  }
+
+  /**
+   * Processes tokens.
+   */
+  _processTokens(tokens) {
+    if (typeof tokens === 'string') {
+      tokens = tokens.split(/\s+/);
+    }
+
+    return Array.isArray(tokens)
+      ? tokens.map(token => new GrammarSymbol(token))
+      : this.getTokens();
   }
 
   _processBnf(originalBnf) {

@@ -149,9 +149,7 @@ const ExampleParserGeneratorTrait = {
    *
    */
   generateLexRules() {
-    this._ruleToIndexMap = new Map();
-
-    let lexRules = this._grammar.getLexRules().map((lexRule, index) => {
+    let lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
 
       // Here you may transform the handler code as needed. E.g. if your
       // language doesn't support module-level global variables, such as
@@ -162,7 +160,6 @@ const ExampleParserGeneratorTrait = {
       const action = lexRule.getRawHandler() + ';';
 
       this._lexHandlers.push({args: '', action});
-      this._ruleToIndexMap.set(lexRule, index);
 
       // Example: ["^\s+", "_lexRule1"],
       return `[/${lexRule.getRawMatcher()}/, ` +
@@ -185,13 +182,14 @@ const ExampleParserGeneratorTrait = {
    * };
    */
   generateLexRulesByStartConditions() {
-    const lexRulesByConditions = this._grammar.getLexRulesByStartConditions();
+    const lexGrammar = this._grammar.getLexGrammar();
+    const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
     const result = {};
 
     for (const condition in lexRulesByConditions) {
-      result[condition] = lexRulesByConditions[condition].map(lexRule => {
-        return this._ruleToIndexMap.get(lexRule);
-      });
+      result[condition] = lexRulesByConditions[condition].map(lexRule =>
+        lexGrammar.getRuleIndex(lexRule)
+      );
     }
 
     this.writeData(

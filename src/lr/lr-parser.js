@@ -31,7 +31,7 @@ export default class LRParser {
     });
 
     this._tokenizer = new Tokenizer({
-      grammar: this._grammar,
+      lexGrammar: this._grammar.getLexGrammar(),
     });
 
     // Parsing stack.

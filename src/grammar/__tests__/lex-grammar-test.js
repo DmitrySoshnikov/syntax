@@ -17,10 +17,6 @@ const startConditions = {
   comment: 1,
 };
 
-const macros = {
-  id: '[a-zA-Z0-9_]',
-};
-
 const lexRulesByStartConditions = {
   INITIAL: [0, 1, 2, 3, 4, 5, 6, 7],
   comment: [0, 8, 9],
@@ -49,16 +45,16 @@ describe('lex-grammar', () => {
   });
 
   it('macros', () => {
-    expect(lexGrammar.getMacros()).toEqual(macros);
+    expect(lexGrammar.getMacros()).toEqual(lexGrammarData.macros);
   });
 
   it('expanded macro', () => {
-    const rule1 = lexGrammar.getRuleByIndex(1);
+    const rule2 = lexGrammar.getRuleByIndex(2);
     const id = lexGrammarData.macros.id;
 
-    expect(rule1.getMatcher().source).toEqual(`^${id}+`);
-    expect(rule1.getOriginalMatcher()).toEqual(`${id}+`);
-    expect(rule1.getRawMatcher()).toEqual(`^${id}+`);
+    expect(rule2.getMatcher().source).toEqual(`^${id}+`);
+    expect(rule2.getOriginalMatcher()).toEqual(`${id}+`);
+    expect(rule2.getRawMatcher()).toEqual(`^${id}+`);
   });
 
   it('rules by start conditions', () => {

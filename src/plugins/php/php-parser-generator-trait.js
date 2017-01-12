@@ -77,12 +77,9 @@ const PHPParserGeneratorTrait = {
    * Generates rules for tokenizer.
    */
   generateLexRules() {
-    this._ruleToIndexMap = new Map();
-
-    let lexRules = this._grammar.getLexRules().map((lexRule, index) => {
+    const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
       const action = this._scopeVars(lexRule.getRawHandler()) + ';';
       this._lexHandlers.push({args: '', action});
-      this._ruleToIndexMap.set(lexRule, index);
 
       return `['/${lexRule.getRawMatcher()}/', ` +
         `'_lex_rule${this._lexHandlers.length}']`;
@@ -92,13 +89,14 @@ const PHPParserGeneratorTrait = {
   },
 
   generateLexRulesByStartConditions() {
-    const lexRulesByConditions = this._grammar.getLexRulesByStartConditions();
-    const result = [];
+    const lexGrammar = this._grammar.getLexGrammar();
+    const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
+    const result = {};
 
     for (const condition in lexRulesByConditions) {
-      result[condition] = lexRulesByConditions[condition].map(lexRule => {
-        return this._ruleToIndexMap.get(lexRule);
-      });
+      result[condition] = lexRulesByConditions[condition].map(lexRule =>
+        lexGrammar.getRuleIndex(lexRule)
+      );
     }
 
     this.writeData(

@@ -188,6 +188,9 @@ export default class LexGrammar {
    * this functions expands it to [0-9].
    */
   _extractMacros(macros, rules) {
+    if (!macros) {
+      return;
+    }
     rules.forEach(lexData => {
       Object.keys(macros).forEach(macro => {
         if (lexData[0].indexOf(`{${macro}}`) !== -1) {

@@ -77,7 +77,7 @@ const RubyParserGeneratorTrait = {
    * Generates rules for tokenizer.
    */
   generateLexRules() {
-    let lexRules = this._grammar.getLexRules().map(lexRule => {
+    const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
       const action = this._scopeVars(lexRule.getRawHandler());
       this._lexHandlers.push({args: '', action});
 

@@ -13,8 +13,8 @@ module.exports = {
 
   "rules": [
     [["*"],       "\\s+", "/*skip whitespace*/"],
-    ["{id}+",     "return 'IDENTIFIER'"],
     ["\\d+",      "return 'NUMBER'"],
+    ["{id}+",     "return 'IDENTIFIER'"],
     ["\\(",       "return '('"],
     ["\\)",       "return ')'"],
     ["\\+",       "return '+'"],

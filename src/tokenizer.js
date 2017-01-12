@@ -28,8 +28,8 @@ export default class Tokenizer {
    * Creates a tokenizer instance for a string
    * that belongs to the given grammar.
    */
-  constructor({string, grammar}) {
-    this._grammar = grammar;
+  constructor({string, lexGrammar}) {
+    this._lexGrammar = lexGrammar;
 
     /**
      * Tokenizer states to work with start conditions of lex rules.
@@ -136,7 +136,7 @@ export default class Tokenizer {
     let string = this._string.slice(this._cursor);
 
     // Get all rules which should be considered for this state.
-    const lexRulesForState = this._grammar.getLexRulesForState(
+    const lexRulesForState = this._lexGrammar.getRulesForState(
       this.getCurrentState(),
     );
 

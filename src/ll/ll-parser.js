@@ -29,7 +29,7 @@ export default class LLParser {
     this._validateConflicts();
 
     this._tokenizer = new Tokenizer({
-      grammar,
+      lexGrammar: grammar.getLexGrammar(),
     });
 
     // Parsing stack.
