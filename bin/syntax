@@ -24,7 +24,6 @@ const options = require('nomnom')
     grammar: {
       abbr: 'g',
       help: 'File containing LL or LR grammar',
-      required: true,
       metavar: 'FILE'
     },
     lex: {
@@ -69,6 +68,14 @@ const options = require('nomnom')
       help: 'Path to a file with custom tokenizer class',
       type: 'string',
       metavar: 'FILE'
+    },
+    'tokenizer-only': {
+      help: 'Whether to generate only standalone tokenizer output file',
+      flag: true,
+    },
+    'tokenize': {
+      help: 'Show list of tokens',
+      flag: true,
     },
     'ignore-whitespaces': {
       abbr: 'w',
@@ -137,13 +144,18 @@ const parsers = {
     }
 
     // Parse a string.
-    if (options.hasOwnProperty('parse')) {
+    if (provided('parse')) {
       parse(options.parse, grammar);
     }
 
     // Parse a file.
-    if (options.hasOwnProperty('file')) {
+    if (provided('file')) {
       parse(fs.readFileSync(options.file, 'utf-8'), grammar);
+    }
+
+    // Output information about tokens.
+    if (options['tokenize']) {
+      tokenizeFromOptions(options, grammar.getLexGrammar());
     }
 
     // Generate parser module.
@@ -174,10 +186,7 @@ const parsers = {
         resolveConflicts: options['resolve-conflicts'],
       }).generate();
 
-      console.info(
-        `${colors.green('\n\u2713 Successfully generated:')}`,
-        options.output, '\n'
-      );
+      showGeneratedSuccessMessage(options.output);
     }
   },
 
@@ -196,13 +205,18 @@ const parsers = {
     }
 
     // Parse a string.
-    if (options.hasOwnProperty('parse')) {
+    if (provided('parse')) {
       parse(options.parse, grammar);
     }
 
     // Parse a file.
-    if (options.hasOwnProperty('file')) {
+    if (provided('file')) {
       parse(fs.readFileSync(options.file, 'utf-8'), grammar);
+    }
+
+    // Output information about tokens.
+    if (options['tokenize']) {
+      tokenizeFromOptions(options, grammar.getLexGrammar());
     }
 
     // Generate parser module.
@@ -231,13 +245,17 @@ const parsers = {
         customTokenizer: options['custom-tokenizer'],
       }).generate();
 
-      console.info(
-        `${colors.green('\n\u2713 Successfully generated:')}`,
-        options.output, '\n'
-      );
+      showGeneratedSuccessMessage(options.output);
     }
   },
 };
+
+function showGeneratedSuccessMessage(filePath) {
+  console.info(
+    `${colors.green('\n\u2713 Successfully generated:')}`,
+    filePath, '\n'
+  );
+}
 
 function parse(string, grammar) {
   console.info(`\n${colors.bold('Parsing:')}\n\n ${string}\n`);
@@ -293,23 +311,40 @@ function formatParsedOutput(output) {
 }
 
 function getGrammar(grammarFile, mode) {
-  let grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf');
-
-  // If explicit lexical grammar file was passed, use it.
-  if (options.lex) {
-    grammarData.lex = Grammar.dataFromGrammarFile(options.lex, 'lex');
+  if (!grammarFile) {
+    return null;
   }
 
-  if (options['ignore-whitespaces']) {
-    if (!grammarData.lex) {
-      grammarData.lex = {rules: []};
-    }
-    grammarData.lex.rules.unshift(['\\s+', /* skip whitespace */'']);
+  const grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf');
+
+  // If explicit lexical grammar file was passed, use it.
+  const lexGrammarData = getLexGrammarData(options);
+  if (lexGrammarData) {
+    grammarData.lex = lexGrammarData;
   }
 
   grammarData.mode = mode;
 
   return new Grammar(grammarData);
+}
+
+function getLexGrammarData(options) {
+  let data = null;
+
+  // If explicit lexical grammar file was passed, use it.
+  if (options.lex) {
+    data = Grammar.dataFromGrammarFile(options.lex, 'lex');
+  }
+
+  if (options['ignore-whitespaces'] && !data) {
+    data = {
+      rules: [
+        ['\\s+', /* skip whitespace */''],
+      ],
+    };
+  }
+
+  return data;
 }
 
 function normalizeMode(mode) {
@@ -325,19 +360,19 @@ function extractMode(options) {
 
   // If no explicit mode is passed, try
   // infer it from the grammar file extension.
-  if (!mode) {
+  if (!mode && options.grammar) {
     mode = path.extname(options.grammar).slice(1);
   }
 
   if (!mode) {
-    console.error(`\n"mode" option is required\n`);
+    error(`\nError: "mode" option is required for parsing\n`);
     return null;
   }
 
   mode = normalizeMode(mode);
 
   if (!GRAMMAR_MODE.hasOwnProperty(mode)) {
-    console.log(`\n"${mode}" is not a valid parsing mode. ` +
+    error(`\nError: "${mode}" is not a valid parsing mode. ` +
       `Valid modes are: ${getModesList()}.\n`
     );
     return null;
@@ -348,8 +383,8 @@ function extractMode(options) {
       .filter(mode => !mode.startsWith('_'))
       .join(', ');
 
-    console.error(
-      `\n"${mode}" is not implemented yet. ` +
+    error(
+      `\nError: "${mode}" is not implemented yet. ` +
       `Available parsers are: ${availableModes}.\n`
     );
     return null;
@@ -379,11 +414,86 @@ function handleSets() {
   }
 }
 
-function main() {
-  const mode = extractMode(options);
+function error(message) {
+  console.error(colors.red(message));
+  console.log('Run --help for details.\n');
+  process.exit(1);
+}
 
-  if (!mode) {
+function isTokenizerOnly(options) {
+  return options['tokenizer-only'] ||
+    (options.lex && !options.grammar);
+}
+
+function handleStandaloneTokenizer() {
+  const LexGrammar = require(ROOT + 'grammar/lex-grammar').default;
+
+  let lexGrammarData = getLexGrammarData(options);
+  let lexGrammar;
+
+  if (lexGrammarData) {
+    lexGrammar = new LexGrammar(lexGrammarData);
+  } else {
+    // Try infer from --grammar.
+    lexGrammar = getGrammar(options.grammar, options.mode).getLexGrammar();
+  }
+
+  if (!provided('tokenize') && !provided('output')) {
+    error('\nError: for tokenization pass either --tokenize or --output.\n');
+  }
+
+  if (options['tokenize']) {
+    tokenizeFromOptions(options, lexGrammar);
+  }
+}
+
+function provided(option) {
+  return options.hasOwnProperty(option);
+}
+
+function tokenizeFromOptions(options, lexGrammar) {
+  if (!provided('parse') && !provided('file')) {
+    error('\nError: tokenization requires -p or -f parameter\n');
     return;
+  }
+
+  // Tokenize a string.
+  if (provided('parse')) {
+    tokenize(options.parse, lexGrammar);
+  }
+
+  // Tokinize a file.
+  if (provided('file')) {
+    tokenize(fs.readFileSync(options.file, 'utf-8'), lexGrammar);
+  }
+}
+
+function tokenize(string, lexGrammar) {
+  // Inline tokenization supported only for JS.
+  const Tokenizer = require(ROOT + 'tokenizer').default;
+
+  const tokens = (new Tokenizer({string: options.parse, lexGrammar}))
+    .getTokens();
+
+  // Don't show last EOF token.
+  tokens.pop();
+
+  console.info(
+    colors.bold('\nList of tokens:'), '\n\n',
+    formatParsedOutput(tokens), '\n'
+  );
+}
+
+function main() {
+  if (!options.grammar && !options.lex) {
+    error(`\nError: expected at least --grammar or --lex parameters.\n`);
+    return;
+  }
+
+  // Generating a standalone tokenizer, either from direct --lex
+  // parameter, or from the `lex` part of the --grammar parameter.
+  if (isTokenizerOnly(options)) {
+    return handleStandaloneTokenizer();
   }
 
   // Sets.
@@ -391,7 +501,7 @@ function main() {
     handleSets();
   }
 
-  parsers[mode](options);
+  parsers[extractMode(options)](options);
 }
 
 if (require.main === module) {

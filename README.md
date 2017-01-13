@@ -18,8 +18,10 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
   - [C# plugin](#c-plugin)
-- [Using custom tokenizer](#using-custom-tokenizer)
-- [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
+- [Lexical grammar and tokenizer](#lexical-grammar-and-tokenizer)
+  - [Getting list of tokens](#getting-list-of-tokens)
+  - [Using custom tokenizer](#using-custom-tokenizer)
+  - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
 - [Parsing modes](#parsing-modes)
   - [LL parsing](#ll-parsing)
   - [LR parsing](#lr-parsing)
@@ -177,7 +179,92 @@ Console.WriteLine(parser.parse("2 + 2 * 2")); // 6
 
 Parsing hooks example in C# format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.cs.g).
 
-### Using custom tokenizer
+### Lexical grammar and tokenizer
+
+Tokenizers use formalism of _regular grammars_ in order to split a string to a list of _tokens_. One of the convenient implementations of the regular grammars is _regular expressions_.
+
+A basic format of a lexical grammar should provide at least `rules` section:
+
+```js
+{
+  rules: [
+    [`\\d+`,    `return 'NUMBER'`],
+    [`"[^"]*"`, `yytext = yytext.slice(1, -1); return 'STRING';`],
+    ...
+  ],
+}
+```
+The first element of a lexical rule is the _regexp pattern_ to match, and the second element is the corresponding token handler, which should return _type_ of the matched token.
+
+Handlers may access the matched text as `yytext` variable, which is also can be mutated -- in the example above for the `STRING` token we modify matched text to be the quoted value, stripping the quotes themselves.
+
+A handler can be arbitrary complex function, and in addition may return _multiple tokens_, using an array (see also [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/indent-explicit.g.js#L136-L147)):
+
+```
+// Return 3 tokens for one matched value.
+return ['DEDENT', 'DEDENT', 'NL'];
+```
+
+Lexical grammar may also define [macros](https://github.com/DmitrySoshnikov/syntax/blob/ca8f0c86401c6c18cea1885ba602e76d62855d63/examples/json.grammar.js#L25) field -- variables which can be used later in rules, and also [start conditions](#start-conditions-of-lex-rules-and-tokenizer-states) for _tokenizer states_, which are discussed below.
+
+```js
+{
+  macros: {
+    id: `[a-zA-Z0-9_]`,
+  },
+
+  rules: [
+    [`{id}+`,    `return 'IDENTIFIER'`],
+    ...
+  ],
+}
+```
+
+#### Getting list of tokens
+
+It is possible to analyze just a list of tokens either from the `lex` part of the `--grammar`, or from a standalone `--lex` file.
+
+Example:
+
+```js
+// ~/lang.lex
+
+{
+  rules: [
+    [`\\s+`,       `/* skip whitespace */`],
+    [`\\d+`,       `return 'NUMBER'`],
+    [`(\\+|\\-)`,  `return 'ADDITIVE_OPERATOR'`],
+  ],
+}
+```
+
+Extract the tokens:
+
+```
+./bin/syntax --lex ~/lang.lex --tokenize -p '2 + 5'
+
+```
+
+The result:
+
+```js
+[
+  {
+    "type": "NUMBER",
+    "value": "2"
+  },
+  {
+    "type": "ADDITIVE_OPERATOR",
+    "value": "+"
+  },
+  {
+    "type": "NUMBER",
+    "value": "5"
+  }
+]
+```
+
+#### Using custom tokenizer
 
 > NOTE: built-in tokenizer uses underlying regexp implementation to extract stream of tokens.
 
@@ -226,7 +313,7 @@ const MyTokenizer = {
 module.exports = MyTokenizer;
 ```
 
-### Start conditions of lex rules, and tokenizer states
+#### Start conditions of lex rules, and tokenizer states
 
 Built-in tokenizer supports _stateful tokenization_. This means the same lex rule can applied in different states, and result to a different token. For lex rules it's known as _start conditions_.
 
