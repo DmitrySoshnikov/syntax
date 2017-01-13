@@ -472,7 +472,7 @@ function tokenize(string, lexGrammar) {
   // Inline tokenization supported only for JS.
   const Tokenizer = require(ROOT + 'tokenizer').default;
 
-  const tokens = (new Tokenizer({string: options.parse, lexGrammar}))
+  const tokens = (new Tokenizer({string, lexGrammar}))
     .getTokens();
 
   // Don't show last EOF token.
