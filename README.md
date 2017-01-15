@@ -242,7 +242,6 @@ Extract the tokens:
 
 ```
 ./bin/syntax --lex ~/lang.lex --tokenize -p '2 + 5'
-
 ```
 
 The result:
@@ -267,8 +266,7 @@ The result:
 It is also possible to capture locations of the tokens, and AST nodes. For this just pass the `--loc` option:
 
 ```
-./bin/syntax --lex ~/lang.lex --tokenize -p '25'
-
+./bin/syntax --lex ~/lang.lex --tokenize -p '25' --loc
 ```
 
 Tokens with locations:
