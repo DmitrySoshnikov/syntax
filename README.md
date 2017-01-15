@@ -264,6 +264,36 @@ The result:
 ]
 ```
 
+It is also possible to capture locations of the tokens, and AST nodes. For this just pass the `--loc` option:
+
+```
+./bin/syntax --lex ~/lang.lex --tokenize -p '25'
+
+```
+
+Tokens with locations:
+
+```js
+[
+  {
+    "type": "NUMBER",
+    "value": "25",
+    "start": 0,
+    "end": 2,
+    "loc": {
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 1,
+        "column": 2
+      }
+    }
+  }
+]
+```
+
 #### Using custom tokenizer
 
 > NOTE: built-in tokenizer uses underlying regexp implementation to extract stream of tokens.
