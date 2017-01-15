@@ -17,7 +17,11 @@ import path from 'path';
 const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
-  constructor({grammar, parserModule}) {
+  constructor({
+    grammar,
+    parserModule,
+    captureLocation,
+  }) {
     this._grammar = grammar;
     this._parserModule = parserModule;
 
@@ -32,6 +36,7 @@ export default class LRParser {
 
     this._tokenizer = new Tokenizer({
       lexGrammar: this._grammar.getLexGrammar(),
+      captureLocation,
     });
 
     // Parsing stack.
@@ -57,7 +62,7 @@ export default class LRParser {
     return this._canonicalCollection;
   }
 
-  static fromParserGenerator({grammar}) {
+  static fromParserGenerator({grammar, captureLocation}) {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
@@ -67,7 +72,7 @@ export default class LRParser {
       resolveConflicts: true,
     }).generate();
 
-    return new LRParser({grammar, parserModule});
+    return new LRParser({grammar, parserModule, captureLocation});
   }
 
   parse(string) {

@@ -17,7 +17,11 @@ import path from 'path';
  * Implements LL(1) parsing algorithm.
  */
 export default class LLParser {
-  constructor({grammar, parserModule}) {
+  constructor({
+    grammar,
+    parserModule,
+    captureLocation,
+  }) {
     this._grammar = grammar;
     this._parserModule = parserModule;
 
@@ -30,6 +34,7 @@ export default class LLParser {
 
     this._tokenizer = new Tokenizer({
       lexGrammar: grammar.getLexGrammar(),
+      captureLocation,
     });
 
     // Parsing stack.
@@ -46,7 +51,7 @@ export default class LLParser {
     return this._productionNumbers;
   }
 
-  static fromParserGenerator({grammar}) {
+  static fromParserGenerator({grammar, captureLocation}) {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
@@ -55,7 +60,7 @@ export default class LLParser {
       outputFile,
     }).generate();
 
-    return new LLParser({grammar, parserModule});
+    return new LLParser({grammar, parserModule, captureLocation});
   }
 
   parse(string) {

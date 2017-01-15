@@ -161,4 +161,98 @@ describe('tokenizer', () => {
     ]);
   });
 
+  it('capture locations', () => {
+    const lexGrammar = new LexGrammar({
+      rules: [
+        [`\\d+`,                  `return 'NUMBER'`],
+        [`\\s+`,                  `/*skip whitespace*/`],
+        [`\/\\*(.|\\s)*?\\*\/`,   `/* skip comments */`],
+      ],
+    });
+
+    const tokenizer = new Tokenizer({
+      string: `10
+        200       30
+            /* multiline
+                comment */
+
+         45
+      `,
+      lexGrammar,
+      captureLocation: true,
+    });
+
+    expect(tokenizer.getTokens()).toEqual([
+      {
+        type: 'NUMBER',
+        value: '10',
+        start: 0,
+        end: 2,
+        loc: {
+          start: {
+            line: 1,
+            column: 0,
+          },
+          end: {
+            line: 1,
+            column: 2,
+          },
+        },
+      },
+
+      {
+        type: 'NUMBER',
+        value: '200',
+        start: 11,
+        end: 14,
+        loc: {
+          start: {
+            line: 2,
+            column: 8,
+          },
+          end: {
+            line: 2,
+            column: 11,
+          },
+        },
+      },
+
+      {
+        type: 'NUMBER',
+        value: '30',
+        start: 21,
+        end: 23,
+        loc: {
+          start: {
+            line: 2,
+            column: 18,
+          },
+          end: {
+            line: 2,
+            column: 20,
+          },
+        },
+      },
+
+      {
+        type: 'NUMBER',
+        value: '45',
+        start: 86,
+        end: 88,
+        loc: {
+          start: {
+            line: 6,
+            column: 9,
+          },
+          end: {
+            line: 6,
+            column: 11,
+          },
+        },
+      },
+
+      {"type": EOF, "value": EOF},
+    ]);
+  });
+
 })

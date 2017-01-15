@@ -28,8 +28,21 @@ export default class Tokenizer {
    * Creates a tokenizer instance for a string
    * that belongs to the given grammar.
    */
-  constructor({string, lexGrammar}) {
+  constructor({
+    string,
+    lexGrammar,
+    captureLocation = false,
+  }) {
+
+    /**
+     * Corresponding lexical grammar.
+     */
     this._lexGrammar = lexGrammar;
+
+    /**
+     * Some tools may choose to capture tokens location.
+     */
+    this._captureLocation = captureLocation;
 
     /**
      * Tokenizer states to work with start conditions of lex rules.
@@ -49,6 +62,36 @@ export default class Tokenizer {
      * this queue, it's just returned.
      */
     this._tokensQueue = [];
+
+    /**
+     * Current line number.
+     */
+    this._currentLine = 1;
+
+    /**
+     * Current offset of the beginning of the current line.
+     *
+     * Since new lines can be handled by the lex rules themselves,
+     * we scan an extracted token for `\n`s, and calculate start/end
+     * locations of tokens based on the `currentLine`/`currentLineBeginOffset`.
+     */
+    this._currentLineBeginOffset = 0;
+
+    /**
+     * Initialize token location data. It's set on a each
+     * token match, and is mixed to the returning token.
+     */
+    this._tokenLoc = null;
+
+    /**
+     * Tokens start line.
+     */
+    this._tokenStartLine = 1;
+
+    /**
+     * Tokens start column.
+     */
+    this._tokenStartCol = 0;
 
     if (string) {
       this.initString(string);
@@ -175,16 +218,69 @@ export default class Tokenizer {
       }
     }
 
-    throw new Error(`Unexpected token: "${string[0]}".`);
+    throw new Error(
+      `Unexpected token: "${string[0]}" at ${this._tokenStartLine}:` +
+      this._tokenStartCol
+    );
+  }
+
+  _updateLocationTracking(matched) {
+    const nlRe = /\n/g;
+
+    // Absolute offsets.
+    const start = this._cursor;
+
+    // Line-based locations, start.
+    this._tokenStartLine = this._currentLine;
+    this._tokenStartCol = start - this._currentLineBeginOffset;
+
+    // Extract `\n` in the matched token.
+    let nlMatch;
+    while ((nlMatch = nlRe.exec(matched)) !== null) {
+      this._currentLine++;
+      this._currentLineBeginOffset = start + nlMatch.index + 1;
+    }
+
+    // No token location data is needed.
+    if (!this._captureLocation) {
+      return;
+    }
+
+    const end = this._cursor + matched.length;
+
+    // Line-based locations, end.
+    const endLine = this._currentLine;
+    const endColumn = end - this._currentLineBeginOffset;
+
+    this._tokenLoc = {
+      start,
+      end,
+      loc: {
+        start: {
+          line: this._tokenStartLine,
+          column: this._tokenStartCol,
+        },
+        end: {
+          line: endLine,
+          column: endColumn,
+        },
+      },
+    };
   }
 
   _toToken(rawToken, yytext = '') {
-    let token = new GrammarSymbol(rawToken);
+    let tokenSymbol = new GrammarSymbol(rawToken);
 
-    return {
-      type: token.getSymbol(),
+    const token = {
+      type: tokenSymbol.getSymbol(),
       value: yytext,
     };
+
+    if (this._captureLocation) {
+      Object.assign(token, this._tokenLoc);
+    }
+
+    return token;
   }
 
   isEOF() {
@@ -202,6 +298,8 @@ export default class Tokenizer {
   _match(string, regexp) {
     let matched = string.match(regexp);
     if (matched) {
+      // Handle `\n` in the matched token to track line numbers.
+      this._updateLocationTracking(matched[0]);
       this._cursor += matched[0].length;
       return matched[0];
     }

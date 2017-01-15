@@ -77,6 +77,10 @@ const options = require('nomnom')
       help: 'Show list of tokens',
       flag: true,
     },
+    'loc': {
+      help: 'Capture token locations (offsets, line and column numbers)',
+      flag: true,
+    },
     'ignore-whitespaces': {
       abbr: 'w',
       help: 'Adds a Lex rule to ignore whitespaces',
@@ -94,6 +98,11 @@ const options = require('nomnom')
     },
   })
   .parse();
+
+/**
+ * Whether token and node locations should be captured.
+ */
+const captureLocation = options.loc;
 
 /**
  * Set of parsers.
@@ -258,7 +267,7 @@ function showGeneratedSuccessMessage(filePath) {
 }
 
 function parse(string, grammar) {
-  console.info(`\n${colors.bold('Parsing:')}\n\n ${string}\n`);
+  console.info(`\n${colors.bold('Parsing:')}\n\n${string}\n`);
 
   try {
     const parsed = grammar.getMode().isLR()
@@ -271,7 +280,7 @@ function parse(string, grammar) {
 
     if (parsed.hasOwnProperty('value')) {
       console.info(
-        colors.bold('Parsed value:'), '\n\n',
+        colors.bold('Parsed value:'), '\n\n' +
         formatParsedOutput(parsed.value), '\n'
       );
     }
@@ -286,15 +295,22 @@ function lrParse(string, grammar) {
   const LRParser = require(ROOT + 'lr/lr-parser').default;
 
   if (options['generate-inline-parser']) {
-    return LRParser.fromParserGenerator({grammar}).parse(string);
+    return LRParser
+      .fromParserGenerator({grammar, captureLocation}).parse(string);
   }
 
-  return new LRParser({grammar}).parse(string);
+  return new LRParser({grammar, captureLocation}).parse(string);
 }
 
 function llParse(string, grammar) {
   const LLParser = require(ROOT + 'll/ll-parser').default;
-  return new LLParser.fromParserGenerator({grammar}).parse(string);
+
+  if (options['generate-inline-parser']) {
+    return LLParser
+      .fromParserGenerator({grammar, captureLocation}).parse(string);
+  }
+
+  return new LLParser({grammar, captureLocation}).parse(string);
 }
 
 function formatParsedOutput(output) {
@@ -472,7 +488,7 @@ function tokenize(string, lexGrammar) {
   // Inline tokenization supported only for JS.
   const Tokenizer = require(ROOT + 'tokenizer').default;
 
-  const tokens = (new Tokenizer({string, lexGrammar}))
+  const tokens = (new Tokenizer({string, lexGrammar, captureLocation}))
     .getTokens();
 
   // Don't show last EOF token.
