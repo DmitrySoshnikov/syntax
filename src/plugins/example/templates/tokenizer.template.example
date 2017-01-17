@@ -33,12 +33,31 @@
 // --------------------------------------------------------------
 
 /**
- * Token class: encapsulates token type, and the matched value.
+ * Token class: encapsulates token type, the matched value,
+ * and also location data.
  */
 class Token {
-  constructor({type, value}) {
+  constructor({
+    type,
+    value,
+    startOffset,
+    endOffset,
+    startLine,
+    endLine,
+    startColumn,
+    endColumn,
+  }) {
+    // Basic data.
     this.type = type;
     this.value = value;
+
+    // Location data.
+    this.startOffset = startOffset;
+    this.endOffset = endOffset;
+    this.startLine = startLine;
+    this.endLine = endLine;
+    this.startColumn = startColumn;
+    this.endColumn = endColumn;
   }
 }
 
@@ -190,6 +209,31 @@ class Tokenizer {
      */
     this._tokensQueue = [];
 
+    /**
+     * Current line number.
+     */
+    this._currentLine = 1;
+
+    /**
+     * Current column number.
+     */
+    this._currentColumn = 0;
+
+    /**
+     * Current offset of the beginning of the current line.
+     *
+     * Since new lines can be handled by the lex rules themselves,
+     * we scan an extracted token for `\n`s, and calculate start/end
+     * locations of tokens based on the `currentLine`/`currentLineBeginOffset`.
+     */
+    this._currentLineBeginOffset = 0;
+
+    /**
+     * Initialize token location data. It's set on a each
+     * token match, and is mixed to the returning token.
+     */
+    this._tokenLoc = null;
+
     return this;
   }
 
@@ -301,14 +345,51 @@ class Tokenizer {
       }
     }
 
-    throw new Error(`Unexpected token: "${string[0]}".`);
+    throw new Error(
+      `Unexpected token: "${string[0]}" ` +
+      `at ${this._currentLine}:${this._currentColumn}.`
+    );
+  }
+
+  _captureLocation(matched) {
+    const nlRe = /\n/g;
+
+    // Absolute offsets.
+    const startOffset = this._cursor;
+
+    // Line-based locations, start.
+    const startLine = this._currentLine;
+    const startColumn = startOffset - this._currentLineBeginOffset;
+
+    // Extract `\n` in the matched token.
+    let nlMatch;
+    while ((nlMatch = nlRe.exec(matched)) !== null) {
+      this._currentLine++;
+      this._currentLineBeginOffset = startOffset + nlMatch.index + 1;
+    }
+
+    const endOffset = this._cursor + matched.length;
+
+    // Line-based locations, end.
+    const endLine = this._currentLine;
+    const endColumn = this._currentColumn =
+      (endOffset - this._currentLineBeginOffset);
+
+    this._tokenLoc = {
+      startOffset,
+      endOffset,
+      startLine,
+      endLine,
+      startColumn,
+      endColumn,
+    };
   }
 
   _toToken(tokenType, yytext = '') {
-    return new Token({
+    return new Token(Object.assign({
       type: tokensMap[tokenType],
       value: yytext,
-    });
+    }, this._tokenLoc));
   }
 
   isEOF() {
@@ -327,6 +408,8 @@ class Tokenizer {
   _match(string, regexp) {
     let matched = string.match(regexp);
     if (matched) {
+      // Handle `\n` in the matched token to track line numbers.
+      this._captureLocation(matched[0]);
       this._cursor += matched[0].length;
       return matched[0];
     }

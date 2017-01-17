@@ -223,7 +223,10 @@ class yyparse {
     if (token.value == EOF) {
       this.unexpectedEndOfInput();
     }
-    this.parseError("Unexpected token: " + token.value);
+    this.parseError(
+      `Unexpected token: "${token.value}" at ` +
+      `${token.startLine}:${token.startColumn}.`
+    );
   }
 
   unexpectedEndOfInput() {
