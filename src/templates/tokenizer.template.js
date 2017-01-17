@@ -16,10 +16,14 @@ const EOF_TOKEN = {
 
 tokenizer = {
   initString(string) {
-    this._states = ['INITIAL'];
     this._string = string + EOF;
     this._cursor = 0;
+    this._states = ['INITIAL'];
     this._tokensQueue = [];
+    this._currentLine = 1;
+    this._currentColumn = 0;
+    this._currentLineBeginOffset = 0;
+    this._tokenLoc = null;
     return this;
   },
 
@@ -94,14 +98,63 @@ tokenizer = {
       }
     }
 
-    throw new Error(`Unexpected token: "${string[0]}".`);
+    throw new Error(
+      `Unexpected token: "${string[0]}" at ${this._currentLine}:` +
+      this._currentColumn
+    );
   },
 
-  _toToken(token, yytext = '') {
-    return {
-      type: token,
-      value: yytext,
+  getCursor() {
+    return this._cursor;
+  },
+
+  getCurrentLine() {
+    return this._currentLine;
+  },
+
+  getCurrentColumn() {
+    return this._currentColumn;
+  },
+
+  _captureLocation(matched) {
+    const nlRe = /\n/g;
+
+    // Absolute offsets.
+    const startOffset = this._cursor;
+
+    // Line-based locations, start.
+    const startLine = this._currentLine;
+    const startColumn = startOffset - this._currentLineBeginOffset;
+
+    // Extract `\n` in the matched token.
+    let nlMatch;
+    while ((nlMatch = nlRe.exec(matched)) !== null) {
+      this._currentLine++;
+      this._currentLineBeginOffset = startOffset + nlMatch.index + 1;
+    }
+
+    const endOffset = this._cursor + matched.length;
+
+    // Line-based locations, end.
+    const endLine = this._currentLine;
+    const endColumn = this._currentColumn =
+      (endOffset - this._currentLineBeginOffset);
+
+    this._tokenLoc = {
+      startOffset,
+      endOffset,
+      startLine,
+      endLine,
+      startColumn,
+      endColumn,
     };
+  },
+
+  _toToken(tokenType, yytext = '') {
+    return Object.assign({
+      type: tokenType,
+      value: yytext,
+    }, this._tokenLoc);
   },
 
   isEOF() {
@@ -116,6 +169,8 @@ tokenizer = {
   _match(string, regexp) {
     let matched = string.match(regexp);
     if (matched) {
+      // Handle `\n` in the matched token to track line numbers.
+      this._captureLocation(matched[0]);
       this._cursor += matched[0].length;
       return matched[0];
     }

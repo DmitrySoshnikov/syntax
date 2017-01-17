@@ -99,7 +99,10 @@ function unexpectedToken(token) {
   if (token.value === EOF) {
     unexpectedEndOfInput();
   }
-  parseError(`Unexpected token: ${token.value}.`);
+  parseError(
+    `Unexpected token: "${token.value}" at ` +
+    `${token.startLine}:${token.startColumn}.`
+  );
 }
 
 function unexpectedEndOfInput() {

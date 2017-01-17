@@ -14,13 +14,9 @@ const EOF_TOKEN = {
 };
 
 /**
- * A simple tokenizer that extracts tokens from the string,
- * based on the tokens from the grammar.
- *
- * We don't implement raw NFA/DFA here, rather use underlying
- * regexp implementaiton, however the tokenizer can easily be
- * replaced with any other custom implementation when is passed
- * to the parser.
+ * A default tokenizer that extracts tokens from the string,
+ * based on the tokens from the grammar. Uses underlying
+ * regexp implementation.
  */
 export default class Tokenizer {
 
@@ -28,70 +24,12 @@ export default class Tokenizer {
    * Creates a tokenizer instance for a string
    * that belongs to the given grammar.
    */
-  constructor({
-    string,
-    lexGrammar,
-    captureLocation = false,
-  }) {
+  constructor({string, lexGrammar}) {
 
     /**
      * Corresponding lexical grammar.
      */
     this._lexGrammar = lexGrammar;
-
-    /**
-     * Some tools may choose to capture tokens location.
-     */
-    this._captureLocation = captureLocation;
-
-    /**
-     * Tokenizer states to work with start conditions of lex rules.
-     * The `INITIAL` state always present, i.e. all rules with no
-     * explicit start conditions are executed, untill a new state is
-     * pushed. If the state is exclusive, then only the rules with this
-     * start condition are executed. If it's inclusive, then in addition
-     * rules with no start conditions are executed as well.
-     * https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
-     */
-    this._states = ['INITIAL'];
-
-    /**
-     * In case if a token handler returns multiple tokens from one rule,
-     * we still return tokens one by one in the `getNextToken`, putting
-     * other "fake" tokens into the queue. If there is still something in
-     * this queue, it's just returned.
-     */
-    this._tokensQueue = [];
-
-    /**
-     * Current line number.
-     */
-    this._currentLine = 1;
-
-    /**
-     * Current offset of the beginning of the current line.
-     *
-     * Since new lines can be handled by the lex rules themselves,
-     * we scan an extracted token for `\n`s, and calculate start/end
-     * locations of tokens based on the `currentLine`/`currentLineBeginOffset`.
-     */
-    this._currentLineBeginOffset = 0;
-
-    /**
-     * Initialize token location data. It's set on a each
-     * token match, and is mixed to the returning token.
-     */
-    this._tokenLoc = null;
-
-    /**
-     * Tokens start line.
-     */
-    this._tokenStartLine = 1;
-
-    /**
-     * Tokens start column.
-     */
-    this._tokenStartCol = 0;
 
     if (string) {
       this.initString(string);
@@ -138,9 +76,63 @@ export default class Tokenizer {
     return this._states[0];
   }
 
+  /**
+   * Initializes a parsing string, and corresponding meta data.
+   */
   initString(string) {
+    /**
+     * The string followed by the EOF.
+     */
     this._string = string + EOF;
+
+    /**
+     * Tracking cursor (absolute offset).
+     */
     this._cursor = 0;
+
+    /**
+     * Tokenizer states to work with start conditions of lex rules.
+     * The `INITIAL` state always present, i.e. all rules with no
+     * explicit start conditions are executed, untill a new state is
+     * pushed. If the state is exclusive, then only the rules with this
+     * start condition are executed. If it's inclusive, then in addition
+     * rules with no start conditions are executed as well.
+     * https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
+     */
+    this._states = ['INITIAL'];
+
+    /**
+     * In case if a token handler returns multiple tokens from one rule,
+     * we still return tokens one by one in the `getNextToken`, putting
+     * other "fake" tokens into the queue. If there is still something in
+     * this queue, it's just returned.
+     */
+    this._tokensQueue = [];
+
+    /**
+     * Current line number.
+     */
+    this._currentLine = 1;
+
+    /**
+     * Current column number.
+     */
+    this._currentColumn = 0;
+
+    /**
+     * Current offset of the beginning of the current line.
+     *
+     * Since new lines can be handled by the lex rules themselves,
+     * we scan an extracted token for `\n`s, and calculate start/end
+     * locations of tokens based on the `currentLine`/`currentLineBeginOffset`.
+     */
+    this._currentLineBeginOffset = 0;
+
+    /**
+     * Initialize token location data. It's set on a each
+     * token match, and is mixed to the returning token.
+     */
+    this._tokenLoc = null;
   }
 
   getTokens() {
@@ -219,68 +211,50 @@ export default class Tokenizer {
     }
 
     throw new Error(
-      `Unexpected token: "${string[0]}" at ${this._tokenStartLine}:` +
-      this._tokenStartCol
+      `Unexpected token: "${string[0]}" ` +
+      `at ${this._currentLine}:${this._currentColumn}.`
     );
   }
 
-  _updateLocationTracking(matched) {
+  _captureLocation(matched) {
     const nlRe = /\n/g;
 
     // Absolute offsets.
-    const start = this._cursor;
+    const startOffset = this._cursor;
 
     // Line-based locations, start.
-    this._tokenStartLine = this._currentLine;
-    this._tokenStartCol = start - this._currentLineBeginOffset;
+    const startLine = this._currentLine;
+    const startColumn = startOffset - this._currentLineBeginOffset;
 
     // Extract `\n` in the matched token.
     let nlMatch;
     while ((nlMatch = nlRe.exec(matched)) !== null) {
       this._currentLine++;
-      this._currentLineBeginOffset = start + nlMatch.index + 1;
+      this._currentLineBeginOffset = startOffset + nlMatch.index + 1;
     }
 
-    // No token location data is needed.
-    if (!this._captureLocation) {
-      return;
-    }
-
-    const end = this._cursor + matched.length;
+    const endOffset = this._cursor + matched.length;
 
     // Line-based locations, end.
     const endLine = this._currentLine;
-    const endColumn = end - this._currentLineBeginOffset;
+    const endColumn = this._currentColumn =
+      (endOffset - this._currentLineBeginOffset);
 
     this._tokenLoc = {
-      start,
-      end,
-      loc: {
-        start: {
-          line: this._tokenStartLine,
-          column: this._tokenStartCol,
-        },
-        end: {
-          line: endLine,
-          column: endColumn,
-        },
-      },
+      startOffset,
+      endOffset,
+      startLine,
+      endLine,
+      startColumn,
+      endColumn,
     };
   }
 
-  _toToken(rawToken, yytext = '') {
-    let tokenSymbol = new GrammarSymbol(rawToken);
-
-    const token = {
-      type: tokenSymbol.getSymbol(),
+  _toToken(tokenType, yytext = '') {
+    return Object.assign({
+      type: tokenType,
       value: yytext,
-    };
-
-    if (this._captureLocation) {
-      Object.assign(token, this._tokenLoc);
-    }
-
-    return token;
+    }, this._tokenLoc);
   }
 
   isEOF() {
@@ -299,7 +273,7 @@ export default class Tokenizer {
     let matched = string.match(regexp);
     if (matched) {
       // Handle `\n` in the matched token to track line numbers.
-      this._updateLocationTracking(matched[0]);
+      this._captureLocation(matched[0]);
       this._cursor += matched[0].length;
       return matched[0];
     }

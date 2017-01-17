@@ -250,47 +250,38 @@ The result:
 [
   {
     "type": "NUMBER",
-    "value": "2"
+    "value": "2",
+    "startOffset": 0,
+    "endOffset": 1,
+    "startLine": 1,
+    "endLine": 1,
+    "startColumn": 0,
+    "endColumn": 1
   },
   {
     "type": "ADDITIVE_OPERATOR",
-    "value": "+"
+    "value": "+",
+    "startOffset": 2,
+    "endOffset": 3,
+    "startLine": 1,
+    "endLine": 1,
+    "startColumn": 2,
+    "endColumn": 3
   },
   {
     "type": "NUMBER",
-    "value": "5"
+    "value": "5",
+    "startOffset": 4,
+    "endOffset": 5,
+    "startLine": 1,
+    "endLine": 1,
+    "startColumn": 4,
+    "endColumn": 5
   }
 ]
 ```
 
-It is also possible to capture locations of the tokens, and AST nodes. For this just pass the `--loc` option:
-
-```
-./bin/syntax --lex ~/lang.lex --tokenize -p '25' --loc
-```
-
-Tokens with locations:
-
-```js
-[
-  {
-    "type": "NUMBER",
-    "value": "25",
-    "start": 0,
-    "end": 2,
-    "loc": {
-      "start": {
-        "line": 1,
-        "column": 0
-      },
-      "end": {
-        "line": 1,
-        "column": 2
-      }
-    }
-  }
-]
-```
+As you can see, along with the type, and the value, a tokenizer also captures token locations: absolute offsets, line, and column numbers.
 
 #### Using custom tokenizer
 
@@ -332,8 +323,17 @@ const MyTokenizer = {
     // Implement logic here.
 
     return {
+      // Basic data.
       type: <<TOKEN_TYPE>>,
       value: <<TOKEN_VALUE>>,
+
+      // Location data.
+      startOffset: <<START_OFFSET>>,
+      endOffset: <<END_OFFSET>>,
+      startLine: <<START_LINE>>,
+      endLine: <<END_LINE>>,
+      startColumn: <<START_COLUMN>>,
+      endColumn: <<END_COLUMN>>,
     }
   },
 };

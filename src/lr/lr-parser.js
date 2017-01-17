@@ -17,11 +17,7 @@ import path from 'path';
 const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
-  constructor({
-    grammar,
-    parserModule,
-    captureLocation,
-  }) {
+  constructor({grammar, parserModule}) {
     this._grammar = grammar;
     this._parserModule = parserModule;
 
@@ -36,7 +32,6 @@ export default class LRParser {
 
     this._tokenizer = new Tokenizer({
       lexGrammar: this._grammar.getLexGrammar(),
-      captureLocation,
     });
 
     // Parsing stack.
@@ -62,7 +57,7 @@ export default class LRParser {
     return this._canonicalCollection;
   }
 
-  static fromParserGenerator({grammar, captureLocation}) {
+  static fromParserGenerator({grammar}) {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
@@ -72,7 +67,7 @@ export default class LRParser {
       resolveConflicts: true,
     }).generate();
 
-    return new LRParser({grammar, parserModule, captureLocation});
+    return new LRParser({grammar, parserModule});
   }
 
   parse(string) {
@@ -167,7 +162,11 @@ export default class LRParser {
       this._unexpectedEndOfInput();
     }
 
-    this._parseError(`Unexpected token: ${token.value}.`);
+    this._parseError(
+      `Unexpected token: "${token.value}" at ` +
+      `${tokenizer.getCurrentTokenStartLine()}:` +
+      `${tokenizer.getCurrentTokenStartColumn()}.`
+    );
   }
 
   _parseError(message) {
