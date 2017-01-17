@@ -164,8 +164,7 @@ export default class LRParser {
 
     this._parseError(
       `Unexpected token: "${token.value}" at ` +
-      `${tokenizer.getCurrentTokenStartLine()}:` +
-      `${tokenizer.getCurrentTokenStartColumn()}.`
+      `${token.startLine}:${token.startColumn}.`
     );
   }
 

@@ -99,8 +99,8 @@ tokenizer = {
     }
 
     throw new Error(
-      `Unexpected token: "${string[0]}" at ${this._currentLine}:` +
-      this._currentColumn
+      `Unexpected token: "${string[0]}" ` +
+      `at ${this._currentLine}:${this._currentColumn}.`
     );
   },
 
