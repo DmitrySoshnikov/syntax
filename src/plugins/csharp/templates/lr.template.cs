@@ -204,12 +204,14 @@ namespace SyntaxParser
 
                 var state = Convert.ToInt32(mStack.Peek());
                 var column = token.Type;
-                var entry = mTable[state][column];
 
-                if (entry == null)
+                if (!mTable[state].ContainsKey(column))
                 {
                     unexpectedToken(token);
+                    break;
                 }
+
+                var entry = mTable[state][column];
 
                 // ---------------------------------------------------
                 // "Shift". Shift-entries always have 's' as their
@@ -333,7 +335,10 @@ namespace SyntaxParser
             {
                 unexpectedEndOfInput();
             }
-            parseError("Unexpected token: " + token.Value);
+            parseError(
+                "Unexpected token: \"" + token.Value + "\" at " +
+                token.StartLine + ":" + token.StartColumn + "."
+            );
         }
 
         private void unexpectedEndOfInput()

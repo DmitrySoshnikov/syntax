@@ -25,13 +25,35 @@ namespace SyntaxParser
      */
     public class Token
     {
+        // Basic data.
         public int Type;
         public string Value;
 
-        public Token(int type, string value)
+        // Location data.
+        public int StartOffset;
+        public int EndOffset;
+        public int StartLine;
+        public int EndLine;
+        public int StartColumn;
+        public int EndColumn;
+
+        public Token(int type, string value) :
+            // Special token with no location data (e.g. EOF).
+            this(type, value, 0, 0, 0, 0, 0, 0) {}
+
+        public Token(int type, string value, int startOffset,
+                     int endOffset, int startLine, int endLine,
+                     int startColumn, int endColumn)
         {
             Type = type;
             Value = value;
+
+            StartOffset = startOffset;
+            EndOffset = endOffset;
+            StartLine = startLine;
+            EndLine = endLine;
+            StartColumn = startColumn;
+            EndColumn = endColumn;
         }
     }
 
@@ -115,6 +137,23 @@ namespace SyntaxParser
         private int mCursor = 0;
 
         /**
+         * Line-based location tracking.
+         */
+        int mCurrentLine;
+        int mCurrentColumn;
+        int mCurrentLineBeginOffset;
+
+        /**
+         * Location data of a matched token.
+         */
+        int mTokenStartOffset;
+        int mTokenEndOffset;
+        int mTokenStartLine;
+        int mTokenEndLine;
+        int mTokenStartColumn;
+        int mTokenEndColumn;
+
+        /**
          * In case if a token handler returns multiple tokens from one rule,
          * we still return tokens one by one in the `getNextToken`, putting
          * other "fake" tokens into the queue. If there is still something in
@@ -162,6 +201,20 @@ namespace SyntaxParser
             begin("INITIAL");
 
             mTokensQueue = new Queue<string>();
+
+            // Init locations.
+
+            mCurrentLine = 1;
+            mCurrentColumn = 0;
+            mCurrentLineBeginOffset = 0;
+
+            // Token locationis.
+            mTokenStartOffset = 0;
+            mTokenEndOffset = 0;
+            mTokenStartLine = 0;
+            mTokenEndLine = 0;
+            mTokenStartColumn = 0;
+            mTokenEndColumn = 0;
         }
 
         // --------------------------------------------
@@ -250,12 +303,50 @@ namespace SyntaxParser
                 }
             }
 
-            throw new Exception("Unexpected token: " + str[0]);
+            throw new Exception(
+                "Unexpected token: \"" + str[0] + "\" at " +
+                mCurrentLine + ":" + mCurrentColumn + "."
+            );
+        }
+
+        private void captureLocation(string matched)
+        {
+            Regex nlRe = new Regex("\n");
+
+            // Absolute offsets.
+            mTokenStartOffset = mCursor;
+
+            // Line-based locations, start.
+            mTokenStartLine = mCurrentLine;
+            mTokenStartColumn = mTokenStartOffset - mCurrentLineBeginOffset;
+
+            // Extract `\n` in the matched token.
+            foreach (Match nlMatch in nlRe.Matches(matched))
+            {
+                mCurrentLine++;
+                mCurrentLineBeginOffset = mTokenStartOffset + nlMatch.Index + 1;
+            }
+
+            mTokenEndOffset = mCursor + matched.Length;
+
+            // Line-based locations, end.
+            mTokenEndLine = mCurrentLine;
+            mTokenEndColumn = mCurrentColumn =
+                (mTokenEndOffset - mCurrentLineBeginOffset);
         }
 
         private Token toToken(string tokenType, string yytext)
         {
-            return new Token(mTokensMap[tokenType], yytext);
+            return new Token(
+                mTokensMap[tokenType],
+                yytext,
+                mTokenStartOffset,
+                mTokenEndOffset,
+                mTokenStartLine,
+                mTokenEndLine,
+                mTokenStartColumn,
+                mTokenEndColumn
+            );
         }
 
         public bool hasMoreTokens()
@@ -276,6 +367,7 @@ namespace SyntaxParser
             if (m.Success)
             {
                 v = m.Groups[0].Value;
+                captureLocation(v);
                 mCursor += v.Length;
             }
             return v;
