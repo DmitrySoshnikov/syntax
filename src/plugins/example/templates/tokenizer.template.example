@@ -229,10 +229,14 @@ class Tokenizer {
     this._currentLineBeginOffset = 0;
 
     /**
-     * Initialize token location data. It's set on a each
-     * token match, and is mixed to the returning token.
+     * Matched token location data.
      */
-    this._tokenLoc = null;
+    this._tokenStartOffset = 0;
+    this._tokenEndOffset = 0;
+    this._tokenStartLine = 1;
+    this._tokenEndLine = 1;
+    this._tokenStartColumn = 0;
+    this._tokenEndColumn = 0;
 
     return this;
   }
@@ -355,41 +359,42 @@ class Tokenizer {
     const nlRe = /\n/g;
 
     // Absolute offsets.
-    const startOffset = this._cursor;
+    this._tokenStartOffset = this._cursor;
 
     // Line-based locations, start.
-    const startLine = this._currentLine;
-    const startColumn = startOffset - this._currentLineBeginOffset;
+    this._tokenStartLine = this._currentLine;
+    this._tokenStartColumn =
+      this._tokenStartOffset - this._currentLineBeginOffset;
 
     // Extract `\n` in the matched token.
     let nlMatch;
     while ((nlMatch = nlRe.exec(matched)) !== null) {
       this._currentLine++;
-      this._currentLineBeginOffset = startOffset + nlMatch.index + 1;
+      this._currentLineBeginOffset = this._tokenStartOffset + nlMatch.index + 1;
     }
 
-    const endOffset = this._cursor + matched.length;
+    this._tokenEndOffset = this._cursor + matched.length;
 
     // Line-based locations, end.
-    const endLine = this._currentLine;
-    const endColumn = this._currentColumn =
-      (endOffset - this._currentLineBeginOffset);
-
-    this._tokenLoc = {
-      startOffset,
-      endOffset,
-      startLine,
-      endLine,
-      startColumn,
-      endColumn,
-    };
+    this._tokenEndLine = this._currentLine;
+    this._tokenEndColumn = this._currentColumn =
+      (this._tokenEndOffset - this._currentLineBeginOffset);
   }
 
   _toToken(tokenType, yytext = '') {
-    return new Token(Object.assign({
+    return new Token({
+      // Basic data.
       type: tokensMap[tokenType],
       value: yytext,
-    }, this._tokenLoc));
+
+      // Location data.
+      startOffset: this._tokenStartOffset,
+      endOffset: this._tokenEndOffset,
+      startLine: this._tokenStartLine,
+      endLine: this._tokenEndLine,
+      startColumn: this._tokenStartColumn,
+      endColumn: this._tokenEndColumn,
+    });
   }
 
   isEOF() {
