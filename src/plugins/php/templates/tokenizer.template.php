@@ -16,6 +16,23 @@ class __SyntaxToolTokenizer {
   private $cursor = 0;
   private $tokensQueue = array();
 
+  /**
+   * Line-based location tracking.
+   */
+  private $currentLine = 1;
+  private $currentColumn = 0;
+  private $currentLineBeginOffset = 0;
+
+  /**
+   * Location data of a matched token.
+   */
+  private $tokenStartOffset = 0;
+  private $tokenEndOffset = 0;
+  private $tokenStartLine = 0;
+  private $tokenEndLine = 0;
+  private $tokenStartColumn = 0;
+  private $tokenEndColumn = 0;
+
   private static $EOF_TOKEN = array(
     'type' => yyparse::EOF,
     'value' => yyparse::EOF,
@@ -28,6 +45,20 @@ class __SyntaxToolTokenizer {
     $this->string = $string.yyparse::EOF;
     $this->cursor = 0;
     $this->tokensQueue = array();
+
+    $this->currentLine = 1;
+    $this->currentColumn = 0;
+    $this->currentLineBeginOffset = 0;
+
+    /**
+     * Location data of a matched token.
+     */
+    $this->tokenStartOffset = 0;
+    $this->tokenEndOffset = 0;
+    $this->tokenStartLine = 0;
+    $this->tokenEndLine = 0;
+    $this->tokenStartColumn = 0;
+    $this->tokenEndColumn = 0;
   }
 
   public function getStates() {
@@ -94,13 +125,51 @@ class __SyntaxToolTokenizer {
       }
     }
 
-    throw new \Exception('Unexpected token: ' . $string[0]);
+    throw new \Exception(
+      'Unexpected token: "' . $string[0] . '" at ' .
+      $this->currentLine . ':' . $this->currentColumn . '.'
+    );
+  }
+
+  private function captureLocation($matched) {
+    // Absolute offsets.
+    $this->tokenStartOffset = $this->cursor;
+
+    // Line-based locations, start.
+    $this->tokenStartLine = $this->currentLine;
+    $this->tokenStartColumn = $this->tokenStartOffset - $this->currentLineBeginOffset;
+
+    // Extract `\n` in the matched token.
+    preg_match_all('/\n/', $matched, $nl_matches, PREG_OFFSET_CAPTURE);
+    $nl_match = $nl_matches[0];
+
+    if (count($nl_match) > 0) {
+      foreach ($nl_match as $nl_match_data) {
+        $this->currentLine++;
+        // Offset is at index 1.
+        $this->currentLineBeginOffset = $this->tokenStartOffset +
+          $nl_match_data[1] + 1;
+      }
+    }
+
+    $this->tokenEndOffset = $this->cursor + strlen($matched);
+
+    // Line-based locations, end.
+    $this->tokenEndLine = $this->currentLine;
+    $this->tokenEndColumn = $this->currentColumn =
+      ($this->tokenEndOffset - $this->currentLineBeginOffset);
   }
 
   private function toToken($token, $yytext = '') {
     return array(
       'type' => $token,
       'value' => $yytext,
+      'startOffset' => $this->tokenStartOffset,
+      'endOffset' => $this->tokenEndOffset,
+      'startLine' => $this->tokenStartLine,
+      'endLine' => $this->tokenEndLine,
+      'startColumn' => $this->tokenStartColumn,
+      'endColumn' => $this->tokenEndColumn,
     );
   }
 
@@ -116,8 +185,10 @@ class __SyntaxToolTokenizer {
   private function match($string, $regexp) {
     preg_match($regexp, $string, $matches);
     if (count($matches) > 0) {
-      $this->cursor += strlen($matches[0]);
-      return $matches[0];
+      $matched = $matches[0];
+      $this->captureLocation($matched);
+      $this->cursor += strlen($matched);
+      return $matched;
     }
     return null;
   }

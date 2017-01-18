@@ -162,7 +162,10 @@ class yyparse {
     if ($token['value'] === self::EOF) {
       unexpectedEndOfInput();
     }
-    self::parseError('Unexpected token: '.$token['value']);
+    self::parseError(
+      'Unexpected token: "'.$token['value'] . '" at ' .
+      $token['startLine'] . ':' . $token['startColumn'] . '.'
+    );
   }
 
   private static function unexpectedEndOfInput() {
