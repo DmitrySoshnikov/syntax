@@ -94,7 +94,10 @@ def der(to, t, tt):
 def _unexpected_token(token):
     if token['value'] == EOF:
         _unexpected_end_of_input()
-    _parse_error('Unexpected token: ' + str(token['value']))
+    _parse_error(
+        'Unexpected token: "' + str(token['value']) + '" at ' +
+        str(token['start_line']) + ':'  + str(token['start_column']) + '.'
+    )
 
 
 def _unexpected_end_of_input():

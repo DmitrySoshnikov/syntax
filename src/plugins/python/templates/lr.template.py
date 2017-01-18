@@ -67,10 +67,11 @@ def parse(string):
 
         sta = str(s[-1])
         clm = tks[t['type']]
-        e = tbl[sta][clm]
 
-        if e is None:
+        if not clm in tbl[sta].keys():
             _unexpected_token(t)
+
+        e = tbl[sta][clm]
 
         if e[0] == 's':
             s.extend((
@@ -125,7 +126,10 @@ def parse(string):
 def _unexpected_token(token):
     if token['value'] == EOF:
         _unexpected_end_of_input()
-    _parse_error('Unexpected token: ' + str(token['value']))
+    _parse_error(
+        'Unexpected token: "' + str(token['value']) + '" at ' +
+        str(token['start_line']) + ':'  + str(token['start_column']) + '.'
+    )
 
 
 def _unexpected_end_of_input():
