@@ -15,6 +15,10 @@ const mockGrammar = {
       '+': {assoc: "left", precedence: 1},
     };
   },
+
+  usesDefaultSematicActions() {
+    return false;
+  },
 };
 
 const productionData = {
@@ -98,6 +102,23 @@ describe('production', () => {
 
     expect(production.hasSemanticAction()).toBe(false);
     expect(production.runSemanticAction(args)).toBe(undefined);
+  });
+
+  it('default action', () => {
+    let production = new Production({
+      ...productionData,
+      RHS: `'foo'`,
+      semanticAction: null,
+      grammar: {
+        ...mockGrammar,
+        usesDefaultSematicActions() {
+          return true;
+        },
+      }
+    });
+
+    const defaultAction = '$$ = $1';
+    expect(production.getRawSemanticAction()).toBe(defaultAction);
   });
 
   it('epsilon', () => {
