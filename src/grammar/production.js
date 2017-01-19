@@ -34,6 +34,16 @@ export default class Production {
     this._isShort = isShort;
     this._grammar = grammar;
     this._normalize();
+
+    // Generate default "propagating" semantic action for
+    // simple productions, if no explicit action is provided.
+    if (!semanticAction &&
+        grammar.usesDefaultSematicActions() &&
+        this.getRHS().length === 1
+    ) {
+      semanticAction = '$$ = $1';
+    }
+
     this._rawSemanticAction = semanticAction;
     this._semanticAction = this._buildSemanticAction(semanticAction);
     this._precedence = precedence || this._calculatePrecedence();

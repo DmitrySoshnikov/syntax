@@ -92,6 +92,10 @@ const options = require('nomnom')
       help: 'Whether to generate a parser module for parsing a passed string',
       flag: true,
     },
+    'default-actions': {
+      help: 'Whether to generate default semantic action for productions',
+      flag: true,
+    },
   })
   .parse();
 
@@ -328,9 +332,22 @@ function getGrammar(grammarFile, mode) {
     grammarData.lex = lexGrammarData;
   }
 
-  grammarData.mode = mode;
+  const grammarOptions = {
+    /**
+     * Parsing mode.
+     */
+    mode,
 
-  return new Grammar(grammarData);
+    /**
+     * This flag will enforce default semantic actions
+     * for simple productions. This allows omitting semantic actions
+     * like { $$ = $1 } when there is only on symbol on RHS which
+     * should be returned.
+     */
+    useDefaultSematicActions: options['default-actions'],
+  };
+
+  return Grammar.fromData(grammarData, grammarOptions);
 }
 
 function getLexGrammarData(options) {

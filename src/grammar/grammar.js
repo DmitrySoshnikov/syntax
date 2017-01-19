@@ -88,16 +88,65 @@ export default class Grammar {
    * from the list of all terminals in the `bnf` grammar.
    */
   constructor({
+    /**
+     * Lexical grammar.
+     */
     lex,
+
+    /**
+     * Explicit list of tokens. If not provided, it's inferred automatically
+     * from the BNF grammar.
+     */
     tokens,
+
+    /**
+     * BNF grammar.
+     */
     bnf,
+
+    /**
+     * Precedence, and associativity.
+     */
     operators,
+
+    /**
+     * Start symbol. If not provided, it's inferred from the first
+     * production's LHS.
+     */
     start,
+
+    /**
+     * Grammar mode (LL1, SLR1, LALR1, etc).
+     */
     mode,
+
+    /**
+     * Source code which should be included at the beginning of
+     * the generated parser.
+     */
     moduleInclude = '',
+
+    /**
+     * Whether to generate default semantic action for simple productions.
+     * This allows writing:
+     *
+     * LogicalOperator
+     *   : '&&'
+     *   | '||'
+     *   ;
+     *
+     * Instead of:
+     *
+     * LogicalOperator
+     *   : '&&' { $$ = $1 }
+     *   | '||' { $$ = $1 }
+     *   ;
+     */
+    useDefaultSematicActions = false,
   }) {
     this._mode = new GrammarMode(mode);
     this._startSymbol = start;
+    this._useDefaultSematicActions = useDefaultSematicActions;
 
     // Operators and precedence.
     this._operators = this._processOperators(operators);
@@ -128,12 +177,11 @@ export default class Grammar {
 
   /**
    * Loads a grammar object from a grammar file,
-   * for the specific parsing mode.
+   * for the specific options.
    */
-  static fromGrammarFile(grammarFile, mode, grammarType = 'bnf') {
-    let grammarData = Grammar.dataFromGrammarFile(grammarFile, grammarType);
-    grammarData.mode = mode;
-    return new Grammar(grammarData);
+  static fromGrammarFile(grammarFile, options = {}, grammarType = 'bnf') {
+    const grammarData = Grammar.dataFromGrammarFile(grammarFile, grammarType);
+    return Grammar.fromData(grammarData, options);
   }
 
   /**
@@ -141,24 +189,46 @@ export default class Grammar {
    * and `lex` grammars based on mode.
    */
   static dataFromGrammarFile(grammarFile, grammarType = 'bnf') {
-    let rawGrammarData = fs.readFileSync(grammarFile, 'utf-8');
+    return Grammar.dataFromString(fs.readFileSync(grammarFile, 'utf-8'));
+  }
+
+  /**
+   * Creates Grammar instance from grammar data for
+   * a particular parsing options.
+   */
+  static fromData(grammarData, options = {}) {
+    return new Grammar({...grammarData, ...options});
+  }
+
+  /**
+   * Creates Grammar instance from grammar string.
+   */
+  static fromString(string, options = {}, grammarType = 'bnf') {
+    const grammarData = Grammar.dataFromString(string, grammarType);
+    return Grammar.fromData(grammarData, options);
+  }
+
+  /**
+   * Generates data from grammar string.
+   */
+  static dataFromString(grammarString, grammarType = 'bnf') {
     let grammarData = null;
 
     try {
       // Pure JSON representation.
-      grammarData = JSON.parse(rawGrammarData);
+      grammarData = JSON.parse(grammarString);
     } catch (e) {
       // JS code.
       try {
         grammarData = vm.runInNewContext(`
-          (function() { return (${rawGrammarData});})()
+          (function() { return (${grammarString});})()
         `);
       } catch (jsEx) {
         const jsError = jsEx.stack;
         // A grammar as a string, for BNF, and lex.
         if (grammarType) {
           try {
-            grammarData = BnfParser.parse(rawGrammarData);
+            grammarData = BnfParser.parse(grammarString);
           } catch (bnfEx) {
             console.error(
               colors.red('\nParsing grammar in JS-format failed:\n\n') +
@@ -174,6 +244,13 @@ export default class Grammar {
     }
 
     return grammarData;
+  }
+
+  /**
+   * Whether the grammar uses default semantic actions.
+   */
+  usesDefaultSematicActions() {
+    return this._useDefaultSematicActions;
   }
 
   /**
