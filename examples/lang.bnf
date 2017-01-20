@@ -185,7 +185,7 @@ IterationStatement
 
     | FOR
         LPAREN
-          OptExpression SEMICOLON
+          OptForStatementInit SEMICOLON
           OptExpression SEMICOLON
           OptExpression
         RPAREN Statement
@@ -198,6 +198,15 @@ IterationStatement
           body: $9,
         }
       }
+  ;
+
+/**
+ * ForStatementInit.
+ */
+OptForStatementInit
+  : VariableDeclarationListInit
+  | Expression
+  | /* empty */
   ;
 
 /**
@@ -218,7 +227,7 @@ ReturnStatement
  */
 OptExpression
   : Expression
-  | /* empty */ { $$ = null }
+  | /* empty */
   ;
 
 /**
@@ -241,7 +250,7 @@ FunctionDeclaration
  */
 OptIdentifier
   : Identifier
-  | /* empty */ { $$ = null }
+  | /* empty */
   ;
 
 /**
@@ -331,7 +340,14 @@ SequenceExpression
  * VariableDeclaration.
  */
 VariableDeclaration
-  : LET VariableDeclarationList SEMICOLON
+  : VariableDeclarationListInit SEMICOLON { $$ = $1 }
+  ;
+
+/**
+ * VariableDeclarationListInit.
+ */
+VariableDeclarationListInit
+  : LET VariableDeclarationList
     { $$ = {
         type: 'VariableDeclaration',
         declarations: $2,
@@ -345,6 +361,7 @@ VariableDeclaration
 VariableDeclarationList
   : VariableDeclarator
     { $$ = [$1] }
+
   | VariableDeclarationList COMMA VariableDeclarator
     { $1.push($3); $$ = $1 }
   ;
@@ -366,8 +383,7 @@ VariableDeclarator
  * VariableInitializer.
  */
 VariableInitializer
-  : SIMPLE_ASSIGN AssignmentExpression
-    { $$ = $2 }
+  : SIMPLE_ASSIGN AssignmentExpression { $$ = $2 }
   | /* empty */
   ;
 
@@ -404,8 +420,7 @@ PrimaryExpression
  * ParenthisizedExpression.
  */
 ParenthisizedExpression
-  : LPAREN Expression RPAREN
-    { $$ = $2 }
+  : LPAREN Expression RPAREN { $$ = $2 }
   ;
 
 /**
@@ -414,10 +429,8 @@ ParenthisizedExpression
  * This can be either empty, or an arrow of a lambda function.
  */
 LambdaTail
-  : ARROW BlockStatement
-    { $$ = $2 }
+  : ARROW BlockStatement { $$ = $2 }
   | /* empty */
-    { $$ = null }
   ;
 
 /**

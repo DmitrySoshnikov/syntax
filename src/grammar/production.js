@@ -41,7 +41,9 @@ export default class Production {
         grammar.usesDefaultSematicActions() &&
         this.getRHS().length === 1
     ) {
-      semanticAction = '$$ = $1';
+      semanticAction = this.isEpsilon()
+        ? '$$ = null'
+        : '$$ = $1';
     }
 
     this._rawSemanticAction = semanticAction;

@@ -41,6 +41,6 @@ while (x < 10) {
 /**
  * for-loop.
  */
-for (; ; ) {
+for (let i = 0; i < 10; i += 1) {
   foo += i;
 }

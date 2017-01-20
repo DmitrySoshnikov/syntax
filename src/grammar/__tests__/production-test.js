@@ -104,7 +104,7 @@ describe('production', () => {
     expect(production.runSemanticAction(args)).toBe(undefined);
   });
 
-  it('default action', () => {
+  it('default propagating action', () => {
     let production = new Production({
       ...productionData,
       RHS: `'foo'`,
@@ -119,6 +119,23 @@ describe('production', () => {
 
     const defaultAction = '$$ = $1';
     expect(production.getRawSemanticAction()).toBe(defaultAction);
+  });
+
+  it('default epsilon action', () => {
+    let production = new Production({
+      ...productionData,
+      RHS: ``,
+      semanticAction: null,
+      grammar: {
+        ...mockGrammar,
+        usesDefaultSematicActions() {
+          return true;
+        },
+      }
+    });
+
+    const defaultEpsilonAction = '$$ = null';
+    expect(production.getRawSemanticAction()).toBe(defaultEpsilonAction);
   });
 
   it('epsilon', () => {
