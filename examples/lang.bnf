@@ -1,0 +1,522 @@
+/**
+ * Lang: BNF Grammar.
+ *
+ * Lex grammar is in: examples/lang.lex
+ * Test source code is in: examples/test.lang
+ *
+ * How to run:
+ *
+ *   ./bin/syntax \
+ *     --grammar examples/lang.bnf \
+ *     --lex examples/lang.lex \
+ *     --mode lalr1 \
+ *     --default-actions \
+ *     --file examples/test.lang
+ */
+
+%{
+
+/**
+ * Creates generic binary expression node.
+ */
+function BinaryExpression(left, operator, right) {
+  return {
+    type: 'BinaryExpression',
+    operator,
+    left,
+    right
+  };
+}
+
+/**
+ * Creates logical expression node.
+ */
+function LogicalExpression(left, operator, right) {
+  return {
+    type: 'LogicalExpression',
+    operator,
+    left,
+    right
+  };
+}
+
+/**
+ * Creates an unary expression node.
+ */
+function UnaryExpression(operator, argument) {
+  return {
+    type: 'UnaryExpression',
+    operator,
+    argument,
+  };
+}
+
+/**
+ * Creates a literal node.
+ */
+function Literal(value) {
+  return {
+    type: 'Literal',
+    value,
+  };
+}
+
+/**
+ * Creates an If-statement node.
+ */
+function IfStatement(test, consequent, alternate) {
+  return {
+    type: 'IfStatement',
+    test,
+    consequent,
+    alternate,
+  };
+}
+
+/**
+ * Creates a Lambda function node.
+ *
+ * The lambda parameter list is handled by the cover grammar:
+ * (x, y) is a sequence expression, however
+ * (x, y) -> { ... } is a lambda function.
+ */
+function LambdaFunction(paramsNode, body) {
+  let params = paramsNode.type === 'SequenceExpression'
+    ? paramsNode.expressions
+    : [paramsNode];
+
+  // Static semantics: validate function parameters.
+  params.forEach(e => {
+    if (e.type !== 'Identifier') {
+      throw new Error(
+        'Parse error: Lambda parameters can only be identifiers.'
+      );
+    }
+  });
+
+  return {
+    type: 'LambdaFunction',
+    params,
+    body,
+  };
+}
+
+%}
+
+/**
+ * The `THEN` precedence is lower, than of `ELSE`, so
+ * no shift-reduce conflict, and no "dangling-else" problem.
+ */
+%nonassoc THEN
+%nonassoc ELSE
+
+%%
+
+/**
+ * Main Program.
+ */
+Program
+  : StatementList
+    { $$ = {
+        type: 'Program',
+        body: $1,
+      }
+    }
+  ;
+
+/**
+ * StatementList.
+ */
+StatementList
+  : Statement
+      { $$ = [$1] }
+
+  | StatementList Statement
+      { $1.push($2); $$ = $1 }
+  ;
+
+/**
+ * Statements.
+ */
+Statement
+  : BlockStatement
+  | VariableDeclaration
+  | FunctionDeclaration
+  | ExpressionStatement
+  | IfStatement
+  | ReturnStatement
+  ;
+
+/**
+ * BlockStatement.
+ */
+BlockStatement
+  : LCURLY OptStatementList RCURLY
+    {
+      $$ = {
+        type: 'BlockStatement',
+        body: $2,
+      };
+    }
+  ;
+
+/**
+ * ReturnStatement.
+ */
+ReturnStatement
+  : RETURN OptExpression SEMICOLON
+    {
+      $$ = {
+        type: 'ReturnStatement',
+        argument: $2,
+      }
+    }
+  ;
+
+/**
+ * Optional expression.
+ */
+OptExpression
+  : Expression
+  | /* empty */
+  ;
+
+/**
+ * FunctionDeclaration.
+ */
+FunctionDeclaration
+  : FN Identifier LPAREN OptFormalParameterList RPAREN BlockStatement
+    {
+      $$ = {
+        type: 'FunctionDeclaration',
+        id: $2,
+        params: $4,
+        body: $6,
+      }
+    }
+  ;
+
+/**
+ * Optional Identifier.
+ */
+OptIdentifier
+  : Identifier
+  | /* empty */ { $$ = null }
+  ;
+
+/**
+ * OptFormalParameterList.
+ */
+OptFormalParameterList
+  : FormalParameterList
+  | /* empty */ { $$ = [] }
+  ;
+
+/**
+ * FormalParameterList.
+ */
+FormalParameterList
+  : Identifier
+    { $$ = [$1] }
+
+  | FormalParameterList COMMA Identifier
+    { $1.push($3); $$ = $1 }
+  ;
+
+/**
+ * Optional StatementList.
+ */
+OptStatementList
+  : StatementList
+  | /* empty */ { $$ = [] }
+  ;
+
+/**
+ * IfStatement.
+ */
+IfStatement
+  : IF LPAREN Expression RPAREN Statement %prec THEN
+    { $$ = IfStatement($3, $5) }
+
+  | IF LPAREN Expression RPAREN Statement ELSE Statement
+    { $$ = IfStatement($3, $5, $7) }
+  ;
+
+/**
+ * ExpressionStatement.
+ */
+ExpressionStatement
+  : Expression SEMICOLON
+    {
+      $$ = {
+        type: 'ExpressionStatement',
+        expression: $1,
+      }
+    }
+  ;
+
+/**
+ * Expression.
+ */
+Expression
+  : SequenceExpression
+    {
+      let expression;
+
+      // Only one expression in the sequence, just return it.
+      if ($1.length === 1) {
+        return $$ = $1[0];
+      }
+
+      // Else, wrap into an actual sequence expression.
+      $$ = {
+        type: 'SequenceExpression',
+        expressions: $1,
+      };
+    }
+  ;
+
+/**
+ * SequenceExpression: a comma-separated list of expressions.
+ */
+SequenceExpression
+  : AssignmentExpression
+    { $$ = [$1] }
+
+  | SequenceExpression COMMA AssignmentExpression
+    { $1.push($3); $$ = $1 }
+  ;
+
+/**
+ * VariableDeclaration.
+ */
+VariableDeclaration
+  : LET VariableDeclarationList SEMICOLON
+    { $$ = {
+        type: 'VariableDeclaration',
+        declarations: $2,
+      }
+    }
+  ;
+
+/**
+ * VariableDeclarationList.
+ */
+VariableDeclarationList
+  : VariableDeclarator
+    { $$ = [$1] }
+  | VariableDeclarationList COMMA VariableDeclarator
+    { $1.push($3); $$ = $1 }
+  ;
+
+/**
+ * VariableDeclarator.
+ */
+VariableDeclarator
+  : Identifier VariableInitializer
+    { $$ = {
+        type: 'VariableDeclarator',
+        id: $1,
+        init: $2,
+      };
+    }
+  ;
+
+/**
+ * VariableInitializer.
+ */
+VariableInitializer
+  : SIMPLE_ASSIGN AssignmentExpression
+    { $$ = $2 }
+  | /* empty */
+  ;
+
+/**
+ * Literal (numbers, and strings).
+ */
+Literal
+  : NUMBER { $$ = Literal(Number($1)) }
+  | STRING { $$ = Literal($1) }
+  | TRUE   { $$ = Literal(true) }
+  | NULL   { $$ = Literal(null) }
+  | FALSE  { $$ = Literal(false) }
+  ;
+
+/**
+ * Primary expression.
+ */
+PrimaryExpression
+  : Identifier
+  | Literal
+  | ParenthisizedExpression LambdaTail
+    {
+      // Lambda function.
+      if ($2) {
+        return $$ = LambdaFunction($1, $2);
+      }
+
+      // Else, it's just a grouping operator.
+      $$ = $1;
+    }
+  ;
+
+/**
+ * ParenthisizedExpression.
+ */
+ParenthisizedExpression
+  : LPAREN Expression RPAREN
+    { $$ = $2 }
+  ;
+
+/**
+ * LambdaTail.
+ *
+ * This can be either empty, or an arrow of a lambda function.
+ */
+LambdaTail
+  : ARROW BlockStatement
+    { $$ = $2 }
+  | /* empty */
+    { $$ = null }
+  ;
+
+/**
+ * Identifier.
+ */
+Identifier
+  : IDENTIFIER
+    { $$ = {
+        type: 'Identifier',
+        value: $1,
+      }
+    }
+  ;
+
+/**
+ * Left-hand side expression.
+ *
+ * Currently support only simple variable names.
+ */
+LeftHandSideExpression
+  : Identifier
+  ;
+
+/**
+ * Assignment expression.
+ *
+ * AssignmentOperator: =, *=, /=, +=, -=,
+ *
+ * x = y
+ * x *= y
+ * x /= y
+ * x += y
+ * x -= y
+ */
+AssignmentExpression
+  : LogicalORExpression
+  | LeftHandSideExpression AssignmentOperator AssignmentExpression
+    { $$ = {
+        type: 'AssignmentExpression',
+        left: $1,
+        operator: $2,
+        right: $3,
+      }
+    }
+  ;
+
+/**
+ * AssignmentOperator: =, *=, /=, +=, -=.
+ */
+AssignmentOperator
+  : SIMPLE_ASSIGN
+  | COMPLEX_ASSIGN
+  ;
+
+/**
+ * Logical OR expression.
+ *
+ * x || y
+ */
+LogicalORExpression
+  : LogicalANDExpression
+  | LogicalORExpression LOGICAL_OR LogicalANDExpression
+      { $$ = LogicalExpression($1, $2, $3) }
+  ;
+
+/**
+ * Logical AND expression.
+ *
+ * x && y
+ */
+LogicalANDExpression
+  : EqualityExpression
+  | LogicalANDExpression LOGICAL_AND EqualityExpression
+      { $$ = LogicalExpression($1, $2, $3) }
+  ;
+
+/**
+ * Equality expressions.
+ *
+ * EQUALITY_OPERATOR: ==, !=
+ *
+ * x == y
+ * x != y
+ */
+EqualityExpression
+  : RelationalExpression
+  | EqualityExpression EQUALITY_OPERATOR RelationalExpression
+      { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+/**
+ * Relational expressions.
+ *
+ * RELATIONAL_OPERATOR: >, >=, <, <=
+ *
+ * x > y
+ * x >= y
+ * x < y
+ * x <= y
+ */
+RelationalExpression
+  : AdditiveExpression
+  | RelationalExpression RELATIONAL_OPERATOR AdditiveExpression
+      { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+/**
+ * Additive expressions.
+ *
+ * ADDITIVE_OPERATOR: +, -
+ *
+ * x + y
+ * x - y
+ */
+AdditiveExpression
+  : MultiplicativeExpression
+  | AdditiveExpression ADDITIVE_OPERATOR MultiplicativeExpression
+      { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+/**
+ * Additive expressions.
+ *
+ * MULTIPLICATIVE_OPERATOR: *, /
+ *
+ * x * y
+ * x / y
+ */
+MultiplicativeExpression
+  : UnaryExpression
+  | MultiplicativeExpression MULTIPLICATIVE_OPERATOR UnaryExpression
+      { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+/**
+ * Unary expression.
+ */
+UnaryExpression
+  : PrimaryExpression
+  | ADDITIVE_OPERATOR UnaryExpression
+    { $$ = UnaryExpression($1, $2) }
+  ;

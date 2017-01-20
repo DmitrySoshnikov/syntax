@@ -1,0 +1,23 @@
+/**
+ * Example Lang file.
+ *
+ * BNF grammar is in: examples/lang.bnf
+ * Lex grammar is in: examples/lang.lex
+ */
+
+// Variable declaration.
+let x = 10, y = PI * 2;
+
+/**
+ * Function declaration.
+ */
+fn square(x) {
+  return x * x;
+}
+
+/**
+ * Lambda function.
+ */
+let square = (x) -> {
+  return x * x;
+};
