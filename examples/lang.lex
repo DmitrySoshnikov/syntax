@@ -37,6 +37,7 @@
     [`fn`,                      `return 'FN'`],
     [`do`,                      `return 'DO'`],
     [`while`,                   `return 'WHILE'`],
+    [`for`,                     `return 'FOR'`],
 
     [`\\->`,                    `return 'ARROW'`],
 

@@ -37,3 +37,10 @@ while (x < 10) {
   foo -= x;
   x += 1;
 }
+
+/**
+ * for-loop.
+ */
+for (; ; ) {
+  foo += i;
+}

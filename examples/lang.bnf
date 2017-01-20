@@ -182,6 +182,22 @@ IterationStatement
         test: $3,
       }
     }
+
+    | FOR
+        LPAREN
+          OptExpression SEMICOLON
+          OptExpression SEMICOLON
+          OptExpression
+        RPAREN Statement
+      {
+        $$ = {
+          type: 'ForStatement',
+          init: $3,
+          test: $5,
+          update: $7,
+          body: $9,
+        }
+      }
   ;
 
 /**
@@ -202,7 +218,7 @@ ReturnStatement
  */
 OptExpression
   : Expression
-  | /* empty */
+  | /* empty */ { $$ = null }
   ;
 
 /**
