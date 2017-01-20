@@ -21,3 +21,19 @@ fn square(x) {
 let square = (x) -> {
   return x * x;
 };
+
+/**
+ * do-while loop.
+ */
+do {
+  foo += x;
+  x -= 1;
+} while (x > 0);
+
+/**
+ * while-loop.
+ */
+while (x < 10) {
+  foo -= x;
+  x += 1;
+}

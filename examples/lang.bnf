@@ -144,6 +144,7 @@ Statement
   | FunctionDeclaration
   | ExpressionStatement
   | IfStatement
+  | IterationStatement
   | ReturnStatement
   ;
 
@@ -157,6 +158,29 @@ BlockStatement
         type: 'BlockStatement',
         body: $2,
       };
+    }
+  ;
+
+/**
+ * IterationStatement.
+ */
+IterationStatement
+  : DO Statement WHILE LPAREN Expression RPAREN SEMICOLON
+    {
+      $$ = {
+        type: 'DoWhileStatement',
+        body: $2,
+        test: $5,
+      }
+    }
+
+  | WHILE LPAREN Expression RPAREN Statement
+    {
+      $$ = {
+        type: 'WhileStatement',
+        body: $5,
+        test: $3,
+      }
     }
   ;
 

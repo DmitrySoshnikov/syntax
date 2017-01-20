@@ -35,6 +35,8 @@
     [`null`,                    `return 'NULL'`],
     [`return`,                  `return 'RETURN'`],
     [`fn`,                      `return 'FN'`],
+    [`do`,                      `return 'DO'`],
+    [`while`,                   `return 'WHILE'`],
 
     [`\\->`,                    `return 'ARROW'`],
 
