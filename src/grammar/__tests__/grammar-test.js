@@ -226,7 +226,7 @@ describe('grammar', () => {
   // -------------------------------------------------------------
   // Default semantic action.
 
-  it.only('default semantic action', () => {
+  it('default semantic action', () => {
     const defaultAction = `$$ = $1`;
     const customAction = `$$ = 'custom'`;
 
