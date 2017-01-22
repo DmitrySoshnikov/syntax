@@ -44,3 +44,15 @@ while (x < 10) {
 for (let i = 0; i < 10; i += 1) {
   foo += i;
 }
+
+/**
+ * break/continue.
+ */
+for (;;) {
+  x += 1;
+  if (x < 10) {
+    continue;
+  }
+  x = 0;
+  break;
+}

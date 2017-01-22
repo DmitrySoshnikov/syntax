@@ -15,10 +15,6 @@ const mockGrammar = {
       '+': {assoc: "left", precedence: 1},
     };
   },
-
-  usesDefaultSematicActions() {
-    return false;
-  },
 };
 
 const productionData = {
@@ -109,12 +105,6 @@ describe('production', () => {
       ...productionData,
       RHS: `'foo'`,
       semanticAction: null,
-      grammar: {
-        ...mockGrammar,
-        usesDefaultSematicActions() {
-          return true;
-        },
-      }
     });
 
     const defaultAction = '$$ = $1';
@@ -126,12 +116,6 @@ describe('production', () => {
       ...productionData,
       RHS: ``,
       semanticAction: null,
-      grammar: {
-        ...mockGrammar,
-        usesDefaultSematicActions() {
-          return true;
-        },
-      }
     });
 
     const defaultEpsilonAction = '$$ = null';

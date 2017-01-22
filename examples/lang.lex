@@ -38,6 +38,8 @@
     [`do`,                      `return 'DO'`],
     [`while`,                   `return 'WHILE'`],
     [`for`,                     `return 'FOR'`],
+    [`break`,                   `return 'BREAK'`],
+    [`continue`,                `return 'CONTINUE'`],
 
     [`\\->`,                    `return 'ARROW'`],
 

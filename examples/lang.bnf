@@ -146,6 +146,8 @@ Statement
   | IfStatement
   | IterationStatement
   | ReturnStatement
+  | BreakStatement
+  | ContinueStatement
   ;
 
 /**
@@ -218,6 +220,30 @@ ReturnStatement
       $$ = {
         type: 'ReturnStatement',
         argument: $2,
+      }
+    }
+  ;
+
+/**
+ * BreakStatement.
+ */
+BreakStatement
+  : BREAK SEMICOLON
+    {
+      $$ = {
+        type: 'BreakStatement',
+      }
+    }
+  ;
+
+/**
+ * ContinueStatement.
+ */
+ContinueStatement
+  : CONTINUE SEMICOLON
+    {
+      $$ = {
+        type: 'ContinueStatement',
       }
     }
   ;

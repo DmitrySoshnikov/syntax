@@ -239,12 +239,10 @@ describe('grammar', () => {
         ;
     `, {
       mode: GrammarMode.SLR1,
-      useDefaultSematicActions: true,
     });
 
     // 0 - augmented, 1, 2, 3 - Program alternatives.
     expect(grammar.getProductions().length).toBe(4);
-    expect(grammar.usesDefaultSematicActions()).toBe(true);
 
     expect(grammar.getProduction(1).getRawSemanticAction())
       .toBe(defaultAction);

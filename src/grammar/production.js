@@ -37,10 +37,7 @@ export default class Production {
 
     // Generate default "propagating" semantic action for
     // simple productions, if no explicit action is provided.
-    if (!semanticAction &&
-        grammar.usesDefaultSematicActions() &&
-        this.getRHS().length === 1
-    ) {
+    if (!semanticAction && this.getRHS().length === 1) {
       semanticAction = this.isEpsilon()
         ? '$$ = null'
         : '$$ = $1';

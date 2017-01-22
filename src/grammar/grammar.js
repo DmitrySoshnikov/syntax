@@ -125,28 +125,9 @@ export default class Grammar {
      * the generated parser.
      */
     moduleInclude = '',
-
-    /**
-     * Whether to generate default semantic action for simple productions.
-     * This allows writing:
-     *
-     * LogicalOperator
-     *   : '&&'
-     *   | '||'
-     *   ;
-     *
-     * Instead of:
-     *
-     * LogicalOperator
-     *   : '&&' { $$ = $1 }
-     *   | '||' { $$ = $1 }
-     *   ;
-     */
-    useDefaultSematicActions = false,
   }) {
     this._mode = new GrammarMode(mode);
     this._startSymbol = start;
-    this._useDefaultSematicActions = useDefaultSematicActions;
 
     // Operators and precedence.
     this._operators = this._processOperators(operators);
@@ -248,13 +229,6 @@ export default class Grammar {
     }
 
     return grammarData;
-  }
-
-  /**
-   * Whether the grammar uses default semantic actions.
-   */
-  usesDefaultSematicActions() {
-    return this._useDefaultSematicActions;
   }
 
   /**

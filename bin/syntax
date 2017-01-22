@@ -92,10 +92,6 @@ const options = require('nomnom')
       help: 'Whether to generate a parser module for parsing a passed string',
       flag: true,
     },
-    'default-actions': {
-      help: 'Whether to generate default semantic action for productions',
-      flag: true,
-    },
   })
   .parse();
 
