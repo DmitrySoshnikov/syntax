@@ -173,6 +173,10 @@ export default class Grammar {
     // Lexical grammar.
     this._lexGrammar = this._createLexGrammar(lex);
     this._tokens = this._processTokens(tokens);
+
+    // Caching maps.
+    this._productionsForSymbol = {};
+    this._productionsWithSymbol = {};
   }
 
   /**
@@ -413,9 +417,13 @@ export default class Grammar {
       symbol = symbol.getSymbol();
     }
 
-    return this._bnf.filter(production => {
-      return production.getLHS().isSymbol(symbol);
-    });
+    if (!this._productionsForSymbol.hasOwnProperty(symbol)) {
+      this._productionsForSymbol[symbol] = this._bnf.filter(production => {
+        return production.getLHS().isSymbol(symbol);
+      });
+    }
+
+    return this._productionsForSymbol[symbol];
   }
 
   /**
@@ -426,9 +434,13 @@ export default class Grammar {
       symbol = symbol.getSymbol();
     }
 
-    return this._bnf.filter(production => {
-      return production.getRHS().some(s => s.getSymbol() === symbol);
-    });
+    if (!this._productionsWithSymbol.hasOwnProperty(symbol)) {
+      this._productionsWithSymbol[symbol] = this._bnf.filter(production => {
+        return production.getRHS().some(s => s.getSymbol() === symbol);
+      });
+    }
+
+    return this._productionsWithSymbol[symbol];
   }
 
   /**
