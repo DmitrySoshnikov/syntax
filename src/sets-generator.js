@@ -162,7 +162,7 @@ export default class SetsGenerator {
       let RHS = production.getRHS();
       let symbolIndex;
 
-      // Get the follow symbol of our symbol. A simple may appear
+      // Get the follow symbol of our symbol. A symbol can appear
       // several times on the RHS, e.g. S -> AaAb, so Follow set should
       // be {a, b}. Also a symbol may appear as the last symbol, in
       // which case it should be Follow(LHS).

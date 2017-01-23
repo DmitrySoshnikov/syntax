@@ -88,6 +88,46 @@ const Grammars = {
       count: 5,
     },
   },
+
+  FROM_STRING: {
+    string: `
+      %{ (() => 'code')(); %}
+      %%
+      S : A | B;
+      A : 'a';
+      B : 'b';
+    `,
+    mode: GRAMMAR_MODE.SLR1,
+
+    startSymbol: 'S',
+    nonTerminalSymbols: ['S', 'A', 'B'],
+    terminalSymbols: [`'a'`, `'b'`],
+    tokenSymbols: [],
+    moduleIncludeResult: 'code',
+
+    operators: {},
+
+    grammarToString: `
+      $accept -> S
+
+      S -> A
+         | B
+
+      A -> 'a'
+      B -> 'b'
+    `,
+
+    productionsFor: {
+      symbol: 'S',
+      count: 2,
+    },
+
+    productionsWith: {
+      symbol: 'A',
+      count: 1,
+    },
+
+  }
 };
 
 describe('grammar', () => {
@@ -100,18 +140,28 @@ describe('grammar', () => {
     validate(Grammars.JS_FORMAT);
   });
 
+  describe('from string', () => {
+    validate(Grammars.FROM_STRING);
+  });
+
   function validate(grammarData) {
     let grammar;
 
     // -------------------------------------------------------------
-    // Load grammar from file.
+    // Load grammar from string/file.
 
     it('loads grammar', () => {
-      grammar = Grammar.fromGrammarFile(
-        grammarData.filename, {
+      if (grammarData.filename) {
+        grammar = Grammar.fromGrammarFile(
+          grammarData.filename, {
+            mode: grammarData.mode,
+          }
+        );
+      } else if (grammarData.string) {
+        grammar = Grammar.fromString(grammarData.string, {
           mode: grammarData.mode,
-        }
-      );
+        });
+      }
       expect(grammar instanceof Grammar).toBe(true);
     });
 
