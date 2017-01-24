@@ -10,7 +10,6 @@
  *     --grammar examples/lang.bnf \
  *     --lex examples/lang.lex \
  *     --mode lalr1 \
- *     --default-actions \
  *     --file examples/test.lang
  */
 
