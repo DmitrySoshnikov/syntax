@@ -59,6 +59,13 @@ export default class LRItem {
   }
 
   /**
+   * Returns dot position.
+   */
+  getDotPosition() {
+    return this._dotPosition;
+  }
+
+  /**
    * Whether this item should be closured.
    */
   shouldClosure() {
