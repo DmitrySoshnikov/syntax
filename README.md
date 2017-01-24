@@ -32,7 +32,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
 
 ### Installation
 
-The tool can be installed as an NPM module (notice, it's called `syntax-cli` there):
+The tool can be installed as an [npm module](https://www.npmjs.com/package/syntax-cli) (notice, it's called `syntax-cli` there):
 
 ```
 npm install -g syntax-cli
