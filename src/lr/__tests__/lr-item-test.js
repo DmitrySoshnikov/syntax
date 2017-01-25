@@ -11,8 +11,6 @@ import {MODES as GRAMMAR_MODE} from '../../grammar/grammar-mode';
 
 import fs from 'fs';
 
-//const CanonicalCollection = jest.genMockFromModule('../canonical-collection').default;
-
 import CanonicalCollection from '../canonical-collection';
 
 const grammar = Grammar.fromGrammarFile(
