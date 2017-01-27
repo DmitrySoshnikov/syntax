@@ -41,7 +41,7 @@ const defaultLookaheadSet = {
   '+': true,
 };
 
-// E -> • E + E
+// E -> E • + E
 const kernelItem1 = new LRItem({
   production: grammar.getProduction(1),
   dotPosition: 1,
@@ -51,7 +51,7 @@ const kernelItem1 = new LRItem({
   lookaheadSet: defaultLookaheadSet,
 });
 
-// E -> • E * E
+// E -> E • * E
 const kernelItem2 = new LRItem({
   production: grammar.getProduction(2),
   dotPosition: 1,
@@ -83,6 +83,8 @@ const otherItem = new LRItem({
 
 state.addItem(otherItem);
 
+const items = kernelItems.concat(otherItem);
+
 // $accept -> E •
 const acceptItem = new LRItem({
   production: grammar.getAugmentedProduction(),
@@ -103,11 +105,32 @@ const acceptState = new State({
   canonicalCollection,
 });
 
+// E -> E + E •
+const finalItem = new LRItem({
+  production: grammar.getProduction(2),
+  dotPosition: 3,
+  grammar,
+  canonicalCollection,
+  setsGenerator,
+  lookaheadSet: defaultLookaheadSet,
+});
+
+const finalState = new State({
+  kernelItems: [finalItem],
+  grammar,
+  canonicalCollection,
+});
+
 describe('state', () => {
 
   it('kernal items', () => {
     expect(state.getKernelItems()).toBe(kernelItems);
     expect(acceptState.getKernelItems()).toBe(acceptItems);
+  });
+
+  it('items', () => {
+    expect(state.getItems()).toEqual(items);
+    expect(acceptState.getItems()).toEqual(acceptItems);
   });
 
   it('is kernel item', () => {
@@ -124,8 +147,38 @@ describe('state', () => {
     });
 
     expect(state.isKernelItem(otherItem)).toBe(false);
-
     expect(acceptState.isKernelItem(acceptItem)).toBe(true);
+  });
+
+  it('number', () => {
+    expect(state.getNumber()).toBe(null);
+    expect(acceptState.getNumber()).toBe(null);
+
+    state.setNumber(1);
+    acceptState.setNumber(2);
+
+    expect(state.getNumber()).toBe(1);
+    expect(acceptState.getNumber()).toBe(2);
+  });
+
+  it('is final', () => {
+    expect(finalState.isFinal()).toBe(true);
+    expect(state.isFinal()).toBe(false);
+    expect(acceptState.isFinal()).toBe(true);
+  });
+
+  it('is accept', () => {
+    expect(finalState.isAccept()).toBe(false);
+    expect(state.isAccept()).toBe(false);
+    expect(acceptState.isAccept()).toBe(true);
+  });
+
+  it('reduce items', () => {
+    expect(finalState.getReduceItems().length).toBe(1);
+    expect(finalState.getReduceItems()[0]).toBe(finalItem);
+
+    expect(state.getReduceItems().length).toBe(0);
+    expect(acceptState.getReduceItems().length).toBe(0);
   });
 
 });
