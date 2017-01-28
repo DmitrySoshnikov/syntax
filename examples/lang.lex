@@ -48,6 +48,9 @@
     [`\\{`,                     `return 'LCURLY'`],
     [`\\}`,                     `return 'RCURLY'`],
 
+    [`\\[`,                     `return 'LBRACKET'`],
+    [`\\]`,                     `return 'RBRACKET'`],
+
     [`;`,                       `return 'SEMICOLON'`],
     [`,`,                       `return 'COMMA'`],
 

@@ -429,6 +429,7 @@ Literal
 PrimaryExpression
   : Identifier
   | Literal
+  | ArrayLiteral
   | ParenthisizedExpression LambdaTail
     {
       // Lambda function.
@@ -439,6 +440,49 @@ PrimaryExpression
       // Else, it's just a grouping operator.
       $$ = $1;
     }
+  ;
+
+/**
+ * ArrayLiteral.
+ */
+ArrayLiteral
+  : LBRACKET OptElementList RBRACKET
+    {
+      $$ = {
+        type: 'ArrayLiteral',
+        elements: $2,
+      }
+    }
+  ;
+
+/**
+ * OptElementList.
+ */
+OptElementList
+  : ElementList OptComma
+    { $$ = $1 }
+
+  | /* empty */
+    { $$ = [] }
+  ;
+
+/**
+ * OptComma.
+ */
+OptComma
+  : COMMA
+  | /* empty */
+  ;
+
+/**
+ * ElementList.
+ */
+ElementList
+  : AssignmentExpression
+    { $$ = [$1] }
+
+  | ElementList COMMA AssignmentExpression
+    { $1.push($3); $$ = $1 }
   ;
 
 /**

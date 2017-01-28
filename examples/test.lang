@@ -56,3 +56,8 @@ for (;;) {
   x = 0;
   break;
 }
+
+/**
+ * Array literals.
+ */
+let data = [1, 2, 3];
