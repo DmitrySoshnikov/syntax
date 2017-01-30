@@ -130,7 +130,7 @@ function enforceBlockStatementList(nodes) {
 }
 
 /**
- * Since we use cover grammar to parser blocks and objects,
+ * Since we use cover grammar to parse blocks and objects,
  * this function checks that all entries in a block are
  * object properties.
  */
@@ -211,7 +211,7 @@ BlockStatement
  *
  * We could use lookahead restrictions by doubling the expression
  * productions (using "NoCurly" version of expression productions) in order
- * to parser ExpressionStatement correctly, however we choose here to use
+ * to parse `ExpressionStatement` correctly, however we choose here to use
  * cover grammar with single `BlockOrObject` production, and enforcing
  * needed nodes (object properties or statement list) based on the
  * statement or expression position.

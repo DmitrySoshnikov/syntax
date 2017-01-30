@@ -75,3 +75,26 @@ let config = {
   0: index,
   "value scores": [1, 2],
 };
+
+/**
+ * Simple block.
+ */
+{
+  let x = 10;
+  let y = 20;
+
+  fn Point(x, y) {
+    return {
+      "x": x,
+      "y": y,
+    };
+  }
+}
+
+/**
+ * Object literal.
+ */
+({
+  "x": x,
+  "y": y,
+});
