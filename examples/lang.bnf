@@ -53,9 +53,9 @@ function UnaryExpression(operator, argument) {
 /**
  * Creates a literal node.
  */
-function Literal(value) {
+function Literal(typePrefix, value) {
   return {
-    type: 'Literal',
+    type: typePrefix + 'Literal',
     value,
   };
 }
@@ -98,6 +98,50 @@ function LambdaFunction(paramsNode, body) {
     params,
     body,
   };
+}
+
+function BlockStatement(statements) {
+  enforceBlockStatementList(statements);
+  return {
+    type: 'BlockStatement',
+    statements,
+  };
+}
+
+function ObjectLiteral(properties) {
+  enforceObjectProperties(properties);
+  return {
+    type: 'ObjectLiteral',
+    properties,
+  }
+}
+
+/**
+ * See `enforceObjectProperties`.
+ */
+function enforceBlockStatementList(nodes) {
+  nodes.forEach(node => {
+    if (node.type == 'Property') {
+      throw new Error(
+        'Block: invalid statement.'
+      );
+    }
+  });
+}
+
+/**
+ * Since we use cover grammar to parser blocks and objects,
+ * this function checks that all entries in a block are
+ * object properties.
+ */
+function enforceObjectProperties(nodes) {
+  nodes.forEach(node => {
+    if (node.type !== 'Property') {
+      throw new Error(
+        'ObjectLiteral: invalid property declaration.'
+      );
+    }
+  });
 }
 
 %}
@@ -153,13 +197,43 @@ Statement
  * BlockStatement.
  */
 BlockStatement
-  : LCURLY OptStatementList RCURLY
+  : BlockOrObject
     {
-      $$ = {
-        type: 'BlockStatement',
-        body: $2,
-      };
+      $$ = BlockStatement($1)
     }
+  ;
+
+/**
+ * BlockOrObject.
+ *
+ * Cover grammar: { } at statement position should be parsed as a Block,
+ * however at expression position should be parsed as ObjectLiteral.
+ *
+ * We could use lookahead restrictions by doubling the expression
+ * productions (using "NoCurly" version of expression productions) in order
+ * to parser ExpressionStatement correctly, however we choose here to use
+ * cover grammar with single `BlockOrObject` production, and enforcing
+ * needed nodes (object properties or statement list) based on the
+ * statement or expression position.
+ */
+BlockOrObject
+  : LCURLY OptBlockOrObjectEntries RCURLY
+    { $$ = $2 }
+  ;
+
+/**
+ * OptBlockOrObjectEntries.
+ *
+ * Cover grammar: see `BlockOrObject`.
+ */
+OptBlockOrObjectEntries
+  : StatementList
+
+  | PropertyList OptComma
+    { $$ = $1 }
+
+  | /* empty */
+    { $$ = [] }
   ;
 
 /**
@@ -298,14 +372,6 @@ FormalParameterList
   ;
 
 /**
- * Optional StatementList.
- */
-OptStatementList
-  : StatementList
-  | /* empty */ { $$ = [] }
-  ;
-
-/**
  * IfStatement.
  */
 IfStatement
@@ -416,11 +482,25 @@ VariableInitializer
  * Literal (numbers, and strings).
  */
 Literal
-  : NUMBER { $$ = Literal(Number($1)) }
-  | STRING { $$ = Literal($1) }
-  | TRUE   { $$ = Literal(true) }
-  | NULL   { $$ = Literal(null) }
-  | FALSE  { $$ = Literal(false) }
+  : StringLiteral
+  | NumericLiteral
+  | TRUE   { $$ = Literal('Boolean', true) }
+  | FALSE  { $$ = Literal('Boolean', false) }
+  | NULL   { $$ = Literal('Null', null) }
+  ;
+
+/**
+ * StringLiteral.
+ */
+StringLiteral
+  : STRING { $$ = Literal('String', $1) }
+  ;
+
+/**
+ * NumericLiteral.
+ */
+NumericLiteral
+  : NUMBER { $$ = Literal('Numeric', Number($1)) }
   ;
 
 /**
@@ -430,6 +510,7 @@ PrimaryExpression
   : Identifier
   | Literal
   | ArrayLiteral
+  | ObjectLiteral
   | ParenthisizedExpression LambdaTail
     {
       // Lambda function.
@@ -483,6 +564,48 @@ ElementList
 
   | ElementList COMMA AssignmentExpression
     { $1.push($3); $$ = $1 }
+  ;
+
+/**
+ * ObjectLiteral.
+ */
+ObjectLiteral
+  : BlockOrObject
+    { $$ = ObjectLiteral($1) }
+  ;
+
+/**
+ * PropertyList.
+ */
+PropertyList
+  : PropertyAssignment
+    { $$ = [$1] }
+
+  | PropertyList COMMA PropertyAssignment
+    { $1.push($3); $$ = $1 }
+  ;
+
+/**
+ * PropertyAssignment.
+ */
+PropertyAssignment
+  : PropertyName COLON AssignmentExpression
+    {
+      $$ = {
+        type: 'Property',
+        key: $1,
+        value: $3,
+      }
+    }
+  ;
+
+/**
+ * PropertyName.
+ */
+PropertyName
+  : StringLiteral
+  | NumericLiteral
+  | Identifier
   ;
 
 /**

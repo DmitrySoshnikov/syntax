@@ -61,3 +61,17 @@ for (;;) {
  * Array literals.
  */
 let data = [1, 2, 3];
+
+/**
+ * Object literals.
+ */
+let config = {
+  ip: "127.0.0.1",
+  port: 3306,
+  user: {
+    name: "John Doe",
+    alias: "jdoe",
+  },
+  0: index,
+  "value scores": [1, 2],
+};

@@ -51,6 +51,7 @@
     [`\\[`,                     `return 'LBRACKET'`],
     [`\\]`,                     `return 'RBRACKET'`],
 
+    [`:`,                       `return 'COLON'`],
     [`;`,                       `return 'SEMICOLON'`],
     [`,`,                       `return 'COMMA'`],
 
