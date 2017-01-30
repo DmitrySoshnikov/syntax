@@ -81,7 +81,7 @@ let config = {
  */
 {
   let x = 10;
-  let y = 20;
+  let y = 0.5;
 
   fn Point(x, y) {
     return {
