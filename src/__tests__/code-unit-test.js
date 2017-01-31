@@ -7,6 +7,26 @@ import CodeUnit from '../code-unit';
 
 const environment = CodeUnit.getSandbox();
 
+function MockSymbol(symbol) {
+  return {
+    getSymbol() {
+      return symbol;
+    },
+  };
+}
+
+function MockProduction(RHS) {
+  return {
+    getRHS() {
+      return RHS.map(symbol => MockSymbol(symbol));
+    },
+
+    getRawSemanticAction() {
+      return '$$ = $1 + $3';
+    },
+  };
+}
+
 describe('code-unit', () => {
 
   it('default bindings', () => {
@@ -18,7 +38,7 @@ describe('code-unit', () => {
     expect(typeof environment.yyparse.onParseBegin).toBe('function');
     expect(typeof environment.yyparse.onParseEnd).toBe('function');
 
-    expect(environment.$$).toBe(null);
+    expect(environment.__).toBe(null);
     expect(typeof environment.require).toBe('function');
   });
 
@@ -27,7 +47,7 @@ describe('code-unit', () => {
     expect(typeof handler).toBe('function');
 
     handler(1, 2);
-    expect(environment.$$).toBe(3);
+    expect(environment.__).toBe(3);
   });
 
   it('shared sandbox', () => {
@@ -36,7 +56,35 @@ describe('code-unit', () => {
 
   it('eval', () => {
     CodeUnit.eval('$$ = 2 * 5');
-    expect(environment.$$).toBe(10);
+    expect(environment.__).toBe(10);
+  });
+
+  it('production action parameters', () => {
+    let production = MockProduction(['additive', 'PLUS', 'multiplicative']);
+
+    expect(CodeUnit.createProductionParams(production)).toBe(
+      '_1, _2, _3, _additive, _PLUS, _multiplicative, _1loc, _2loc, _3loc'
+    );
+
+    production = MockProduction(['additive', '+', 'multiplicative']);
+
+    expect(CodeUnit.createProductionParams(production)).toBe(
+      '_1, _2, _3, _additive, _named2, _multiplicative, _1loc, _2loc, _3loc'
+    );
+  });
+
+  it('production handler', () => {
+    const production = MockProduction(['additive', 'PLUS', 'multiplicative']);
+    const handler = CodeUnit.createProductionHandler(production);
+
+    expect(handler.toString()).toBe(
+      'function (' +
+        '_1, _2, _3, _additive, _PLUS, _multiplicative, _1loc, _2loc, _3loc' +
+      ') { __ = _1 + _3 }'
+    );
+
+    handler(1, '+', 2)
+    expect(environment.__).toBe(3);
   });
 
   it('set bindings', () => {

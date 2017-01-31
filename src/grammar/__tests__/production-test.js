@@ -90,7 +90,7 @@ describe('production', () => {
     const result = semanticAction.apply(null, args);
 
     expect(result).toBe(30);
-    expect(CodeUnit.getSandbox().$$).toBe(result);
+    expect(CodeUnit.getSandbox().__).toBe(result);
     expect(production.runSemanticAction(args)).toBe(result);
 
     // No semantic action.

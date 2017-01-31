@@ -31,9 +31,9 @@ const SANDBOX = Object.assign(Object.create(global), {
   },
 
   /**
-   * Return value of production handlers.
+   * Result value of production handlers, used as $$.
    */
-  $$: null,
+  __: null,
 
   /**
    * To require modules.
@@ -62,7 +62,64 @@ const CodeUnit = {
    * Evaluates the code.
    */
   eval(code) {
-    return vm.runInContext(code, context);
+    return vm.runInContext(this._rewriteParamsInCode(code), context);
+  },
+
+  /**
+   * Creates parameters string for a semantic action.
+   *
+   * Consists of: positioned arguments, named arguments,
+   * and location data.
+   *
+   * Example of using the arguments in a handler:
+   *
+   * $1, $2, $expr, $term, @1, @2
+   *
+   * Created parameters: _1, _2, _expr, _term, _1loc, _2loc
+   */
+  createProductionParams(production) {
+    const symbols = production
+      .getRHS()
+      .map(symbol => symbol.getSymbol());
+
+    let positioned = [];
+    let named = [];
+    let locations = [];
+
+    const idRe = /^[a-zA-Z][a-zA-Z0-9]*$/;
+
+    for (var i = 0; i < symbols.length; i++) {
+      const symbol = symbols[i];
+      const index = i + 1;
+
+      positioned.push(`_${index}`);
+      named.push(idRe.test(symbol) ? `_${symbol}` : `_named${index}`);
+      locations.push(`_${index}loc`);
+    }
+
+    return positioned
+      .concat(named, locations)
+      .join(', ');
+  },
+
+  /**
+   * Creates a handler for a production.
+   */
+  createProductionHandler(production) {
+    return this.createHandler(
+      this.createProductionParams(production),
+      this._rewriteParamsInCode(production.getRawSemanticAction()),
+    );
+  },
+
+  /**
+   * Rewrites $1, @1 to _1, _1loc
+   */
+  _rewriteParamsInCode(code) {
+    return code
+      .replace(/\$([0-9a-zA-Z]+)/g, '_$1')
+      .replace(/@(\d+)/g, '_$1loc')
+      .replace(/\$\$/g, '__');
   },
 
   /**

@@ -123,15 +123,9 @@ export default class Production {
       return null;
     }
 
-    // Generate the function handler only for JS language
+    // Generate the function handler only for JS language.
     try {
-      // Builds a string of args: '$1, $2, $3...'
-      let parameters = [...Array(this.getRHS().length)]
-        .map((_, i) => `$${i + 1}`)
-        .join(',');
-
-      const handler = CodeUnit.createHandler(parameters, semanticAction);
-
+      const handler = CodeUnit.createProductionHandler(this);
       return (...args) => {
         // Executing a handler mutates $$ variable, return it.
         try {
@@ -143,7 +137,7 @@ export default class Production {
           );
           throw e;
         }
-        return CodeUnit.getSandbox().$$;
+        return CodeUnit.getSandbox().__;
       };
     } catch (e) {
       /* And skip for other languages, which use raw handler in generator */
