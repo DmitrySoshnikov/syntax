@@ -762,6 +762,58 @@ MultiplicativeExpression
  */
 UnaryExpression
   : PrimaryExpression
+  | CallExpression
   | ADDITIVE_OPERATOR UnaryExpression
     { $$ = UnaryExpression($1, $2) }
+  ;
+
+/**
+ * CallExpression.
+ */
+CallExpression
+  : Callee Arguments
+    {
+      $$ = {
+        type: 'CallExpression',
+        callee: $1,
+        arguments: $2,
+      };
+    }
+  ;
+
+/**
+ * Callee.
+ *
+ * Simple function call `foo();` or chained `foo()();`.
+ */
+Callee
+  : Identifier
+  | CallExpression
+  ;
+
+/**
+ * Call expression arguments.
+ */
+Arguments
+  : LPAREN OptArgumentList RPAREN
+    { $$ = $2 }
+  ;
+
+/**
+ * OptArgumentList.
+ */
+OptArgumentList
+  : ArgumentList
+  | /* empty */ { $$ = [] }
+  ;
+
+/**
+ * ArgumentList.
+ */
+ArgumentList
+  : AssignmentExpression
+    { $$ = [$1] }
+
+  | ArgumentList COMMA AssignmentExpression
+    { $$ = $1; $1.push($3) }
   ;

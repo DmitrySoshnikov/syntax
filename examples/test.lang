@@ -23,6 +23,11 @@ let square = (x) -> {
 };
 
 /**
+ * Function call.
+ */
+square(2);
+
+/**
  * do-while loop.
  */
 do {
