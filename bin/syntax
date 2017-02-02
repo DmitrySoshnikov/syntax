@@ -92,6 +92,10 @@ const options = require('nomnom')
       help: 'Whether to generate a parser module for parsing a passed string',
       flag: true,
     },
+    'loc': {
+       help: 'Capture token locations (offsets, line and column numbers)',
+       flag: true,
+    },
   })
   .parse();
 
@@ -335,12 +339,9 @@ function getGrammar(grammarFile, mode) {
     mode,
 
     /**
-     * This flag will enforce default semantic actions
-     * for simple productions. This allows omitting semantic actions
-     * like { $$ = $1 } when there is only on symbol on RHS which
-     * should be returned.
+     * Whether to capture locations.
      */
-    useDefaultSematicActions: options['default-actions'],
+    captureLocations: options.loc,
   };
 
   return Grammar.fromData(grammarData, grammarOptions);

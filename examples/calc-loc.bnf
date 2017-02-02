@@ -1,0 +1,154 @@
+/**
+ * Captures location info.
+ *
+ * In order to capture locations, pass the `--loc` option.
+ *
+ * Locations in handlers are accessible via `@` notation, e.g. @1, @2, etc.
+ * A named accessors are available as well: @foo, @bar.
+ *
+ * A location is an object of structure:
+ *
+ * {
+ *   startOffset,
+ *   endOffset,
+ *   startLine,
+ *   endLine,
+ *   startColumn,
+ *   endColum,
+ * }
+ *
+ * The resulting location is in the @$. It is calculated automatically from
+ * first and last symbol on a RHS handle, and it also can be overridden
+ * manually.
+ *
+ * ./bin/syntax -g examples/calc-loc.bnf -m slr1 -p '15 + 10 * 3' -w --loc
+ *
+ * Parsed nodes with captures locations:
+ *
+ * {
+ *   "type": "BinaryExpression",
+ *   "op": "+",
+ *   "left": {
+ *     "type": "NumericLiteral",
+ *     "value": 15,
+ *     "loc": {
+ *       "startOffset": 0,
+ *       "endOffset": 2,
+ *       "startLine": 1,
+ *       "endLine": 1,
+ *       "startColumn": 0,
+ *       "endColumn": 2
+ *     }
+ *   },
+ *   "right": {
+ *     "type": "BinaryExpression",
+ *     "op": "*",
+ *     "left": {
+ *       "type": "NumericLiteral",
+ *       "value": 10,
+ *       "loc": {
+ *         "startOffset": 5,
+ *         "endOffset": 7,
+ *         "startLine": 1,
+ *         "endLine": 1,
+ *         "startColumn": 5,
+ *         "endColumn": 7
+ *       }
+ *     },
+ *     "right": {
+ *       "type": "NumericLiteral",
+ *       "value": 3,
+ *       "loc": {
+ *         "startOffset": 10,
+ *         "endOffset": 11,
+ *         "startLine": 1,
+ *         "endLine": 1,
+ *         "startColumn": 10,
+ *         "endColumn": 11
+ *       }
+ *     },
+ *     "loc": {
+ *       "startOffset": 5,
+ *       "endOffset": 11,
+ *       "startLine": 1,
+ *       "endLine": 1,
+ *       "startColumn": 5,
+ *       "endColumn": 11
+ *     }
+ *   },
+ *   "loc": {
+ *     "startOffset": 0,
+ *     "endOffset": 11,
+ *     "startLine": 1,
+ *     "endLine": 1,
+ *     "startColumn": 0,
+ *     "endColumn": 11
+ *   }
+ * }
+ */
+
+%{
+
+function BinaryExpression(op, left, right, loc) {
+  return {
+    type: 'BinaryExpression',
+    op,
+    left,
+    right,
+    loc,
+  };
+}
+
+function Loc(s, e) {
+  // Same as default result location.
+  return {
+    startOffset: s.startOffset,
+    endOffset: e.endOffset,
+    startLine: s.startLine,
+    endLine: e.endLine,
+    startColumn: s.startColumn,
+    endColumn: e.endColumn,
+  };
+}
+
+function NumericLiteral(value, loc) {
+  return {
+    type: 'NumericLiteral',
+    value,
+    loc,
+  };
+}
+
+%}
+
+%left '+'
+%left '*'
+
+%%
+
+exp
+  : exp '+' exp
+    /* Explicitly calculate location */
+    { $$ = BinaryExpression('+', $1, $3, Loc(@1, @3)) }
+
+  | exp '*' exp
+    /* Use default result location: @$ */
+    { $$ = BinaryExpression('*', $1, $3, @$) }
+
+  | number
+    /* Named args and position */
+    { $$ = NumericLiteral($number, @number) }
+  ;
+
+literal
+  : number
+  ;
+
+number
+  : number digit
+    { $$ = Number($number + $digit); }
+
+  | /* empty */ { $$ = ''; }
+  ;
+
+digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';

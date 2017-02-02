@@ -15,15 +15,28 @@ const mockGrammar = {
       '+': {assoc: "left", precedence: 1},
     };
   },
+
+  shouldCaptureLocations() {
+    return false;
+  },
 };
 
 const productionData = {
   LHS: 'E',
-  RHS: 'E + E',
+  RHS: 'E + F',
   number: 1,
   isShort: false,
   grammar: mockGrammar,
-  semanticAction: '$$ = $1 + $2',
+  semanticAction: '$$ = $1 + $3',
+};
+
+const defaultLoc = {
+  startOffset: 1,
+  endOffset: 2,
+  startLine: 1,
+  endLine: 1,
+  startColumn: 1,
+  endColumn: 2,
 };
 
 describe('production', () => {
@@ -48,15 +61,15 @@ describe('production', () => {
 
     expect(RHS[0].getSymbol()).toBe('E');
     expect(RHS[1].getSymbol()).toBe('+');
-    expect(RHS[2].getSymbol()).toBe('E');
+    expect(RHS[2].getSymbol()).toBe('F');
   });
 
   it('full/short', () => {
     let production = new Production({...productionData, isShort: false});
-    expect(production.toString()).toBe('E -> E + E');
+    expect(production.toString()).toBe('E -> E + F');
 
     production = new Production({...productionData, isShort: true});
-    expect(production.toString()).toBe('   | E + E');
+    expect(production.toString()).toBe('   | E + F');
   });
 
   it('augmented', () => {
@@ -74,6 +87,23 @@ describe('production', () => {
     expect(production.getNumber()).toBe(1);
   });
 
+  it('semantic action named args', () => {
+    const semanticAction = '$$ = $E + $F';
+
+    let production = new Production({
+      ...productionData,
+      semanticAction,
+    });
+
+    expect(production.hasSemanticAction()).toBe(true);
+
+    expect(production.getOriginalSemanticAction())
+      .toBe(semanticAction);
+
+    expect(production.getRawSemanticAction())
+      .toBe('$$ = $1 + $3');
+  });
+
   it('semantic action', () => {
     // Has semantic action.
     let production = new Production(productionData);
@@ -86,7 +116,7 @@ describe('production', () => {
     const semanticAction = production.getSemanticAction();
     expect(semanticAction instanceof Function).toBe(true);
 
-    const args = [10, 20];
+    const args = [10, '+', 20];
     const result = semanticAction.apply(null, args);
 
     expect(result).toBe(30);
@@ -98,6 +128,80 @@ describe('production', () => {
 
     expect(production.hasSemanticAction()).toBe(false);
     expect(production.runSemanticAction(args)).toBe(undefined);
+  });
+
+  it('action with locations', () => {
+    // Has semantic action.
+    let production = new Production({
+      ...productionData,
+      grammar: {
+        ...mockGrammar,
+        shouldCaptureLocations() {
+          return true;
+        },
+      }
+    });
+
+    expect(production.hasSemanticAction()).toBe(true);
+
+    expect(production.getRawSemanticAction())
+      .toBe(productionData.semanticAction);
+
+    const semanticAction = production.getSemanticAction();
+    expect(semanticAction instanceof Function).toBe(true);
+
+    const args = [10, '+', 20, defaultLoc, defaultLoc, defaultLoc];
+    const result = semanticAction.apply(null, args);
+
+    expect(result).toBe(30);
+    expect(CodeUnit.getSandbox().__).toBe(result);
+    expect(CodeUnit.getSandbox().__loc).toEqual(defaultLoc);
+  });
+
+  it('default location calculation', () => {
+    let production = new Production({
+      ...productionData,
+      grammar: {
+        ...mockGrammar,
+        shouldCaptureLocations() {
+          return true;
+        },
+      }
+    });
+
+    const $1loc = {
+      startOffset: 0,
+      endOffset: 2,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 0,
+      endColumn: 2,
+    };
+
+    const $3loc = {
+      startOffset: 6,
+      endOffset: 8,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 6,
+      endColumn: 8,
+    };
+
+    const $$loc = {
+      startOffset: 0,
+      endOffset: 8,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 0,
+      endColumn: 8,
+    };
+
+    const args = [10, '+', 20, $1loc, defaultLoc, $3loc];
+    const result = production.runSemanticAction(args);
+
+    expect(result).toBe(30);
+    expect(CodeUnit.getSandbox().__).toBe(result);
+    expect(CodeUnit.getSandbox().__loc).toEqual($$loc);
   });
 
   it('default propagating action', () => {
@@ -136,7 +240,7 @@ describe('production', () => {
     let production = new Production({...productionData, precedence: 3});
     expect(production.getPrecedence()).toBe(3);
 
-    // Inferred from grammar's operators (for '+' in 'E + E').
+    // Inferred from grammar's operators (for '+' in 'E + F').
     production = new Production(productionData);
     expect(production.getPrecedence()).toBe(1);
 

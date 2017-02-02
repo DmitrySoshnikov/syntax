@@ -15,17 +15,30 @@ function MockSymbol(symbol) {
   };
 }
 
-function MockProduction(RHS) {
+function MockProduction(RHS, handler = '$$ = $1 + $3', isEpsilon = false) {
   return {
     getRHS() {
       return RHS.map(symbol => MockSymbol(symbol));
     },
 
     getRawSemanticAction() {
-      return '$$ = $1 + $3';
+      return handler;
     },
+
+    isEpsilon() {
+      return isEpsilon;
+    }
   };
 }
+
+const defaultLoc = {
+  startOffset: 1,
+  endOffset: 2,
+  startLine: 1,
+  endLine: 1,
+  startColumn: 1,
+  endColumn: 2,
+};
 
 describe('code-unit', () => {
 
@@ -62,29 +75,94 @@ describe('code-unit', () => {
   it('production action parameters', () => {
     let production = MockProduction(['additive', 'PLUS', 'multiplicative']);
 
-    expect(CodeUnit.createProductionParams(production)).toBe(
-      '_1, _2, _3, _additive, _PLUS, _multiplicative, _1loc, _2loc, _3loc'
-    );
+    expect(CodeUnit.createProductionParams({production}))
+      .toBe('_1, _2, _3');
 
-    production = MockProduction(['additive', '+', 'multiplicative']);
-
-    expect(CodeUnit.createProductionParams(production)).toBe(
-      '_1, _2, _3, _additive, _named2, _multiplicative, _1loc, _2loc, _3loc'
-    );
+    expect(CodeUnit.createProductionParams({
+      production,
+      captureLocations: true,
+    }))
+      .toBe('_1, _2, _3, _1loc, _2loc, _3loc');
   });
 
   it('production handler', () => {
     const production = MockProduction(['additive', 'PLUS', 'multiplicative']);
-    const handler = CodeUnit.createProductionHandler(production);
+    let handler = CodeUnit.createProductionHandler({production});
 
     expect(handler.toString()).toBe(
       'function (' +
-        '_1, _2, _3, _additive, _PLUS, _multiplicative, _1loc, _2loc, _3loc' +
+        '_1, _2, _3' +
       ') { __ = _1 + _3 }'
     );
 
     handler(1, '+', 2)
     expect(environment.__).toBe(3);
+
+    handler = CodeUnit.createProductionHandler({
+      production,
+      captureLocations: true,
+    });
+
+    expect(handler.toString()).toBe(
+      'function (' +
+        '_1, _2, _3, _1loc, _2loc, _3loc' +
+      ') { __loc = yyloc(_1loc, _3loc);__ = _1 + _3 }'
+    );
+
+    handler(1, '+', 2, defaultLoc, defaultLoc, defaultLoc)
+    expect(environment.__).toBe(3);
+  });
+
+  it('epsilon production loc', () => {
+    const production = MockProduction([], '', /* isEpsilon */true);
+
+    let handler = CodeUnit.createProductionHandler({
+      production,
+      captureLocations: true,
+    });
+
+    expect(handler.toString()).toBe(
+      'function (' +
+        '' +
+      ') { __loc = null; }'
+    );
+  });
+
+  it('yyloc', () => {
+    const yyloc = environment.yyloc;
+
+    const $1loc = {
+      startOffset: 0,
+      endOffset: 2,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 0,
+      endColumn: 2,
+    };
+
+    const $2loc = {
+      startOffset: 6,
+      endOffset: 8,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 6,
+      endColumn: 8,
+    };
+
+    const $$loc = {
+      startOffset: 0,
+      endOffset: 8,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 0,
+      endColumn: 8,
+    };
+
+    expect(yyloc($1loc, $2loc)).toEqual($$loc);
+
+    // Epsilon loc (null)
+    expect(yyloc(null, $2loc)).toEqual($2loc);
+    expect(yyloc($1loc, null)).toEqual($1loc);
   });
 
   it('set bindings', () => {

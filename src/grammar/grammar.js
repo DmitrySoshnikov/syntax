@@ -125,9 +125,16 @@ export default class Grammar {
      * the generated parser.
      */
     moduleInclude = '',
+
+    /**
+     * Whether to capture locations.
+     */
+    captureLocations = false,
   }) {
     this._mode = new GrammarMode(mode);
     this._startSymbol = start;
+
+    this._captureLocations = captureLocations;
 
     // Operators and precedence.
     this._operators = this._processOperators(operators);
@@ -258,6 +265,13 @@ export default class Grammar {
    */
   getModuleInclude() {
     return this._moduleInclude;
+  }
+
+  /**
+   * Whther should capture locations.
+   */
+  shouldCaptureLocations() {
+    return this._captureLocations;
   }
 
   /**

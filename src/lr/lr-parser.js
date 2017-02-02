@@ -185,7 +185,18 @@ export default class LRParser {
 
   _shift(token, entry) {
     this._stack.push(
-      {symbol: token.type, semanticValue: token.value},
+      {
+        symbol: token.type,
+        semanticValue: token.value,
+        loc: {
+          startOffset: token.startOffset,
+          endOffset: token.endOffset,
+          startLine: token.startLine,
+          endLine: token.endLine,
+          startColumn: token.startColumn,
+          endColumn: token.endColumn,
+        },
+      },
       Number(entry.slice(1))
     );
   }
@@ -194,7 +205,8 @@ export default class LRParser {
     let productionNumber = entry.slice(1);
     let production = this._grammar.getProduction(productionNumber);
     let hasSemanticAction = production.hasSemanticAction();
-    let semanticActionArgs = hasSemanticAction ? [] : null;
+    let semanticValueArgs = hasSemanticAction ? [] : null;
+    let locationArgs = hasSemanticAction ? [] : null;
 
     // Pop 2x symbols from the stack (RHS + state number for each),
     // unless it's an ε-production for which nothing to pop.
@@ -207,7 +219,8 @@ export default class LRParser {
         let stackEntry = this._stack.pop();
 
         if (hasSemanticAction) {
-          semanticActionArgs.unshift(stackEntry.semanticValue);
+          semanticValueArgs.unshift(stackEntry.semanticValue);
+          locationArgs.unshift(stackEntry.loc);
         }
       }
     }
@@ -222,9 +235,17 @@ export default class LRParser {
         yytext: token ? token.value : '',
         yyleng: token ? token.value.length : 0,
       });
-      // Run corresponding semantic action.
-      reduceStackEntry.semanticValue = production
-        .runSemanticAction(semanticActionArgs);
+
+      const semanticActionArgs = [
+        ...semanticValueArgs,
+        ...locationArgs,
+      ];
+
+      // Run corresponding semantic action, result is in $$ (__).
+      production.runSemanticAction(semanticActionArgs);
+
+      reduceStackEntry.semanticValue = CodeUnit.getSandbox().__;
+      reduceStackEntry.loc = CodeUnit.getSandbox().__loc;
     }
 
     // Then push LHS.

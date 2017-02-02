@@ -31,9 +31,33 @@ const SANDBOX = Object.assign(Object.create(global), {
   },
 
   /**
+   * Creates location object.
+   */
+  yyloc(start, end) {
+    // Epsilon doesn't produce location.
+    if (!start || !end) {
+      return start || end;
+    }
+
+    return {
+      startOffset: start.startOffset,
+      endOffset: end.endOffset,
+      startLine: start.startLine,
+      endLine: end.endLine,
+      startColumn: start.startColumn,
+      endColumn: end.endColumn,
+    };
+  },
+
+  /**
    * Result value of production handlers, used as $$.
    */
   __: null,
+
+  /**
+   * Result node location object.
+   */
+  __loc: null,
 
   /**
    * To require modules.
@@ -77,49 +101,86 @@ const CodeUnit = {
    *
    * Created parameters: _1, _2, _expr, _term, _1loc, _2loc
    */
-  createProductionParams(production) {
+  createProductionParams({production, captureLocations}) {
+    if (production.isEpsilon()) {
+      return '';
+    }
+
     const symbols = production
       .getRHS()
       .map(symbol => symbol.getSymbol());
 
-    let positioned = [];
-    let named = [];
-    let locations = [];
+    // $1, $2, ...
+    let semanticValues = [];
 
-    const idRe = /^[a-zA-Z][a-zA-Z0-9]*$/;
+    // @1, @2, ...
+    let locations = captureLocations ? [] : null;
 
     for (var i = 0; i < symbols.length; i++) {
       const symbol = symbols[i];
-      const index = i + 1;
+      const semanticValue = `_${i + 1}`;
 
-      positioned.push(`_${index}`);
-      named.push(idRe.test(symbol) ? `_${symbol}` : `_named${index}`);
-      locations.push(`_${index}loc`);
+      semanticValues.push(semanticValue);
+
+      if (captureLocations) {
+        locations.push(`${semanticValue}loc`);
+      }
     }
 
-    return positioned
-      .concat(named, locations)
-      .join(', ');
+    const params = captureLocations
+      ? semanticValues.concat(locations)
+      : semanticValues;
+
+    return params.join(', ');
   },
 
   /**
-   * Creates a handler for a production.
+   * Creates default location prologue to semantic action. Begin is
+   * taken from first symbol on RHS, the end -- from the last one.
+   *
+   * @$.startOffset = @1.startOffset
+   * @$.endOffset = @1.endOffset
+   * ...
    */
-  createProductionHandler(production) {
+  _createLocationPrologue(production) {
+    if (production.isEpsilon()) {
+      return '__loc = null;';
+    }
+
+    const start = 1;
+    const end = production.getRHS().length;
+
+    return `__loc = yyloc(_${start}loc, _${end}loc);`;
+  },
+
+  /**
+   * Creates a handler for a production. Attaches default
+   * location prologue (user code can override it).
+   */
+  createProductionHandler({production, captureLocations}) {
+    const params = this.createProductionParams({production, captureLocations});
+
+    const locationPrologue = captureLocations
+      ? this._createLocationPrologue(production)
+      : '';
+
+    const action = production.getRawSemanticAction();
+
     return this.createHandler(
-      this.createProductionParams(production),
-      this._rewriteParamsInCode(production.getRawSemanticAction()),
+      params,
+      this._rewriteParamsInCode(locationPrologue + action),
     );
   },
 
   /**
-   * Rewrites $1, @1 to _1, _1loc
+   * Rewrites $1, @1, $name to _1, _1loc, _name
    */
   _rewriteParamsInCode(code) {
     return code
-      .replace(/\$([0-9a-zA-Z]+)/g, '_$1')
+      .replace(/\$(\d+)/g, '_$1')
       .replace(/@(\d+)/g, '_$1loc')
-      .replace(/\$\$/g, '__');
+      .replace(/\$\$/g, '__')
+      .replace(/@\$/g, '__loc');
   },
 
   /**

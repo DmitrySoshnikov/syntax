@@ -9,7 +9,7 @@ import {EPSILON} from '../special-symbols';
 import colors from 'colors';
 
 /**
- * A produciton in BNF grammar.
+ * A production in BNF grammar.
  */
 export default class Production {
   /**
@@ -22,7 +22,7 @@ export default class Production {
     LHS,
     RHS,
     number,
-    semanticAction,
+    semanticAction = null,
     isShort = false,
     grammar,
     precedence,
@@ -35,17 +35,53 @@ export default class Production {
     this._grammar = grammar;
     this._normalize();
 
-    // Generate default "propagating" semantic action for
-    // simple productions, if no explicit action is provided.
-    if (!semanticAction && this.getRHS().length === 1) {
-      semanticAction = this.isEpsilon()
-        ? '$$ = null'
-        : '$$ = $1';
+    if (semanticAction === null) {
+      semanticAction = this._createDefaultSemanticAction()
     }
 
-    this._rawSemanticAction = semanticAction;
-    this._semanticAction = this._buildSemanticAction(semanticAction);
+    this._orginialSemanticAction = semanticAction;
+    this._rawSemanticAction = this._rewriteNamedArg(semanticAction);
+    this._semanticAction = this._buildSemanticAction(this._rawSemanticAction);
     this._precedence = precedence || this._calculatePrecedence();
+  }
+
+  /**
+   * Creates default semantic action for simple productions.
+   */
+  _createDefaultSemanticAction() {
+    if (this.getRHS().length !== 1) {
+      return null;
+    }
+
+    return this.isEpsilon() ? '$$ = null' : '$$ = $1';
+  }
+
+  /**
+   * Rewrites named arguments to positioned ones.
+   * $foo -> $1, ...
+   */
+  _rewriteNamedArg(semanticAction) {
+    if (!semanticAction) {
+      return null;
+    }
+
+    const RHS = this.getRHS();
+    const idRe = /[a-zA-Z][a-zA-Z0-9]*/;
+
+    for (let i = 0; i < RHS.length; i++) {
+      const symbol = RHS[i].getSymbol();
+
+      if (!idRe.test(symbol)) {
+        continue;
+      }
+
+      const index = i + 1;
+      const symbolRe = new RegExp(`(\\$|@)${symbol}`, 'g');
+
+      semanticAction = semanticAction.replace(symbolRe, `$1${index}`);
+    }
+
+    return semanticAction;
   }
 
   /**
@@ -73,6 +109,10 @@ export default class Production {
 
   getPrecedence() {
     return this._precedence;
+  }
+
+  getOriginalSemanticAction() {
+    return this._orginialSemanticAction;
   }
 
   getRawSemanticAction() {
@@ -125,7 +165,11 @@ export default class Production {
 
     // Generate the function handler only for JS language.
     try {
-      const handler = CodeUnit.createProductionHandler(this);
+      const handler = CodeUnit.createProductionHandler({
+        production: this,
+        captureLocations: this._grammar.shouldCaptureLocations(),
+      });
+
       return (...args) => {
         // Executing a handler mutates $$ variable, return it.
         try {
@@ -133,7 +177,7 @@ export default class Production {
         } catch (e) {
           console.error(
             colors.red('\nError in handler:\n\n') +
-            this.getRawSemanticAction() + '\n',
+            this.getOriginalSemanticAction() + '\n',
           );
           throw e;
         }
