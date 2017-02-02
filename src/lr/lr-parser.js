@@ -184,29 +184,40 @@ export default class LRParser {
   }
 
   _shift(token, entry) {
+    let loc = null;
+
+    if (this._grammar.shouldCaptureLocations()) {
+      loc = {
+        startOffset: token.startOffset,
+        endOffset: token.endOffset,
+        startLine: token.startLine,
+        endLine: token.endLine,
+        startColumn: token.startColumn,
+        endColumn: token.endColumn,
+      };
+    }
+
     this._stack.push(
       {
         symbol: token.type,
         semanticValue: token.value,
-        loc: {
-          startOffset: token.startOffset,
-          endOffset: token.endOffset,
-          startLine: token.startLine,
-          endLine: token.endLine,
-          startColumn: token.startColumn,
-          endColumn: token.endColumn,
-        },
+        loc,
       },
       Number(entry.slice(1))
     );
   }
 
   _reduce(entry, token) {
-    let productionNumber = entry.slice(1);
-    let production = this._grammar.getProduction(productionNumber);
-    let hasSemanticAction = production.hasSemanticAction();
-    let semanticValueArgs = hasSemanticAction ? [] : null;
-    let locationArgs = hasSemanticAction ? [] : null;
+    const productionNumber = entry.slice(1);
+    const production = this._grammar.getProduction(productionNumber);
+    const hasSemanticAction = production.hasSemanticAction();
+    const semanticValueArgs = hasSemanticAction ? [] : null;
+
+    const locationArgs = (
+      hasSemanticAction && this._grammar.shouldCaptureLocations()
+        ? []
+        : null
+    );
 
     // Pop 2x symbols from the stack (RHS + state number for each),
     // unless it's an ε-production for which nothing to pop.
@@ -220,7 +231,10 @@ export default class LRParser {
 
         if (hasSemanticAction) {
           semanticValueArgs.unshift(stackEntry.semanticValue);
-          locationArgs.unshift(stackEntry.loc);
+
+          if (locationArgs) {
+            locationArgs.unshift(stackEntry.loc);
+          }
         }
       }
     }
@@ -236,16 +250,20 @@ export default class LRParser {
         yyleng: token ? token.value.length : 0,
       });
 
-      const semanticActionArgs = [
-        ...semanticValueArgs,
-        ...locationArgs,
-      ];
+      const semanticActionArgs = (
+        locationArgs !== null
+          ? [...semanticValueArgs, ...locationArgs]
+          : semanticValueArgs
+      );
 
       // Run corresponding semantic action, result is in $$ (__).
       production.runSemanticAction(semanticActionArgs);
 
       reduceStackEntry.semanticValue = CodeUnit.getSandbox().__;
-      reduceStackEntry.loc = CodeUnit.getSandbox().__loc;
+
+      if (locationArgs) {
+        reduceStackEntry.loc = CodeUnit.getSandbox().__loc;
+      }
     }
 
     // Then push LHS.
