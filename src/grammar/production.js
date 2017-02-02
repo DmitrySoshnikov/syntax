@@ -49,11 +49,11 @@ export default class Production {
    * Creates default semantic action for simple productions.
    */
   _createDefaultSemanticAction() {
-    if (this.getRHS().length !== 1) {
+    if (this.getRHS().length !== 1 || this.isEpsilon()) {
       return null;
     }
 
-    return this.isEpsilon() ? '$$ = null' : '$$ = $1';
+    return '$$ = $1';
   }
 
   /**

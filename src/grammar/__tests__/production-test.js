@@ -222,8 +222,7 @@ describe('production', () => {
       semanticAction: null,
     });
 
-    const defaultEpsilonAction = '$$ = null';
-    expect(production.getRawSemanticAction()).toBe(defaultEpsilonAction);
+    expect(production.getRawSemanticAction()).toBe(null);
   });
 
   it('epsilon', () => {

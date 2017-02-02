@@ -281,7 +281,7 @@ IterationStatement
 OptForStatementInit
   : VariableDeclarationListInit
   | Expression
-  | /* empty */
+  | /* empty */ { $$ = null }
   ;
 
 /**
@@ -326,7 +326,7 @@ ContinueStatement
  */
 OptExpression
   : Expression
-  | /* empty */
+  | /* empty */ { $$ = null }
   ;
 
 /**
@@ -349,7 +349,7 @@ FunctionDeclaration
  */
 OptIdentifier
   : Identifier
-  | /* empty */
+  | /* empty */ { $$ = null }
   ;
 
 /**
@@ -474,8 +474,10 @@ VariableDeclarator
  * VariableInitializer.
  */
 VariableInitializer
-  : SIMPLE_ASSIGN AssignmentExpression { $$ = $2 }
-  | /* empty */
+  : SIMPLE_ASSIGN AssignmentExpression
+    { $$ = $2 }
+
+  | /* empty */ { $$ = null }
   ;
 
 /**
@@ -552,7 +554,7 @@ OptElementList
  */
 OptComma
   : COMMA
-  | /* empty */
+  | /* empty */ { $$ = null }
   ;
 
 /**
@@ -621,8 +623,10 @@ ParenthisizedExpression
  * This can be either empty, or an arrow of a lambda function.
  */
 LambdaTail
-  : ARROW BlockStatement { $$ = $2 }
-  | /* empty */
+  : ARROW BlockStatement
+    { $$ = $2 }
+
+  | /* empty */ { $$ = null }
   ;
 
 /**
