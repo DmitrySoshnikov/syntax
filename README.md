@@ -22,6 +22,10 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Getting list of tokens](#getting-list-of-tokens)
   - [Using custom tokenizer](#using-custom-tokenizer)
   - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
+- [Handler arguments notation](#handler-arguments-notation)
+  - [Positioned notation](#positioned-notation)
+  - [Named notation](#named-notation)
+- [Capture location objects](#capture-location-objects)
 - [Parsing modes](#parsing-modes)
   - [LL parsing](#ll-parsing)
   - [LR parsing](#lr-parsing)
@@ -373,6 +377,107 @@ More information on the topic can be found in [this gist](https://gist.github.co
 As an example take a look at [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lexer-start-conditions.g.js), which calculates line numbers in a source file, including line numbers in comments. The comments themselves are skipped during tokenization, however the new lines are handled within comments separately to count those line numbers as well.
 
 Another example is the [grammar for BNF](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g) itself, which we use to parse BNF grammars represented as strings, rather than in JSON format. There we have `action` start condition to correctly parse `{` and `}` of JS code, being inside an actual handler for a grammar rule, which is itself surrounded by  `{` and `}` braces.
+
+### Handler arguments notation
+
+The following notation is used for semantic action (handler) arguments:
+
+- `yytext` -- a matched token value
+- `yyleng` -- the length of the matched token
+- Positioned arguments, e.g. `$1`, `$2`, etc.
+- Positioned locations, e.g. `@1`, `@2`, etc.
+- Named arguments, e.g. `$foo`, `$bar`, etc.
+- Named locations, e.g. `@foo`, `@bar`, etc.
+- `$$` -- result value
+- `@$` -- result location
+
+#### Positioned notation
+
+This is the simplest notation -- the semantic action arguments can be accessed via their number. For example, for the production:
+
+```
+exp : exp '+' term { $$ = $1 + $3 }
+```
+
+The `exp` can be accessed as `$1`, the `$2` would contain `'+'`, and `$3` corresponds to the `term`.
+
+#### Named notation
+
+Sometimes using positioned arguments can be less readable, and may cause refactoring issues. E.g. if some symbol is removed from the production, the handler code should be updated:
+
+```
+exp : exp term { $$ = $1 + $2 }
+```
+
+In this case using _named arguments_ might more suitable:
+
+```
+exp : exp '+' term { $$ = $exp + $term }
+```
+
+And still the same even if the production is changed:
+
+```
+exp : exp term { $$ = $exp + $term }
+```
+
+Notice though, that for _duplicated symbols_ named notation doesn't fit, since would cause ambiguity:
+
+```
+exp : exp '+' exp { $$ = $exp + $exp } /* ERROR! */
+```
+
+In this case the positioned arguments should be used:
+
+```
+exp : exp '+' exp { $$ = $1 + $3 } /* OK! */
+```
+
+### Capture location objects
+
+For some tools (e.g source-code transformation tools) it is important not only to produce AST nodes, but also to capture all the locations in the original source code. _Syntax_ supports `--loc` option for this. A default structure of a location object is the same as for a token:
+
+```js
+{
+  startOffset,
+  endOffset,
+  startLine,
+  endLine,
+  startColumn,
+  endColumn,
+}
+```
+
+However in actual AST nodes generation it is possible to build a custom location information based on this default location object.
+
+The locations are accessed using `@1`, or `@foo` notation, the result location is in the `@$`:
+
+```
+exp : exp + exp
+  {
+    $$ = $1 + $2;
+
+    // Default algorithm.
+    @$.startLine = @1.startLine;
+    @$.endLine = @3.startLine;
+    ...
+  }
+```
+
+By default _Syntax_ automatically calculates resulting location taking _start part_ from the _first symbol_ of a production, and the _end part_ -- from the location information of the _last symbol_ the production. So the example above can actually omit manual result location calculation, and be just:
+
+
+```
+exp : exp + exp { $$ = $1 + $2; }
+```
+
+It is possible to override though the default algorithm by just mutating the `@$`, and it's also possible to create custom location:
+
+```
+exp : exp + exp { $$ = new AdditionNode($1, $3, Loc(@$)) }
+```
+
+In this case function `Loc` can create custom location format. Here is [another example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-loc.bnf) of a grammar which uses location objects.
 
 ### Parsing modes
 
