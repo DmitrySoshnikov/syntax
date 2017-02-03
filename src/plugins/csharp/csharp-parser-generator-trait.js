@@ -76,20 +76,22 @@ const CSharpParserGeneratorTrait = {
    * Production handlers are implemented as methods on the `yyparse` class.
    */
   buildSemanticAction(production) {
-    const semanticActionData = this.getSemanticActionData(
-      production,
-      /*arg type*/ 'dynamic',
-    );
+    let action = this.getSemanticActionCode(production);
 
-    if (!semanticActionData) {
+    if (!action) {
       return null;
     }
 
-    semanticActionData.action =
-      this._scopeVars(semanticActionData.action) + ';';
+    action = this._scopeVars(action) + ';';
+
+    const args = this
+      .getSemanticActionParams(production)
+      // Append type information for C#.
+      .map(arg => `dynamic ${arg}`)
+      .join(',');
 
     // Save the action, they are injected later.
-    this._productionHandlers.push(semanticActionData);
+    this._productionHandlers.push({args, action});
     return `"_handler${this._productionHandlers.length}"`;
   },
 

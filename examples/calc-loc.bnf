@@ -135,6 +135,9 @@ exp
     /* Use default result location: @$ */
     { $$ = BinaryExpression('*', $1, $3, @$) }
 
+  | '(' exp ')'
+    { $$ = $2 }
+
   | number
     /* Named args and position */
     { $$ = NumericLiteral($number, @number) }

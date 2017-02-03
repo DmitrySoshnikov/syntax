@@ -21,6 +21,25 @@ let yytext;
 let yyleng;
 let yy = {};
 let __;
+let __loc;
+
+function yyloc(start, end) {
+  // Epsilon doesn't produce location.
+  if (!start || !end) {
+    return start || end;
+  }
+
+  return {
+    startOffset: start.startOffset,
+    endOffset: end.endOffset,
+    startLine: start.startLine,
+    endLine: end.endLine,
+    startColumn: start.startColumn,
+    endColumn: end.endColumn,
+  };
+}
+
+let shouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
 
 const EOF = '$';
 
@@ -46,69 +65,103 @@ const yyparse = {
     s.length = 0;
     s.push(0);
 
-    let t = tokenizer.getNextToken();
+    let token = tokenizer.getNextToken();
     let st = null;
 
     do {
-      if (!t) {
+      if (!token) {
         unexpectedEndOfInput();
       }
 
       let sta = s[s.length - 1];
-      let clm = tks[t.type];
-      let e = tbl[sta][clm];
+      let clm = tks[token.type];
+      let entry = tbl[sta][clm];
 
-      if (!e) {
-        unexpectedToken(t);
+      if (!entry) {
+        unexpectedToken(token);
       }
 
-      if (e[0] === 's') {
-        s.push(
-          {symbol: tks[t.type], semanticValue: t.value},
-          Number(e.slice(1))
-        );
-        st = t;
-        t = tokenizer.getNextToken();
-      } else if (e[0] === 'r') {
-        let pn = e.slice(1);
-        let p = ps[pn];
-        let hsa = typeof p[2] === 'function';
-        let saa = hsa ? [] : null;
+      if (entry[0] === 's') {
+        let loc = null;
 
-        if (p[1] !== 0) {
-          let rhsl = p[1];
+        if (shouldCaptureLocations) {
+          loc = {
+            startOffset: token.startOffset,
+            endOffset: token.endOffset,
+            startLine: token.startLine,
+            endLine: token.endLine,
+            startColumn: token.startColumn,
+            endColumn: token.endColumn,
+          };
+        }
+
+        s.push(
+          {symbol: tks[token.type], semanticValue: token.value, loc},
+          Number(entry.slice(1))
+        );
+        st = token;
+        token = tokenizer.getNextToken();
+      } else if (entry[0] === 'r') {
+        let pn = entry.slice(1);
+        let production = ps[pn];
+        let hasSemanticAction = typeof production[2] === 'function';
+        let semanticValueArgs = hasSemanticAction ? [] : null;
+
+        const locationArgs = (
+          hasSemanticAction && shouldCaptureLocations
+            ? []
+            : null
+        );
+
+        if (production[1] !== 0) {
+          let rhsl = production[1];
           while (rhsl--) {
             s.pop();
-            let se = s.pop();
+            let stackEntry = s.pop();
 
-            if (hsa) {
-              saa.unshift(se.semanticValue);
+            if (hasSemanticAction) {
+              semanticValueArgs.unshift(stackEntry.semanticValue);
+
+              if (locationArgs) {
+                locationArgs.unshift(stackEntry.loc);
+              }
             }
           }
         }
 
-        let rse = {symbol: p[0]};
+        const reduceStackEntry = {symbol: production[0]};
 
-        if (hsa) {
+        if (hasSemanticAction) {
           yytext = st ? st.value : null;
           yyleng = st ? st.value.length : null;
 
-          p[2](...saa);
-          rse.semanticValue = __;
+          const semanticActionArgs = (
+            locationArgs !== null
+              ? semanticValueArgs.concat(locationArgs)
+              : semanticValueArgs
+          );
+
+          production[2](...semanticActionArgs);
+
+          reduceStackEntry.semanticValue = __;
+
+          if (locationArgs) {
+            reduceStackEntry.loc = __loc;
+          }
         }
 
         s.push(
-          rse,
-          tbl[s[s.length - 1]][p[0]]
+          reduceStackEntry,
+          tbl[s[s.length - 1]][production[0]]
         );
-      } else if (e === 'acc') {
+      } else if (entry === 'acc') {
         s.pop();
         let parsed = s.pop();
 
         if (s.length !== 1 ||
             s[0] !== 0 ||
             tokenizer.hasMoreTokens()) {
-          unexpectedToken(t);
+          unexpectedToken(token);
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {

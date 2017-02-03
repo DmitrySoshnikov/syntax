@@ -38,14 +38,18 @@ const PythonParserGeneratorTrait = {
    * functiona declarations, and put a reference it them in the table.
    */
   buildSemanticAction(production) {
-    const semanticActionData = this.getSemanticActionData(production);
+    const action = this.getSemanticActionCode(production);
 
-    if (!semanticActionData) {
+    if (!action) {
       return null;
     }
 
+    const args = this
+      .getSemanticActionParams(production)
+      .join(',');
+
     // Save the action, they are injected later.
-    this._productionHandlers.push(semanticActionData);
+    this._productionHandlers.push({args, action});
     return `_handler${this._productionHandlers.length}`;
   },
 

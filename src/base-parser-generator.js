@@ -3,6 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CodeUnit from './code-unit';
 import Grammar from './grammar/grammar';
 import {EOF} from './special-symbols';
 
@@ -57,23 +58,42 @@ export default class BaseParserGenerator {
    * Generates code for semantic action.
    */
   buildSemanticAction(production) {
-    const semanticActionData = this.getSemanticActionData(production);
+    const semanticActionCode = this.getSemanticActionCode(production);
 
-    if (!semanticActionData) {
+    if (!semanticActionCode) {
       return null;
     }
 
-    const {args, action} = semanticActionData;
-    return `(${args}) => { ${action} }`;
+    const semanticActionArgs = this
+      .getSemanticActionParams(production)
+      .join(',');
+
+    return `(${semanticActionArgs}) => { ${semanticActionCode} }`;
   }
 
   /**
-   * Returns semantics action data (args, and body).
-   * If optional `argType` is passed, it's used as the type of arguments.
+   * Creates handler prologue for locations. Use default implementation
+   * from CodeUnit, plugins may implement custom logic.
    */
-  getSemanticActionData(production, argType = '') {
-    let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
+  createLocationPrologue(production) {
+    return CodeUnit.createLocationPrologue(production);
+  }
 
+  /**
+   * Returns a list of semantic action parameters. Plugins
+   * can transform it, e.g. adding type information.
+   */
+  getSemanticActionParams(production) {
+    return CodeUnit.createProductionParamsArray({
+      production,
+      captureLocations: this._grammar.shouldCaptureLocations(),
+    });
+  }
+
+  /**
+   * Returns transformed semantic action code.
+   */
+  getSemanticActionCode(production) {
     const rawAction = production.getRawSemanticAction();
 
     if (!rawAction) {
@@ -81,20 +101,17 @@ export default class BaseParserGenerator {
     }
 
     let action = rawAction
-      // Replace $1, $2, ... $$ with _1, _2, ... __ for languages
-      // which do not support $ in variable names.
+      // Replace $1, $2, @1, ... $$ with _1, _2, _1loc, ... __, etc.
       .replace(/\$(\d+)/g, '_$1')
-      .replace(/\$\$/g, '__');
+      .replace(/@(\d+)/g, '_$1loc')
+      .replace(/\$\$/g, '__')
+      .replace(/@\$/g, '__loc');
 
-    if (!action) {
-      return null;
+    if (this._grammar.shouldCaptureLocations()) {
+      action = this.createLocationPrologue(production) + action;
     }
-    // Builds a string of args: '$1, $2, $3...'
-    let args = [...Array(RHSLength)]
-      .map((_, i) => `${argType} _${i + 1}`)
-      .join(', ');
 
-    return {args, action};
+    return action || null;
   }
 
   /**
@@ -156,6 +173,9 @@ export default class BaseParserGenerator {
     // Arbitrary code included to the module.
     this.generateModuleInclude();
 
+    // Whether locations should be captured, and propagated.
+    this.generateCaptureLocations();
+
     // Lexical grammar.
     this.generateTokenizer();
 
@@ -169,6 +189,15 @@ export default class BaseParserGenerator {
     return this._resultData;
   }
 
+  /**
+   * Whether locations should be captured, and propagated.
+   */
+  generateCaptureLocations() {
+    this.writeData(
+      '<<CAPTURE_LOCATIONS>>',
+      JSON.stringify(this._grammar.shouldCaptureLocations()),
+    );
+  }
 
   /**
    * Encodes tokens, and non-terminals as indices (starting with

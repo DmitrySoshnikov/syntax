@@ -47,19 +47,20 @@ const PHPParserGeneratorTrait = {
    * on the `yyparse` class.
    */
   buildSemanticAction(production) {
-    const semanticActionData = this.getSemanticActionData(production);
+    let action = this.getSemanticActionCode(production);
 
-    if (!semanticActionData) {
+    if (!action) {
       return null;
     }
 
-    semanticActionData.action =
-      this._scopeVars(semanticActionData.action) + ';';
+    action = this._scopeVars(action) + ';';
 
-    semanticActionData.args = this._scopeVars(semanticActionData.args);
+    const args = this._scopeVars(
+      this.getSemanticActionParams(production).join(',')
+    );
 
     // Save the action, they are injected later.
-    this._productionHandlers.push(semanticActionData);
+    this._productionHandlers.push({args, action});
     return `'_handler${this._productionHandlers.length}'`;
   },
 

@@ -101,9 +101,9 @@ const CodeUnit = {
    *
    * Created parameters: _1, _2, _expr, _term, _1loc, _2loc
    */
-  createProductionParams({production, captureLocations}) {
+  createProductionParamsArray({production, captureLocations}) {
     if (production.isEpsilon()) {
-      return '';
+      return [];
     }
 
     const symbols = production
@@ -131,7 +131,17 @@ const CodeUnit = {
       ? semanticValues.concat(locations)
       : semanticValues;
 
-    return params.join(', ');
+    return params;
+  },
+
+  /**
+   * See `createProductionParamsArray`.
+   */
+  createProductionParams({production, captureLocations}) {
+    return this.createProductionParamsArray({
+      production,
+      captureLocations,
+    }).join(', ');
   },
 
   /**
@@ -142,7 +152,7 @@ const CodeUnit = {
    * @$.endOffset = @1.endOffset
    * ...
    */
-  _createLocationPrologue(production) {
+  createLocationPrologue(production) {
     if (production.isEpsilon()) {
       return '__loc = null;';
     }
@@ -161,7 +171,7 @@ const CodeUnit = {
     const params = this.createProductionParams({production, captureLocations});
 
     const locationPrologue = captureLocations
-      ? this._createLocationPrologue(production)
+      ? this.createLocationPrologue(production)
       : '';
 
     const action = production.getRawSemanticAction();

@@ -81,21 +81,22 @@ const ExampleParserGeneratorTrait = {
    * Production handlers are implemented as methods on the `yyparse` class.
    */
   buildSemanticAction(production) {
-    const semanticActionData = this.getSemanticActionData(
-      production,
-      /*arg type*/ '',
-    );
+    let action = this.getSemanticActionCode(production);
 
-    if (!semanticActionData) {
+    if (!action) {
       return null;
     }
 
     // Here can do any transformation on the semantic action.
-    semanticActionData.action = semanticActionData.action + ';';
+    action += ';';
+
+    const args = this
+      .getSemanticActionParams(production)
+      .join(',');
 
     // Save the action, they are injected later.
     // "_handler1", "_handler2", etc.
-    this._productionHandlers.push(semanticActionData);
+    this._productionHandlers.push({args, action});
     return `_handler${this._productionHandlers.length}`;
   },
 

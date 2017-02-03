@@ -252,7 +252,7 @@ export default class LRParser {
 
       const semanticActionArgs = (
         locationArgs !== null
-          ? [...semanticValueArgs, ...locationArgs]
+          ? semanticValueArgs.concat(locationArgs)
           : semanticValueArgs
       );
 
