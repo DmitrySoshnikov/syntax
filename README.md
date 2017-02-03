@@ -466,14 +466,14 @@ exp : exp + exp
   }
 ```
 
-By default _Syntax_ automatically calculates resulting location taking _start part_ from the _first symbol_ of a production, and the _end part_ -- from the location information of the _last symbol_ the production. So the example above can actually omit manual result location calculation, and be just:
+By default _Syntax_ automatically calculates resulting location taking _start part_ from the _first symbol_ of a production, and the _end part_ -- from the _last symbol_ of the production. So the example above can actually omit manual result location calculation, and be just:
 
 
 ```
 exp : exp + exp { $$ = $1 + $2; }
 ```
 
-It is possible to override though the default algorithm by just mutating the `@$`, and it's also possible to create custom location:
+It is possible to override though the default algorithm by just mutating the `@$`, and it's also possible to create a custom location:
 
 ```
 exp : exp + exp { $$ = new AdditionNode($1, $3, Loc(@$)) }
