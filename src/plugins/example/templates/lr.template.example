@@ -105,6 +105,49 @@ let stack = [];
  */
 let __ = null;
 
+// --------------------------------------------------------------
+// Global variable __loc
+
+/**
+ * __loc holds a result location info. In the grammar usually used as @$.
+ */
+let __loc = null;
+
+// --------------------------------------------------------------
+// Locaiton calculation function.
+
+/**
+ * Default location calculation algorithm takes start location
+ * from the first symbol, and the end location from the last symbol.
+ *
+ * The location prologue is inserted at the beginning of each handler
+ * as `@$ = yyloc(@1, @<n>)`. A particular handler may then override it,
+ * or calculate custom location format.
+ */
+function yyloc(start, end) {
+  // Epsilon doesn't produce location.
+  if (!start || !end) {
+    return start || end;
+  }
+
+  return {
+    startOffset: start.startOffset,
+    endOffset: end.endOffset,
+    startLine: start.startLine,
+    endLine: end.endLine,
+    startColumn: start.startColumn,
+    endColumn: end.endColumn,
+  };
+}
+
+// --------------------------------------------------------------
+// Capture locations
+
+/**
+ * Whether locations should be captured and propagated.
+ */
+let shouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
+
 // --------------------------------------------
 // Parser.
 
@@ -113,11 +156,13 @@ let __ = null;
  *
  * - an actual entry {symbol, semanticValue}, implemented by `StackEntry`.
  * - a state number
+ * - location object (in case of capturing locations, or `null` otherwise)
  */
 class StackEntry {
-  constructor({symbol, semanticValue}) {
+  constructor({symbol, semanticValue, loc}) {
     this.symbol = symbol;
     this.semanticValue = semanticValue;
+    this.loc = loc;
   }
 }
 
@@ -208,10 +253,24 @@ class yyparse {
       // first char, after which goes *next state number*, e.g. "s5".
       // On shift we push the token, and the next state on the stack.
       if (entry[0] == 's') {
+        let loc = null;
+
+        if (shouldCaptureLocations) {
+          loc = {
+            startOffset: token.startOffset,
+            endOffset: token.endOffset,
+            startLine: token.startLine,
+            endLine: token.endLine,
+            startColumn: token.startColumn,
+            endColumn: token.endColumn,
+          };
+        }
+
         // Push token.
         stack.push(new StackEntry({
           symbol: token.type,
           semanticValue: token.value,
+          loc,
         }));
 
         // Push next state number: "s5" -> 5
@@ -230,33 +289,41 @@ class yyparse {
       // total RHS * 2 symbols.
       else if (entry[0] == 'r') {
         // "r3" -> 3
-        let productionNumber = Number(entry.slice(1));
-        let production = productions[productionNumber];
+        const productionNumber = Number(entry.slice(1));
+        const production = productions[productionNumber];
 
         // Handler can be optional: [0, 3] - no handler,
         // [0, 3, "_handler1"] - has handler.
-        let hasSemanticAction = production.length > 2;
+        const hasSemanticAction = production.length > 2;
 
-        let semanticActionArgs = [];
+        const semanticValueArgs = hasSemanticAction ? [] : null;
+
+        const locationArgs = (
+          hasSemanticAction && shouldCaptureLocations
+            ? []
+            : null
+        );
 
         // The length of RHS is stored in the production[1].
         let rhsLength = Number(production[1]);
         if (rhsLength != 0) {
-          while (rhsLength-- > 0)
-          {
-              // Pop the state number.
-              stack.pop();
+          while (rhsLength-- > 0) {
+            // Pop the state number.
+            stack.pop();
 
-              // Pop the stack entry.
-              let stackEntry = stack.pop();
+            // Pop the stack entry.
+            let stackEntry = stack.pop();
 
-              // Collect all semantic values from the stack
-              // to the arguments list, which is passed to the
-              // semantic action handler.
-              if (hasSemanticAction) {
-                semanticActionArgs.unshift(stackEntry.semanticValue);
+            // Collect all semantic values from the stack
+            // to the arguments list, which is passed to the
+            // semantic action handler.
+            if (hasSemanticAction) {
+              semanticValueArgs.unshift(stackEntry.semanticValue);
+
+              if (locationArgs) {
+                locationArgs.unshift(stackEntry.loc);
               }
-
+            }
           }
         }
 
@@ -269,6 +336,7 @@ class yyparse {
         let reduceStackEntry = new StackEntry({
           symbol: symbolToReduceWith,
           semanticValue: null, // updated further if there is semantic action.
+          loc: null, // updated later
         });
 
         // Execute the semantic action handler.
@@ -279,11 +347,22 @@ class yyparse {
           const semanticActionName = production[2];
           const semanticActionHandler = this[semanticActionName];
 
+          const semanticActionArgs = (
+            locationArgs !== null
+              ? semanticValueArgs.concat(locationArgs)
+              : semanticValueArgs
+          );
+
           // Call the action, the result is in __.
           semanticActionHandler.apply(this, semanticActionArgs);
 
           // And patch the `semanticValue` with the result.
           reduceStackEntry.semanticValue = __;
+
+          // Add location object if needed.
+          if (locationArgs) {
+            reduceStackEntry.loc = __loc;
+          }
         }
 
         // Then push LHS (reduced entry) onto the stack.

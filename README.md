@@ -406,7 +406,7 @@ The `exp` can be accessed as `$1`, the `$2` would contain `'+'`, and `$3` corres
 Sometimes using positioned arguments can be less readable, and may cause refactoring issues. E.g. if some symbol is removed from the production, the handler code should be updated:
 
 ```
-exp : exp term { $$ = $1 + $2 }
+exp : '+' exp term { $$ = $2 + $3 }
 ```
 
 In this case using _named arguments_ might be more suitable:
@@ -418,7 +418,7 @@ exp : exp '+' term { $$ = $exp + $term }
 Still the same, even if the production is changed:
 
 ```
-exp : exp term { $$ = $exp + $term }
+exp : '+' exp term { $$ = $exp + $term }
 ```
 
 Notice though, that for _duplicated symbols_ named notation doesn't work, since causes ambiguity:
@@ -433,7 +433,7 @@ In this case the positioned arguments should be used:
 exp : exp '+' exp { $$ = $1 + $3 } /* OK! */
 ```
 
-### Capture location objects
+### Capturing location objects
 
 For some tools (e.g source-code transformation tools) it is important not only to produce AST nodes, but also to capture all the locations in the original source code. _Syntax_ supports `--loc` option for this. A default structure of a location object is the same as for a token:
 
