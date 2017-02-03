@@ -409,19 +409,19 @@ Sometimes using positioned arguments can be less readable, and may cause refacto
 exp : exp term { $$ = $1 + $2 }
 ```
 
-In this case using _named arguments_ might more suitable:
+In this case using _named arguments_ might be more suitable:
 
 ```
 exp : exp '+' term { $$ = $exp + $term }
 ```
 
-And still the same even if the production is changed:
+Still the same, even if the production is changed:
 
 ```
 exp : exp term { $$ = $exp + $term }
 ```
 
-Notice though, that for _duplicated symbols_ named notation doesn't fit, since would cause ambiguity:
+Notice though, that for _duplicated symbols_ named notation doesn't work, since causes ambiguity:
 
 ```
 exp : exp '+' exp { $$ = $exp + $exp } /* ERROR! */
