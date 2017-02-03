@@ -459,7 +459,9 @@ exp : exp + exp
 
     // Default algorithm.
     @$.startLine = @1.startLine;
-    @$.endLine = @3.startLine;
+    @$.endLine = @3.endLine;
+    @$.startColumn = @1.startColumn;
+    @$.endColumn = @3.endColumn;
     ...
   }
 ```
