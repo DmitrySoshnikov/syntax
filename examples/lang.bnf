@@ -606,8 +606,28 @@ PropertyAssignment
  */
 PropertyName
   : StringLiteral
+  | Keyword
   | NumericLiteral
   | Identifier
+  ;
+
+/**
+ * Keyword.
+ */
+Keyword
+  : LET
+  | IF
+  | ELSE
+  | TRUE
+  | FALSE
+  | NULL
+  | RETURN
+  | FN
+  | DO
+  | WHILE
+  | FOR
+  | BREAK
+  | CONTINUE
   ;
 
 /**

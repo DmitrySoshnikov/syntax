@@ -26,19 +26,19 @@
     // ------------------------------------------------
     // Keywords.
 
-    [`let`,                     `return 'LET'`],
-    [`if`,                      `return 'IF'`],
-    [`else`,                    `return 'ELSE'`],
-    [`true`,                    `return 'TRUE'`],
-    [`false`,                   `return 'FALSE'`],
-    [`null`,                    `return 'NULL'`],
-    [`return`,                  `return 'RETURN'`],
-    [`fn`,                      `return 'FN'`],
-    [`do`,                      `return 'DO'`],
-    [`while`,                   `return 'WHILE'`],
-    [`for`,                     `return 'FOR'`],
-    [`break`,                   `return 'BREAK'`],
-    [`continue`,                `return 'CONTINUE'`],
+    [`\\blet\\b`,                  `return 'LET'`],
+    [`\\b\\bif\\b`,                `return 'IF'`],
+    [`\\belse\\b`,                 `return 'ELSE'`],
+    [`\\btrue\\b`,                 `return 'TRUE'`],
+    [`\\bfalse\\b`,                `return 'FALSE'`],
+    [`\\bnull\\b`,                 `return 'NULL'`],
+    [`\\breturn\\b`,               `return 'RETURN'`],
+    [`\\bfn\\b`,                   `return 'FN'`],
+    [`\\bdo\\b`,                   `return 'DO'`],
+    [`\\bwhile\\b`,                `return 'WHILE'`],
+    [`\\bfor\\b`,                  `return 'FOR'`],
+    [`\\bbreak\\b`,                `return 'BREAK'`],
+    [`\\bcontinue\\b`,             `return 'CONTINUE'`],
 
     // ------------------------------------------------
     // Symbols.

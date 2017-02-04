@@ -103,3 +103,30 @@ let config = {
   "x": x,
   "y": y,
 });
+
+/**
+ * Two nested empty blocks.
+ */
+
+{
+  {
+
+  }
+}
+
+/**
+ * Keywords as property names (object followed by keyword `if`).
+ */
+({
+  if: 10,
+  while: 20,
+});
+
+/**
+ * Block followed by keyword `if`.
+ */
+{
+  if (x) {
+    print(1);
+  }
+}
