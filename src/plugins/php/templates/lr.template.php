@@ -26,6 +26,7 @@ class yyparse {
 
   private static $s = [];
   private static $__ = null;
+  private static $__loc = null;
 
   private static $on_parse_begin = null;
   private static $on_parse_end = null;
@@ -38,6 +39,24 @@ class yyparse {
   private static $tokenizer = null;
 
   <<PRODUCTION_HANDLERS>>
+
+  private static $shouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
+
+  private static function yyloc($start, $end) {
+    // Epsilon doesn't produce location.
+    if (!$start || !$end) {
+      return !$start ? $end : $static;
+    }
+
+    return array(
+      'startOffset' => $start['startOffset'],
+      'endOffset' => $end['endOffset'],
+      'startLine' => $start['startLine'],
+      'endLine' => $end['endLine'],
+      'startColumn' => $start['startColumn'],
+      'endColumn' => $end['endColumn'],
+    );
+  }
 
   public static function setTokenizer($tokenizer) {
     self::$tokenizer = $tokenizer;
@@ -69,78 +88,124 @@ class yyparse {
 
     $tokenizer->initString($string);
 
-    $s = &self::$s;
-    $s = ['0'];
+    $stack = &self::$s;
+    $stack = ['0'];
 
-    $tks = &self::$tks;
-    $tbl = &self::$tbl;
-    $ps = &self::$ps;
+    $tokens = &self::$tks;
+    $table = &self::$tbl;
+    $productions = &self::$ps;
 
-    $t = $tokenizer->getNextToken();
-    $st = null;
+    $token = $tokenizer->getNextToken();
+    $shifted_token = null;
 
     do {
-      if (!$t) {
+      if (!$token) {
         self::unexpectedEndOfInput();
       }
 
-      $sta = end($s);
-      $clm = $tks[$t['type']];
-      $e = $tbl[$sta][$clm];
+      $state = end($stack);
+      $column = $tokens[$token['type']];
+      $entry = $table[$state][$column];
 
-      if (!$e) {
-        self::unexpectedToken($t);
+      if (!$entry) {
+        self::unexpectedToken($token);
       }
 
-      if ($e[0] === 's') {
+      if ($entry[0] === 's') {
+        $loc = null;
+
+        if (self::$shouldCaptureLocations) {
+          $loc = array(
+            'startOffset' => $token['startOffset'],
+            'endOffset'=> $token['endOffset'],
+            'startLine' => $token['startLine'],
+            'endLine' => $token['endLine'],
+            'startColumn' => $token['startColumn'],
+            'endColumn' => $token['endColumn'],
+          );
+        }
+
         array_push(
-          $s,
-          array('symbol' => $tks[$t['type']], 'semanticValue' => $t['value']),
-          intval(substr($e, 1))
+          $stack,
+          array(
+            'symbol' => $tokens[$token['type']],
+            'semanticValue' => $token['value'],
+            'loc' => $loc,
+          ),
+          intval(substr($entry, 1))
         );
-        $st = $t;
-        $t = $tokenizer->getNextToken();
-      } else if ($e[0] === 'r') {
-        $pn = intval(substr($e, 1));
-        $p = $ps[$pn];
-        $hsa = count($p) > 2;
-        $saa = $hsa ? [] : null;
+        $shifted_token = $token;
+        $token = $tokenizer->getNextToken();
+      } else if ($entry[0] === 'r') {
+        $production_number = intval(substr($entry, 1));
+        $production = $productions[$production_number];
+        $has_semantic_action = count($production) > 2;
+        $semantic_value_args = $has_semantic_action ? [] : null;
 
-        if ($p[1] !== 0) {
-          $rhsl = $p[1];
-          while ($rhsl-- > 0) {
-            array_pop($s);
-            $se = array_pop($s);
+        $location_args = (
+          $has_semantic_action && self::$shouldCaptureLocations
+            ? []
+            : null
+        );
 
-            if ($hsa) {
-              array_unshift($saa, $se['semanticValue']);
+        if ($production[1] !== 0) {
+          $rhs_length = $production[1];
+          while ($rhs_length-- > 0) {
+            array_pop($stack);
+            $stack_entry = array_pop($stack);
+
+            if ($has_semantic_action) {
+              array_unshift(
+                $semantic_value_args,
+                $stack_entry['semanticValue']
+              );
+
+              if ($location_args !== null) {
+                array_unshift(
+                  $location_args,
+                  $stack_entry['loc']
+                );
+              }
             }
           }
         }
 
-        $rse = array('symbol' => $p[0]);
+        $reduce_stack_entry = array('symbol' => $production[0]);
 
-        if ($hsa) {
-          self::$yytext = $st ? $st['value'] : null;
-          self::$yyleng = $st ? strlen($st['value']) : null;
+        if ($has_semantic_action) {
+          self::$yytext = $shifted_token ? $shifted_token['value'] : null;
+          self::$yyleng = $shifted_token ? strlen($shifted_token['value']) : null;
 
-          forward_static_call_array(array('self', $p[2]), $saa);
-          $rse['semanticValue'] = self::$__;
+          forward_static_call_array(
+            array('self', $production[2]),
+            $location_args !== null
+              ? array_merge($semantic_value_args, $location_args)
+              : $semantic_value_args
+          );
+
+          $reduce_stack_entry['semanticValue'] = self::$__;
+
+          if ($location_args !== null) {
+            $reduce_stack_entry['loc'] = self::$__loc;
+          }
         }
 
-        array_push(
-          $s,
-          $rse,
-          $tbl[end($s)][$p[0]]
-        );
-      } else if ($e === 'acc') {
-        array_pop($s);
-        $parsed = array_pop($s);
+        $next_state = end($stack);
+        $symbol_to_reduce_with = $production[0];
 
-        if (count($s) !== 1 ||
-            $s[0] !== '0' ||
+        array_push(
+          $stack,
+          $reduce_stack_entry,
+          $table[$next_state][$symbol_to_reduce_with]
+        );
+      } else if ($entry === 'acc') {
+        array_pop($stack);
+        $parsed = array_pop($stack);
+
+        if (count($stack) !== 1 ||
+            $stack[0] !== '0' ||
             $tokenizer->hasMoreTokens()) {
-          self::unexpectedToken($t);
+          self::unexpectedToken($token);
         }
 
         $parsed_value = array_key_exists('semanticValue', $parsed)
@@ -155,7 +220,7 @@ class yyparse {
         return $parsed_value;
       }
 
-    } while ($tokenizer->hasMoreTokens() || count($s) > 1);
+    } while ($tokenizer->hasMoreTokens() || count($stack) > 1);
   }
 
   private static function unexpectedToken($token) {

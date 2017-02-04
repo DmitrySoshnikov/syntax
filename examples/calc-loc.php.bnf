@@ -1,0 +1,93 @@
+/**
+ * Captures location info. PHP version.
+ *
+ * In order to capture locations, pass the `--loc` option.
+ *
+ * Locations in handlers are accessible via `@` notation, e.g. @1, @2, etc.
+ * A named accessors are available as well: @foo, @bar.
+ *
+ * A location is an object of structure:
+ *
+ * {
+ *   startOffset,
+ *   endOffset,
+ *   startLine,
+ *   endLine,
+ *   startColumn,
+ *   endColum,
+ * }
+ *
+ * The resulting location is in the @$. It is calculated automatically from
+ * first and last symbol on a RHS handle, and it also can be overridden
+ * manually.
+ *
+ * ./bin/syntax -g examples/calc-loc.php.bnf -m slr1 -o ~/Parser.php -w --loc
+ *
+ */
+
+%{
+
+class BinaryExpression {
+  public function __construct($op, $left, $right, $loc) {
+    $this->op = $op;
+    $this->left = $left;
+    $this->right = $right;
+    $this->loc = $loc;
+  }
+}
+
+function Loc($s, $e) {
+  // Same as default result location.
+  return array(
+    'startOffset' => $s['startOffset'],
+    'endOffset' => $e['endOffset'],
+    'startLine' => $s['startLine'],
+    'endLine' => $e['endLine'],
+    'startColumn' => $s['startColumn'],
+    'endColumn' => $e['endColumn'],
+  );
+}
+
+class NumericLiteral {
+  public function __construct($value, $loc) {
+    $this->value = $value;
+    $this->loc = $loc;
+  }
+}
+
+%}
+
+%left '+'
+%left '*'
+
+%%
+
+exp
+  : exp '+' exp
+    /* Explicitly calculate location */
+    { $$ = new BinaryExpression('+', $1, $3, Loc(@1, @3)) }
+
+  | exp '*' exp
+    /* Use default result location: @$ */
+    { $$ = new BinaryExpression('*', $1, $3, @$) }
+
+  | '(' exp ')'
+    { $$ = $2 }
+
+  | number
+    /* Named args and position */
+    { $$ = new NumericLiteral($number, @number) }
+  ;
+
+literal
+  : number
+  ;
+
+number
+  : number digit
+    { $$ = intval($number . $digit); }
+
+  | /* empty */ { $$ = ''; }
+  ;
+
+digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';

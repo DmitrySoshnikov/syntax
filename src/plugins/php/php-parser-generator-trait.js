@@ -115,6 +115,8 @@ const PHPParserGeneratorTrait = {
       .replace(/\$?yytext/g, 'yyparse::$yytext')
       .replace(/\$?yyleng/g, 'yyparse::$yyleng')
       .replace(/\b__\b/g, 'yyparse::$__')
+      .replace(/\b__loc\b/g, 'yyparse::$__loc')
+      .replace(/yyloc/g, 'yyparse::yyloc')
       .replace(/\b_(\d+)/g, '$_$1');
   },
 
