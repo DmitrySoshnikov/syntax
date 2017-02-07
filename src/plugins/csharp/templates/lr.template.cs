@@ -25,6 +25,39 @@ using System.Text.RegularExpressions;
 namespace SyntaxParser
 {
     // --------------------------------------------
+    // Location object.
+    public class YyLoc
+    {
+        public YyLoc() {}
+
+        public int StartOffset;
+        public int EndOffset;
+        public int StartLine;
+        public int EndLine;
+        public int StartColumn;
+        public int EndColumn;
+
+        public static YyLoc yyloc(dynamic start, dynamic end)
+        {
+            // Epsilon doesn't produce location.
+            if (start == null || end == null)
+            {
+                return start == null ? end : start;
+            }
+
+            return new YyLoc()
+            {
+              StartOffset = start.StartOffset,
+              EndOffset = end.EndOffset,
+              StartLine = start.StartLine,
+              EndLine = end.EndLine,
+              StartColumn = start.StartColumn,
+              EndColumn = end.EndColumn,
+            };
+        }
+    }
+
+    // --------------------------------------------
     // Parser.
 
     /**
@@ -37,11 +70,13 @@ namespace SyntaxParser
     {
         public int Symbol;
         public object SemanticValue;
+        public YyLoc Loc;
 
-        public StackEntry(int symbol, object semanticValue)
+        public StackEntry(int symbol, object semanticValue, YyLoc loc)
         {
             Symbol = symbol;
             SemanticValue = semanticValue;
+            Loc = loc;
         }
     }
 
@@ -128,6 +163,17 @@ namespace SyntaxParser
          * handler. In the grammar usually used as $$.
          */
         private dynamic __ = null;
+
+        /**
+         * __loc holds a result location info. In the grammar
+         * usually used as @$.
+         */
+        private dynamic __loc = null;
+
+        /**
+         * Whether locations should be captured and propagated.
+         */
+        private bool mShouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
 
         /**
          * On parse begin callback.
@@ -219,8 +265,23 @@ namespace SyntaxParser
                 // On shift we push the token, and the next state on the stack.
                 if (entry[0] == 's')
                 {
+                    YyLoc loc = null;
+
+                    if (mShouldCaptureLocations)
+                    {
+                        loc = new YyLoc
+                        {
+                            StartOffset = token.StartOffset,
+                            EndOffset = token.EndOffset,
+                            StartLine = token.StartLine,
+                            EndLine = token.EndLine,
+                            StartColumn = token.StartColumn,
+                            EndColumn = token.EndColumn,
+                        };
+                    }
+
                     // Push token.
-                    mStack.Push(new StackEntry(token.Type, token.Value));
+                    mStack.Push(new StackEntry(token.Type, token.Value, loc));
 
                     // Push next state number: "s5" -> 5
                     mStack.Push(Convert.ToInt32(entry.Substring(1)));
@@ -246,7 +307,12 @@ namespace SyntaxParser
                     // {0, 3, "_handler1"} - has handler.
                     var hasSemanticAction = production.Length > 2;
 
-                    var semanticActionArgs = new List<object>();
+                    var semanticValueArgs = new List<object>();
+                    List<object> locationArgs = null;
+
+                    if (mShouldCaptureLocations) {
+                        locationArgs = new List<object>();
+                    }
 
                     // The length of RHS is stored in the production[1].
                     var rhsLength = (int)production[1];
@@ -265,7 +331,12 @@ namespace SyntaxParser
                             // semantic action handler.
                             if (hasSemanticAction)
                             {
-                                semanticActionArgs.Insert(0, stackEntry.SemanticValue);
+                                semanticValueArgs.Insert(0, stackEntry.SemanticValue);
+
+                                if (mShouldCaptureLocations)
+                                {
+                                    locationArgs.Insert(0, stackEntry.Loc);
+                                }
                             }
 
                         }
@@ -274,7 +345,7 @@ namespace SyntaxParser
                     var previousState = Convert.ToInt32(mStack.Peek());
                     var symbolToReduceWith = (int)production[0];
 
-                    var reduceStackEntry = new StackEntry(symbolToReduceWith, null);
+                    var reduceStackEntry = new StackEntry(symbolToReduceWith, null, null);
 
                     // Execute the semantic action handler.
                     if (hasSemanticAction)
@@ -284,9 +355,22 @@ namespace SyntaxParser
 
                         var semanticAction = (string)production[2];
                         MethodInfo semanticActionHandler = GetType().GetMethod(semanticAction);
+
+                        var semanticActionArgs = semanticValueArgs;
+
+                        if (mShouldCaptureLocations)
+                        {
+                            semanticActionArgs.AddRange(locationArgs);
+                        }
+
                         // Call the action, the result is in __.
                         semanticActionHandler.Invoke(this, semanticActionArgs.ToArray());
                         reduceStackEntry.SemanticValue = __;
+
+                        if (mShouldCaptureLocations)
+                        {
+                            reduceStackEntry.Loc = __loc;
+                        }
                     }
 
                     // Then push LHS onto the stack.

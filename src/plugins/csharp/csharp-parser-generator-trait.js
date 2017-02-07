@@ -82,7 +82,7 @@ const CSharpParserGeneratorTrait = {
       return null;
     }
 
-    action = this._scopeVars(action) + ';';
+    action = this._actionFromHandler(action);
 
     const args = this
       .getSemanticActionParams(production)
@@ -111,11 +111,29 @@ const CSharpParserGeneratorTrait = {
   },
 
   /**
+   * Creates an action from raw handler.
+   */
+  _actionFromHandler(handler) {
+    let action = (this._scopeVars(handler) || '').trim();
+
+    if (!action) {
+      return 'return null;';
+    }
+
+    if (!/;\s*$/.test(action)) {
+      action += ';';
+    }
+
+    return action;
+  },
+
+  /**
    * Generates rules for tokenizer.
    */
   generateLexRules() {
     const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
-      const action = this._scopeVars(lexRule.getRawHandler()) + ';';
+      let action = this._actionFromHandler(lexRule.getRawHandler());
+
       this._lexHandlers.push({args: '', action});
 
       // Example: new string[] {@"^\s+", "_lexRule1"},
@@ -150,7 +168,8 @@ const CSharpParserGeneratorTrait = {
   _scopeVars(code) {
     return code
       .replace(/yytext/g, 'yyparse.yytext')
-      .replace(/yyleng/g, 'yyparse.yyleng');
+      .replace(/yyleng/g, 'yyparse.yyleng')
+      .replace(/yyloc/g, 'YyLoc.yyloc');
   },
 
   /**
