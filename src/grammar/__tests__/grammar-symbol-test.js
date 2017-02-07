@@ -8,6 +8,14 @@ import {EOF, EPSILON} from '../../special-symbols';
 
 describe('grammar-symbol', () => {
 
+  it('singleton', () => {
+    expect(GrammarSymbol.get('A')).toBe(GrammarSymbol.get('A'));
+  });
+
+  it('instance', () => {
+    expect(new GrammarSymbol('A')).not.toBe(new GrammarSymbol('A'));
+  });
+
   it('terminal', () => {
     expect((new GrammarSymbol(`"a"`)).isTerminal()).toBe(true);
     expect((new GrammarSymbol(`'a'`)).isTerminal()).toBe(true);

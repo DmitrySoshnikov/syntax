@@ -189,22 +189,22 @@ export default class Production {
   }
 
   _normalize() {
-    let LHS = new GrammarSymbol(this._rawLHS);
+    let LHS = GrammarSymbol.get(this._rawLHS);
     let RHS = [];
 
     // If no RHS provided, assume it's ε. We support
     // both formats, explicit: F -> ε, and implicit: F ->
 
     if (!this._rawRHS) {
-      RHS.push(new GrammarSymbol(EPSILON));
+      RHS.push(GrammarSymbol.get(EPSILON));
     } else {
       let rhsProd = this._rawRHS.split(/\s+/);
       for (let i = 0; i < rhsProd.length; i++) {
         if (rhsProd[i] === '"' && rhsProd[i + 1] === '"') {
-          RHS.push(new GrammarSymbol('" "'));
+          RHS.push(GrammarSymbol.get('" "'));
           i++;
         } else {
-          RHS.push(new GrammarSymbol(rhsProd[i]));
+          RHS.push(GrammarSymbol.get(rhsProd[i]));
         }
       }
     }

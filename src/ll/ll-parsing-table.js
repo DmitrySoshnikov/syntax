@@ -67,7 +67,7 @@ export default class LLParsingTable {
     this._table = this._build();
 
     this._tableTokens = grammar.getTerminals()
-      .concat(grammar.getTokens(), new GrammarSymbol(EOF));
+      .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
   }
 
   get() {

@@ -155,7 +155,7 @@ export default class Grammar {
     }
 
     this._tokens = Array.isArray(tokens)
-      ? tokens.map(token => new GrammarSymbol(token))
+      ? tokens.map(token => GrammarSymbol.get(token))
       : this.getTokens();
 
     // Lexical grammar.
@@ -459,7 +459,7 @@ export default class Grammar {
    */
   isTokenSymbol(symbol) {
     if (!(symbol instanceof GrammarSymbol)) {
-      symbol = new GrammarSymbol(symbol);
+      symbol = GrammarSymbol.get(symbol);
     }
 
     return symbol.isTerminal() ||
@@ -551,7 +551,7 @@ export default class Grammar {
     }
 
     return Array.isArray(tokens)
-      ? tokens.map(token => new GrammarSymbol(token))
+      ? tokens.map(token => GrammarSymbol.get(token))
       : this.getTokens();
   }
 

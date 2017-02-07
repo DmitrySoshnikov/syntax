@@ -6,6 +6,12 @@
 import {EOF, EPSILON} from '../special-symbols';
 
 /**
+ * Symbols are stored in the registry, and retrieved from it
+ * if the symbol was already created.
+ */
+const registry = {};
+
+/**
  * Class encapsulates operations with one
  * grammar symbol (terminal or non-terminal)
  */
@@ -23,6 +29,16 @@ export default class GrammarSymbol {
 
     return quoteRe.test(this._symbol[0]) &&
       quoteRe.test(this._symbol[this._symbol.length - 1]);
+  }
+
+  /**
+   * Returns a symbol from the registry, or creates one.
+   */
+  static get(symbol) {
+    if (!registry.hasOwnProperty(symbol)) {
+      registry[symbol] = new GrammarSymbol(symbol);
+    }
+    return registry[symbol];
   }
 
   /**

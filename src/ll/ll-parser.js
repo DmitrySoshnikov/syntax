@@ -71,8 +71,8 @@ export default class LLParser {
 
     // Initialize the stack with the `$` at the bottom, and the start symbol.
     this._stack = [
-      new GrammarSymbol(EOF),
-      new GrammarSymbol(this._grammar.getStartSymbol()),
+      GrammarSymbol.get(EOF),
+      GrammarSymbol.get(this._grammar.getStartSymbol()),
     ];
 
     this._productionNumbers = [];

@@ -107,7 +107,7 @@ export default class LRParsingTable {
     this._shouldResolveConflicts = resolveConflicts;
 
     this._action = grammar.getTerminals()
-      .concat(grammar.getTokens(), new GrammarSymbol(EOF));
+      .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
 
     this._goto = grammar.getNonTerminals();
     this._table = {};
