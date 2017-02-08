@@ -12,6 +12,8 @@ import re as _syntax_tool_re
 
 _lex_rules = <<LEX_RULES>>
 
+_lex_rules_by_conditions = <<LEX_RULES_BY_START_CONDITIONS>>
+
 EOF_TOKEN = {
   'type': EOF,
   'value': EOF
@@ -34,6 +36,9 @@ class Tokenizer(object):
     token_start_column = 0
     token_end_column = 0
 
+    _tokens_queue = []
+    _states = []
+
     def __init__(self, string=None):
         if not string is None:
             self.init_string(string)
@@ -42,6 +47,8 @@ class Tokenizer(object):
         self._string = string + EOF
         self._cursor = 0
         self._tokens_queue = []
+
+        self._states = ['INITIAL']
 
         self._current_line = 1
         self._current_column = 0
@@ -54,6 +61,25 @@ class Tokenizer(object):
         self.token_end_line = 0
         self.token_start_column = 0
         self.token_end_column = 0
+
+    # --------------------------------------------
+    # States.
+
+    def get_current_state(self):
+        return self._states[-1]
+
+    def push_state(self, state):
+        self._states.append(state)
+
+    # Alias for `pushState`.
+    def begin(self, state):
+        self.push_state(state)
+
+    def pop_state(self):
+        if len(self._states) > 1:
+            return self._states.pop()
+
+        return self._states[0]
 
     def get_next_token(self):
         global __, yytext, yyleng
@@ -70,12 +96,16 @@ class Tokenizer(object):
 
         string = self._string[self._cursor:]
 
-        for lex_rule in _lex_rules:
+        lex_rules_for_state = _lex_rules_by_conditions[self.get_current_state()]
+
+        for lex_rule_index in lex_rules_for_state:
+            lex_rule = _lex_rules[lex_rule_index]
+
             matched = self._match(string, lex_rule[0])
             if matched != None:
                 yytext = matched
                 yyleng = len(yytext)
-                token = lex_rule[1]()
+                token = lex_rule[1](self)
                 if token is None:
                     return self.get_next_token()
 

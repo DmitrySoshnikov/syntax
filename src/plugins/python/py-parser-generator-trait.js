@@ -66,7 +66,7 @@ const PythonParserGeneratorTrait = {
   generateLexRules() {
     const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
       const action = lexRule.getRawHandler();
-      this._lexHandlers.push({args: '', action});
+      this._lexHandlers.push({args: 'self', action});
 
       return `['${lexRule.getRawMatcher()}', ` +
         `_lex_rule${this._lexHandlers.length}]`;
@@ -76,7 +76,20 @@ const PythonParserGeneratorTrait = {
   },
 
   generateLexRulesByStartConditions() {
-    // TODO
+    const lexGrammar = this._grammar.getLexGrammar();
+    const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
+    const result = {};
+
+    for (const condition in lexRulesByConditions) {
+      result[condition] = lexRulesByConditions[condition].map(lexRule =>
+        lexGrammar.getRuleIndex(lexRule)
+      );
+    }
+
+    this.writeData(
+      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      `${JSON.stringify(result)}`,
+    );
   },
 
   /**

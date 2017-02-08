@@ -1,5 +1,5 @@
 /**
- * Start conditions of lex rules. Tokenizer states.
+ * Start conditions of lex rules. Tokenizer states. Python version.
  *
  * Tokenizer rules may provide start conditions. Such rules are executed
  * only when lexer enters the state corresponding to the names of the
@@ -34,10 +34,10 @@
  * In the grammar below we has `comment` tokenizer state, which allows us
  * to skip all the comment characters, but still to count number of lines.
  *
- *   ./bin/syntax -g examples/lexer-start-conditions.g.js -m slr1 -f ~/test.js
+ *   ./bin/syntax -g examples/lexer-start-conditions.py.g -m slr1 -f ~/test.txt
  */
 
-// Example of ~/test.js
+// Example of ~/test.txt
 //
 //  1.
 //  2.  /* Hello world
@@ -52,22 +52,11 @@
 
 {
   "moduleInclude": `
-    let lines = 1;
+    lines = 1
 
-    yyparse.onParseBegin = (string) => {
-      // Print the string with line numbers.
+    def on_parse_end(_result):
+      print('Number of lines: ' + str(lines))
 
-      let code = string
-        .split('\\n')
-        .map((s, line) => (line + 1) + '. ' + s)
-        .join('\\n');
-
-      console.log(code + '\\n');
-    };
-
-    yyparse.onParseEnd = () => {
-      console.log('Number of lines: ' + lines + '\\n');
-    };
   `,
 
   "lex": {
@@ -79,25 +68,31 @@
 
       // On `/*` we enter the comment state:
 
-      ["\\/\\*", "this.pushState('comment');      /* skip comments */"],
+      ["\\/\\*", "self.push_state('comment')      # skip comments"],
 
       // On `*/` being in `comment` state we return to the initial state:
 
-      [["comment"], "\\*+\\/", "this.popState();  /* skip comments */"],
+      [["comment"], "\\*+\\/", "self.pop_state()  # skip comments"],
 
       // Being inside the `comment` state, skip all chars, except new lines
       // which we count.
 
-      [["comment"], "[^*\\n]+",                  "/* skip comments */"],
-      [["comment"], "\\*+[^*/\\n]*",             "/* skip comments */"],
+      [["comment"], "[^*\\n]+",                  "# skip comments"],
+      [["comment"], "\\*+[^*/\\n]*",             "# skip comments"],
 
       // Count lines in comments.
-      [["comment"], "\\n",  "lines++;             /* skip new lines in comments */"],
+      [["comment"], "\\n", `
+        global lines
+        lines += 1                                # skip new lines in comments`
+      ],
 
       // In INITIAL state, count line numbers as well:
-      ["\\n",               "lines++              /* skip new lines */"],
+      ["\\n", `
+        global lines
+        lines += 1                                # skip new lines
+      `],
 
-      [["*"], " +",                              "/* skip spaces in any state */"],
+      [["*"], " +",                              "# skip spaces in any state "],
 
       // Main program consisting only of one word "Main"
       ["Main", "return 'MAIN'"],
