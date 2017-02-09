@@ -71,7 +71,7 @@ class Tokenizer(object):
     def push_state(self, state):
         self._states.append(state)
 
-    # Alias for `pushState`.
+    # Alias for `push_state`.
     def begin(self, state):
         self.push_state(state)
 

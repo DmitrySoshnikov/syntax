@@ -93,7 +93,20 @@ const RubyParserGeneratorTrait = {
   },
 
   generateLexRulesByStartConditions() {
-    // TODO
+    const lexGrammar = this._grammar.getLexGrammar();
+    const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
+    const result = {};
+
+    for (const condition in lexRulesByConditions) {
+      result[condition] = lexRulesByConditions[condition].map(lexRule =>
+        lexGrammar.getRuleIndex(lexRule)
+      );
+    }
+
+    this.writeData(
+      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      `${this._toRubyHash(result)}`,
+    );
   },
 
   /**
@@ -117,10 +130,17 @@ const RubyParserGeneratorTrait = {
     let result = [];
     for (let k in object) {
       let value = object[k];
-      let key = k.replace(/'/g, "\\'");
-      result.push("'" + key + "' => " + this._toRubyHash(value));
+
+      if (Array.isArray(object)) {
+        result.push(this._toRubyHash(value));
+      } else {
+        let key = k.replace(/'/g, "\\'");
+        result.push("'" + key + "' => " + this._toRubyHash(value));
+      }
     }
-    return `{${result.join(', ')}}`;
+    return Array.isArray(object)
+      ? `[${result.join(', ')}]`
+      : `{${result.join(', ')}}`;
   },
 
   /**
@@ -141,6 +161,7 @@ const RubyParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._productionHandlers,
       '_handler',
+      /* isStatic */ true,
     );
     this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
   },
@@ -148,9 +169,9 @@ const RubyParserGeneratorTrait = {
   /**
    * Generates Ruby's `def` methods for handlers.
    */
-  _generateHandlers(handlers, name) {
+  _generateHandlers(handlers, name, isStatic = false) {
     return handlers.map(({args, action}, index) => {
-      return `def self.${name}${index + 1}(${args})\n` +
+      return `def ${isStatic ? 'self.' : ''}${name}${index + 1}(${args})\n` +
         `${action}\nend`
     });
   },

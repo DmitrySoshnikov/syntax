@@ -8,10 +8,13 @@
 
 class SyntaxToolTokenizer__
   @@lex_rules = <<LEX_RULES>>
+  @@lex_rules_by_conditions = <<LEX_RULES_BY_START_CONDITIONS>>
+
 
   @string = ''
   @cursor = 0
   @tokens_queue = []
+  @states = []
 
   # Line-based location tracking.
   @current_line = 1
@@ -37,6 +40,7 @@ class SyntaxToolTokenizer__
     @string = string + YYParse::EOF
     @cursor = 0
     @tokens_queue = []
+    @states = ['INITIAL']
 
     @current_line = 1
     @current_column = 0
@@ -48,6 +52,30 @@ class SyntaxToolTokenizer__
     @token_end_line = 0
     @token_start_column = 0
     @token_end_column = 0
+  end
+
+  # --------------------------------------------
+  # States.
+
+  def get_current_state
+    @states.last
+  end
+
+  def push_state(state)
+    @states.push(state)
+  end
+
+  # Alias for `push_state`.
+  def begin(state)
+    push_state(state)
+  end
+
+  def pop_state
+    if @states.length > 1
+      return @states.pop
+    end
+
+    @states[0]
   end
 
   def get_next_token
@@ -64,13 +92,17 @@ class SyntaxToolTokenizer__
 
     string = @string[@cursor..-1]
 
-    @@lex_rules.each { |lex_rule|
+    lex_rules_for_state = @@lex_rules_by_conditions[get_current_state]
+
+    lex_rules_for_state.each { |lex_rule_index|
+      lex_rule = @@lex_rules[lex_rule_index]
+
       matched = match(string, lex_rule[0])
 
       if matched
         YYParse.yytext = matched
         YYParse.yyleng = matched.length
-        token = SyntaxToolTokenizer__.send(lex_rule[1])
+        token = self.send(lex_rule[1])
 
         if not token
           return get_next_token
