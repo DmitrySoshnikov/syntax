@@ -21,11 +21,30 @@ let yytext;
 let yyleng;
 let yy = {};
 let __;
+let __loc;
+
+function yyloc(start, end) {
+  // Epsilon doesn't produce location.
+  if (!start || !end) {
+    return start || end;
+  }
+
+  return {
+    startOffset: start.startOffset,
+    endOffset: end.endOffset,
+    startLine: start.startLine,
+    endLine: end.endLine,
+    startColumn: start.startColumn,
+    endColumn: end.endColumn,
+  };
+}
+
+let shouldCaptureLocations = false;
 
 const EOF = '$';
 
-const ps = [[-1,1],
-[0,3,( _1,  _2,  _3) => { 
+const ps = [[-1,1,(_1) => { __ = _1 }],
+[0,3,(_1,_2,_3) => { 
                       const spec = Object.assign({bnf: _3}, extra);
 
                       if (operators.length) {
@@ -38,43 +57,43 @@ const ps = [[-1,1],
 
                       __ = spec;
                      }],
-[1,1],
+[1,1,(_1) => { __ = _1 }],
 [1,0],
-[2,1],
+[2,1,(_1) => { __ = _1 }],
 [2,2],
-[3,1,( _1) => { extra.lex = _1 }],
-[3,1,( _1) => { extra.moduleInclude = _1 }],
-[3,2,( _1,  _2) => { extra.start = _2 }],
-[3,2,( _1,  _2) => { operators.push(['left'].concat(_2)) }],
-[3,2,( _1,  _2) => { operators.push(['right'].concat(_2)) }],
-[3,2,( _1,  _2) => { operators.push(['nonassoc'].concat(_2)) }],
-[3,2,( _1,  _2) => { tokens.push(..._2) }],
-[4,1,( _1) => { __ = [_1] }],
-[4,2,( _1,  _2) => { __ = _1; _1.push(_2) }],
-[5,2,( _1,  _2) => { __ = _1; __[_2[0]] = _2[1] }],
-[5,1,( _1) => { __ = {}; __[_1[0]] = _1[1] }],
-[6,4,( _1,  _2,  _3,  _4) => { __ = [_1, _3] }],
-[7,1,( _1) => { __ = _1 }],
-[8,3,( _1,  _2,  _3) => { __ = _1; _1.push(_3) }],
-[8,1,( _1) => { __ = [_1] }],
-[9,2,( _1,  _2) => { __ = [_1[0], _2]; _1[1] && __.push({prec: _1[1]}) }],
-[10,2,( _1,  _2) => { __ = [_1, _2] }],
+[3,1,(_1) => { extra.lex = _1 }],
+[3,1,(_1) => { extra.moduleInclude = _1 }],
+[3,2,(_1,_2) => { extra.start = _2 }],
+[3,2,(_1,_2) => { operators.push(['left'].concat(_2)) }],
+[3,2,(_1,_2) => { operators.push(['right'].concat(_2)) }],
+[3,2,(_1,_2) => { operators.push(['nonassoc'].concat(_2)) }],
+[3,2,(_1,_2) => { tokens.push(..._2) }],
+[4,1,(_1) => { __ = [_1] }],
+[4,2,(_1,_2) => { __ = _1; _1.push(_2) }],
+[5,2,(_1,_2) => { __ = _1; __[_2[0]] = _2[1] }],
+[5,1,(_1) => { __ = {}; __[_1[0]] = _1[1] }],
+[6,4,(_1,_2,_3,_4) => { __ = [_1, _3] }],
+[7,1,(_1) => { __ = _1 }],
+[8,3,(_1,_2,_3) => { __ = _1; _1.push(_3) }],
+[8,1,(_1) => { __ = [_1] }],
+[9,2,(_1,_2) => { __ = [_1[0], _2]; _1[1] && __.push({prec: _1[1]}) }],
+[10,2,(_1,_2) => { __ = [_1, _2] }],
 [10,0,() => { __ = '' }],
-[11,2,( _1,  _2) => { __ = _2 }],
+[11,2,(_1,_2) => { __ = _2 }],
 [11,0],
-[12,2,( _1,  _2) => { __ = _1 + ' ' + _2 }],
-[12,1,( _1) => { __ = _1 }],
-[13,1,( _1) => { __ = _1 }],
-[13,1,( _1) => { __ = _1 }],
-[13,1,( _1) => { __ = _1 }],
-[14,3,( _1,  _2,  _3) => { __ = _2 }],
+[12,2,(_1,_2) => { __ = _1 + ' ' + _2 }],
+[12,1,(_1) => { __ = _1 }],
+[13,1,(_1) => { __ = _1 }],
+[13,1,(_1) => { __ = _1 }],
+[13,1,(_1) => { __ = _1 }],
+[14,3,(_1,_2,_3) => { __ = _2 }],
 [14,0,() => { __ = null }],
-[15,1,( _1) => { __ = _1 }],
-[15,5,( _1,  _2,  _3,  _4,  _5) => { __ = _1 + _2 + _3 + _4 + _5 }],
-[15,4,( _1,  _2,  _3,  _4) => { __ = _1 + _2 + _3 + _4 }],
+[15,1,(_1) => { __ = _1 }],
+[15,5,(_1,_2,_3,_4,_5) => { __ = _1 + _2 + _3 + _4 + _5 }],
+[15,4,(_1,_2,_3,_4) => { __ = _1 + _2 + _3 + _4 }],
 [15,0,() => { __ = '' }],
-[16,2,( _1,  _2) => { __ = _1 + _2 }],
-[16,1,( _1) => { __ = _1 }]];
+[16,2,(_1,_2) => { __ = _1 + _2 }],
+[16,1,(_1) => { __ = _1 }]];
 const tks = {"%%":"17","LEX_BLOCK":"18","MODULE_INCLUDE":"19","%start":"20","%left":"21","%right":"22","%nonassoc":"23","%token":"24","SPLITTER":"25",";":"26","ID":"27","|":"28","%prec":"29","SPECIAL_CHAR":"30","STRING":"31","{":"32","}":"33","CODE":"34","$":"35"};
 const tbl = {"0":{"0":51,"1":1,"2":2,"3":3,"17":"r3","18":"s4","19":"s5","20":"s6","21":"s7","22":"s8","23":"s9","24":"s10"},"1":{"17":"s11"},"2":{"3":43,"17":"r2","18":"s4","19":"s5","20":"s6","21":"s7","22":"s8","23":"s9","24":"s10"},"3":{"17":"r4","18":"r4","19":"r4","20":"r4","21":"r4","22":"r4","23":"r4","24":"r4"},"4":{"17":"r6","18":"r6","19":"r6","20":"r6","21":"r6","22":"r6","23":"r6","24":"r6"},"5":{"17":"r7","18":"r7","19":"r7","20":"r7","21":"r7","22":"r7","23":"r7","24":"r7"},"6":{"7":44,"27":"s52"},"7":{"4":45,"13":46,"27":"s22","30":"s23","31":"s24"},"8":{"4":48,"13":46,"27":"s22","30":"s23","31":"s24"},"9":{"4":49,"13":46,"27":"s22","30":"s23","31":"s24"},"10":{"4":50,"13":46,"27":"s22","30":"s23","31":"s24"},"11":{"5":12,"6":13,"7":14,"27":"s52"},"12":{"6":15,"7":14,"27":"s52","35":"r1"},"13":{"27":"r16","35":"r16"},"14":{"25":"s16"},"15":{"27":"r15","35":"r15"},"16":{"8":17,"9":18,"10":19,"12":20,"13":21,"26":"r23","27":"s22","28":"r23","30":"s23","31":"s24","32":"r23"},"17":{"26":"s25","28":"s26"},"18":{"26":"r20","28":"r20"},"19":{"14":28,"26":"r32","28":"r32","32":"s29"},"20":{"11":39,"13":40,"26":"r25","27":"s22","28":"r25","29":"s41","30":"s23","31":"s24","32":"r25"},"21":{"26":"r27","27":"r27","28":"r27","29":"r27","30":"r27","31":"r27","32":"r27"},"22":{"17":"r28","18":"r28","19":"r28","20":"r28","21":"r28","22":"r28","23":"r28","24":"r28","26":"r28","27":"r28","28":"r28","29":"r28","30":"r28","31":"r28","32":"r28"},"23":{"17":"r29","18":"r29","19":"r29","20":"r29","21":"r29","22":"r29","23":"r29","24":"r29","26":"r29","27":"r29","28":"r29","29":"r29","30":"r29","31":"r29","32":"r29"},"24":{"17":"r30","18":"r30","19":"r30","20":"r30","21":"r30","22":"r30","23":"r30","24":"r30","26":"r30","27":"r30","28":"r30","29":"r30","30":"r30","31":"r30","32":"r30"},"25":{"27":"r17","35":"r17"},"26":{"9":27,"10":19,"12":20,"13":21,"26":"r23","27":"s22","28":"r23","30":"s23","31":"s24","32":"r23"},"27":{"26":"r19","28":"r19"},"28":{"26":"r21","28":"r21"},"29":{"15":30,"16":31,"32":"r36","33":"r36","34":"s32"},"30":{"32":"s34","33":"s33"},"31":{"32":"r33","33":"r33","34":"s38"},"32":{"32":"r38","33":"r38","34":"r38"},"33":{"26":"r31","28":"r31"},"34":{"15":35,"16":31,"32":"r36","33":"r36","34":"s32"},"35":{"32":"s34","33":"s36"},"36":{"16":37,"32":"r35","33":"r35","34":"s32"},"37":{"32":"r34","33":"r34","34":"s38"},"38":{"32":"r37","33":"r37","34":"r37"},"39":{"26":"r22","28":"r22","32":"r22"},"40":{"26":"r26","27":"r26","28":"r26","29":"r26","30":"r26","31":"r26","32":"r26"},"41":{"13":42,"27":"s22","30":"s23","31":"s24"},"42":{"26":"r24","28":"r24","32":"r24"},"43":{"17":"r5","18":"r5","19":"r5","20":"r5","21":"r5","22":"r5","23":"r5","24":"r5"},"44":{"17":"r8","18":"r8","19":"r8","20":"r8","21":"r8","22":"r8","23":"r8","24":"r8"},"45":{"13":47,"17":"r9","18":"r9","19":"r9","20":"r9","21":"r9","22":"r9","23":"r9","24":"r9","27":"s22","30":"s23","31":"s24"},"46":{"17":"r13","18":"r13","19":"r13","20":"r13","21":"r13","22":"r13","23":"r13","24":"r13","27":"r13","30":"r13","31":"r13"},"47":{"17":"r14","18":"r14","19":"r14","20":"r14","21":"r14","22":"r14","23":"r14","24":"r14","27":"r14","30":"r14","31":"r14"},"48":{"13":47,"17":"r10","18":"r10","19":"r10","20":"r10","21":"r10","22":"r10","23":"r10","24":"r10","27":"s22","30":"s23","31":"s24"},"49":{"13":47,"17":"r11","18":"r11","19":"r11","20":"r11","21":"r11","22":"r11","23":"r11","24":"r11","27":"s22","30":"s23","31":"s24"},"50":{"13":47,"17":"r12","18":"r12","19":"r12","20":"r12","21":"r12","22":"r12","23":"r12","24":"r12","27":"s22","30":"s23","31":"s24"},"51":{"35":"acc"},"52":{"17":"r18","18":"r18","19":"r18","20":"r18","21":"r18","22":"r18","23":"r18","24":"r18","25":"r18"}};
 
@@ -129,10 +148,26 @@ const EOF_TOKEN = {
 
 tokenizer = {
   initString(string) {
-    this._states = ['INITIAL'];
     this._string = string + EOF;
     this._cursor = 0;
+
+    this._states = ['INITIAL'];
     this._tokensQueue = [];
+
+    this._currentLine = 1;
+    this._currentColumn = 0;
+    this._currentLineBeginOffset = 0;
+
+    /**
+     * Matched token location data.
+     */
+    this._tokenStartOffset = 0;
+    this._tokenEndOffset = 0;
+    this._tokenStartLine = 1;
+    this._tokenEndLine = 1;
+    this._tokenStartColumn = 0;
+    this._tokenEndColumn = 0;
+
     return this;
   },
 
@@ -207,13 +242,63 @@ tokenizer = {
       }
     }
 
-    throw new Error(`Unexpected token: "${string[0]}".`);
+    throw new Error(
+      `Unexpected token: "${string[0]}" ` +
+      `at ${this._currentLine}:${this._currentColumn}.`
+    );
   },
 
-  _toToken(token, yytext = '') {
+  getCursor() {
+    return this._cursor;
+  },
+
+  getCurrentLine() {
+    return this._currentLine;
+  },
+
+  getCurrentColumn() {
+    return this._currentColumn;
+  },
+
+  _captureLocation(matched) {
+    const nlRe = /\n/g;
+
+    // Absolute offsets.
+    this._tokenStartOffset = this._cursor;
+
+    // Line-based locations, start.
+    this._tokenStartLine = this._currentLine;
+    this._tokenStartColumn =
+      this._tokenStartOffset - this._currentLineBeginOffset;
+
+    // Extract `\n` in the matched token.
+    let nlMatch;
+    while ((nlMatch = nlRe.exec(matched)) !== null) {
+      this._currentLine++;
+      this._currentLineBeginOffset = this._tokenStartOffset + nlMatch.index + 1;
+    }
+
+    this._tokenEndOffset = this._cursor + matched.length;
+
+    // Line-based locations, end.
+    this._tokenEndLine = this._currentLine;
+    this._tokenEndColumn = this._currentColumn =
+      (this._tokenEndOffset - this._currentLineBeginOffset);
+  },
+
+  _toToken(tokenType, yytext = '') {
     return {
-      type: token,
+      // Basic data.
+      type: tokenType,
       value: yytext,
+
+      // Location data.
+      startOffset: this._tokenStartOffset,
+      endOffset: this._tokenEndOffset,
+      startLine: this._tokenStartLine,
+      endLine: this._tokenEndLine,
+      startColumn: this._tokenStartColumn,
+      endColumn: this._tokenEndColumn,
     };
   },
 
@@ -229,6 +314,8 @@ tokenizer = {
   _match(string, regexp) {
     let matched = string.match(regexp);
     if (matched) {
+      // Handle `\n` in the matched token to track line numbers.
+      this._captureLocation(matched[0]);
       this._cursor += matched[0].length;
       return matched[0];
     }
@@ -249,69 +336,103 @@ const yyparse = {
     s.length = 0;
     s.push(0);
 
-    let t = tokenizer.getNextToken();
+    let token = tokenizer.getNextToken();
     let st = null;
 
     do {
-      if (!t) {
+      if (!token) {
         unexpectedEndOfInput();
       }
 
       let sta = s[s.length - 1];
-      let clm = tks[t.type];
-      let e = tbl[sta][clm];
+      let clm = tks[token.type];
+      let entry = tbl[sta][clm];
 
-      if (!e) {
-        unexpectedToken(t);
+      if (!entry) {
+        unexpectedToken(token);
       }
 
-      if (e[0] === 's') {
-        s.push(
-          {symbol: tks[t.type], semanticValue: t.value},
-          Number(e.slice(1))
-        );
-        st = t;
-        t = tokenizer.getNextToken();
-      } else if (e[0] === 'r') {
-        let pn = e.slice(1);
-        let p = ps[pn];
-        let hsa = typeof p[2] === 'function';
-        let saa = hsa ? [] : null;
+      if (entry[0] === 's') {
+        let loc = null;
 
-        if (p[1] !== 0) {
-          let rhsl = p[1];
+        if (shouldCaptureLocations) {
+          loc = {
+            startOffset: token.startOffset,
+            endOffset: token.endOffset,
+            startLine: token.startLine,
+            endLine: token.endLine,
+            startColumn: token.startColumn,
+            endColumn: token.endColumn,
+          };
+        }
+
+        s.push(
+          {symbol: tks[token.type], semanticValue: token.value, loc},
+          Number(entry.slice(1))
+        );
+        st = token;
+        token = tokenizer.getNextToken();
+      } else if (entry[0] === 'r') {
+        let pn = entry.slice(1);
+        let production = ps[pn];
+        let hasSemanticAction = typeof production[2] === 'function';
+        let semanticValueArgs = hasSemanticAction ? [] : null;
+
+        const locationArgs = (
+          hasSemanticAction && shouldCaptureLocations
+            ? []
+            : null
+        );
+
+        if (production[1] !== 0) {
+          let rhsl = production[1];
           while (rhsl--) {
             s.pop();
-            let se = s.pop();
+            let stackEntry = s.pop();
 
-            if (hsa) {
-              saa.unshift(se.semanticValue);
+            if (hasSemanticAction) {
+              semanticValueArgs.unshift(stackEntry.semanticValue);
+
+              if (locationArgs) {
+                locationArgs.unshift(stackEntry.loc);
+              }
             }
           }
         }
 
-        let rse = {symbol: p[0]};
+        const reduceStackEntry = {symbol: production[0]};
 
-        if (hsa) {
+        if (hasSemanticAction) {
           yytext = st ? st.value : null;
           yyleng = st ? st.value.length : null;
 
-          p[2](...saa);
-          rse.semanticValue = __;
+          const semanticActionArgs = (
+            locationArgs !== null
+              ? semanticValueArgs.concat(locationArgs)
+              : semanticValueArgs
+          );
+
+          production[2](...semanticActionArgs);
+
+          reduceStackEntry.semanticValue = __;
+
+          if (locationArgs) {
+            reduceStackEntry.loc = __loc;
+          }
         }
 
         s.push(
-          rse,
-          tbl[s[s.length - 1]][p[0]]
+          reduceStackEntry,
+          tbl[s[s.length - 1]][production[0]]
         );
-      } else if (e === 'acc') {
+      } else if (entry === 'acc') {
         s.pop();
         let parsed = s.pop();
 
         if (s.length !== 1 ||
             s[0] !== 0 ||
             tokenizer.hasMoreTokens()) {
-          unexpectedToken(t);
+          unexpectedToken(token);
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
@@ -355,7 +476,10 @@ function unexpectedToken(token) {
   if (token.value === EOF) {
     unexpectedEndOfInput();
   }
-  parseError(`Unexpected token: ${token.value}.`);
+  parseError(
+    `Unexpected token: "${token.value}" at ` +
+    `${token.startLine}:${token.startColumn}.`
+  );
 }
 
 function unexpectedEndOfInput() {
