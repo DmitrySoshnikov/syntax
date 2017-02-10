@@ -63,6 +63,18 @@ for (;;) {
 }
 
 /**
+ * for-prop loop.
+ */
+for (let prop : data) {
+  print(prop);
+}
+
+/**
+ * for-prop loop.
+ */
+for (v : data);
+
+/**
  * Array literals.
  */
 let data = [1, 2, 3];

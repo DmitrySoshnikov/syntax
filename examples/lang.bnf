@@ -73,6 +73,25 @@ function IfStatement(test, consequent, alternate) {
 }
 
 /**
+ * ForPropStatement.
+ */
+function ForPropStatement(left, right, body) {
+  if (left.type === 'VariableDeclaration' && left.declarations.length !== 1) {
+    throw new Error(
+      'SyntaxError: Invalid left-hand side in for-prop loop: ' +
+      'Must have a single binding.'
+    );
+  }
+
+  return {
+    type: 'ForPropStatement',
+    left,
+    right,
+    body,
+  };
+}
+
+/**
  * Creates a Lambda function node.
  *
  * The lambda parameter list is handled by the cover grammar:
@@ -88,7 +107,7 @@ function LambdaFunction(paramsNode, body) {
   params.forEach(e => {
     if (e.type !== 'Identifier') {
       throw new Error(
-        'Parse error: Lambda parameters can only be identifiers.'
+        'SyntaxError: Lambda parameters can only be identifiers.'
       );
     }
   });
@@ -183,6 +202,7 @@ StatementList
  */
 Statement
   : BlockStatement
+  | EmptyStatement
   | VariableDeclaration
   | FunctionDeclaration
   | ExpressionStatement
@@ -191,6 +211,18 @@ Statement
   | ReturnStatement
   | BreakStatement
   | ContinueStatement
+  ;
+
+/**
+ * EmptyStatement.
+ */
+EmptyStatement
+  : SEMICOLON
+    {
+      $$ = {
+        type: 'EmptyStatement',
+      }
+    }
   ;
 
 /**
@@ -273,6 +305,22 @@ IterationStatement
           body: $9,
         }
       }
+
+    | FOR
+        LPAREN
+          ForPropStatementInit
+          COLON
+          Expression
+        RPAREN Statement
+      { $$ = ForPropStatement($3, $5, $7) }
+  ;
+
+/**
+ * ForPropStatementInit.
+ */
+ForPropStatementInit
+  : VariableDeclarationListInit
+  | LeftHandSideExpression
   ;
 
 /**
@@ -509,7 +557,7 @@ NumericLiteral
  * Primary expression.
  */
 PrimaryExpression
-  : Identifier
+  : LeftHandSideExpression
   | Literal
   | ArrayLiteral
   | ObjectLiteral
@@ -811,7 +859,7 @@ CallExpression
  * Simple function call `foo();` or chained `foo()();`.
  */
 Callee
-  : Identifier
+  : LeftHandSideExpression
   | CallExpression
   ;
 
