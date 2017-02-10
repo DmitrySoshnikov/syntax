@@ -29,7 +29,7 @@ export default class LexRule {
     this._startConditions = startConditions;
     this._originalMatcher = matcher;
     this._rawMatcher = `^${matcher}`;
-    this._matcher = new RegExp(this._rawMatcher);
+    this._matcher = this._buildMatcher(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
   }
@@ -105,6 +105,20 @@ export default class LexRule {
     }
 
     return data;
+  }
+
+  /**
+   * Creates an actual regexp object from the regexp string (only for JS target
+   * langauges, other plugins use rawMatcher instead ad code generation).
+   */
+  _buildMatcher(rawMatcher) {
+    this._matcher = null;
+    try {
+      this._matcher = new RegExp(rawMatcher);
+    } catch (e) {
+      /* Skip for other languages */
+    }
+    return this._matcher;
   }
 
   /**

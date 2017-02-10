@@ -19,6 +19,19 @@ describe('lex-rule', () => {
     expect(rule.getMatcher().source).toBe("^\\d+");
   });
 
+  it('non-JS matcher', () => {
+    // PCRE regexp.
+    const orginalMatcher = '(?<=[[:space:]])AND(?=[[:space:]])';
+
+    const rule = new LexRule({
+      matcher: orginalMatcher,
+    });
+
+    expect(rule.getMatcher()).toBe(null);
+    expect(rule.getRawMatcher()).toBe(`^${orginalMatcher}`);
+    expect(rule.getOriginalMatcher()).toBe(orginalMatcher);
+  });
+
   it('matcher from terminal', () => {
     expect(LexRule.matcherFromTerminal(`'a'`)).toBe('a');
     expect(LexRule.matcherFromTerminal(`"a"`)).toBe('a');
