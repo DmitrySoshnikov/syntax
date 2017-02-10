@@ -142,3 +142,13 @@ let config = {
     print(1);
   }
 }
+
+/**
+ * Member expressions.
+ */
+
+foo.bar = 10;
+foo["bar"] = 20;
+foo["bar"].baz = 30;
+
+root.action(10);

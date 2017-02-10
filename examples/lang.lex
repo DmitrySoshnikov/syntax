@@ -27,7 +27,7 @@
     // Keywords.
 
     [`\\blet\\b`,                  `return 'LET'`],
-    [`\\b\\bif\\b`,                `return 'IF'`],
+    [`\\bif\\b`,                   `return 'IF'`],
     [`\\belse\\b`,                 `return 'ELSE'`],
     [`\\btrue\\b`,                 `return 'TRUE'`],
     [`\\bfalse\\b`,                `return 'FALSE'`],
@@ -57,6 +57,8 @@
     [`:`,                       `return 'COLON'`],
     [`;`,                       `return 'SEMICOLON'`],
     [`,`,                       `return 'COMMA'`],
+
+    [`\\.`,                     `return 'DOT'`],
 
     // ------------------------------------------------
     // Logical operators: &&, ||
