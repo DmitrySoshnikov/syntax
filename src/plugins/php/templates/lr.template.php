@@ -225,7 +225,7 @@ class yyparse {
 
   private static function unexpectedToken($token) {
     if ($token['value'] === self::EOF) {
-      unexpectedEndOfInput();
+      self::unexpectedEndOfInput();
     }
     self::parseError(
       'Unexpected token: "'.$token['value'] . '" at ' .
