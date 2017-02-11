@@ -80,4 +80,11 @@ describe('lex-grammar', () => {
     });
   });
 
+  it('options', () => {
+    const options = lexGrammarData.options;
+
+    expect(lexGrammar.getOptions()).toEqual(options);
+    expect(lexGrammar.getRuleByIndex(0).getOptions()).toEqual(options);
+  });
+
 });

@@ -9,7 +9,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
 ### Table of Contents
 
 - [Installation](#installation)
-- [Developement](#developement)
+- [Development](#development)
 - [CLI usage example](#cli-usage-example)
 - [Parser generation](#parser-generation)
 - [Language agnostic parser generator](#language-agnostic-parser-generator)
@@ -22,6 +22,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Getting list of tokens](#getting-list-of-tokens)
   - [Using custom tokenizer](#using-custom-tokenizer)
   - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
+  - [Case-insensitive match](#case-insensitive-match)
 - [Handler arguments notation](#handler-arguments-notation)
   - [Positioned notation](#positioned-notation)
   - [Named notation](#named-notation)
@@ -44,7 +45,7 @@ npm install -g syntax-cli
 syntax-cli --help
 ```
 
-### Developement
+### Development
 
 1. Fork the https://github.com/DmitrySoshnikov/syntax repo
 2. Make your changes
@@ -377,6 +378,31 @@ More information on the topic can be found in [this gist](https://gist.github.co
 As an example take a look at [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lexer-start-conditions.g.js), which calculates line numbers in a source file, including line numbers in comments. The comments themselves are skipped during tokenization, however the new lines are handled within comments separately to count those line numbers as well.
 
 Another example is the [grammar for BNF](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g) itself, which we use to parse BNF grammars represented as strings, rather than in JSON format. There we have `action` start condition to correctly parse `{` and `}` of JS code, being inside an actual handler for a grammar rule, which is itself surrounded by  `{` and `}` braces.
+
+#### Case-insensitive match
+
+Lexical grammar rules can also be _case-insensitive_. From the command line it's control via the appropriate `--case-insensitive` (`-i`) option. It also can be specified in the lexical grammar itself -- for the whole grammar, or per each rule:
+
+```js
+// case-insensitive.lex
+
+{
+  "rules": [
+    // This rule is by default case-insensitive:
+    [`x`, `return "X"`],
+
+    // This rule overrides global options:
+    [`y`, `return "Y"`, {"case-insensitive": false}],
+  ],
+
+  // Global options for the whole lexical grammar.
+  "options": {
+    "case-insensitive": true,
+  },
+}
+```
+
+See [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/case-insensitive-lex.g) for details.
 
 ### Handler arguments notation
 

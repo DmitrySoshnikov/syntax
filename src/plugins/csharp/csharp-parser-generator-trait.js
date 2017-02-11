@@ -136,8 +136,20 @@ const CSharpParserGeneratorTrait = {
 
       this._lexHandlers.push({args: '', action});
 
+      let flags = [];
+
+      if (lexRule.isCaseInsensitive()) {
+        flags.push('i');
+      }
+
+      if (flags.length > 0) {
+        flags = `(?${flags.join('')})`
+      } else {
+        flags = '';
+      }
+
       // Example: new string[] {@"^\s+", "_lexRule1"},
-      return `new string[] { @"${lexRule.getRawMatcher()}", ` +
+      return `new string[] { @"${flags}${lexRule.getRawMatcher()}", ` +
         `"_lexRule${this._lexHandlers.length}" }`;
     });
 

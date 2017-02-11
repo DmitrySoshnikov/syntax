@@ -85,7 +85,13 @@ const RubyParserGeneratorTrait = {
       // NOTE: Ruby's beginning of a string `^` symbol matches beginning of
       // every line, so use `\A` instead for it.
 
-      return `[/\\A${lexRule.getOriginalMatcher()}/, ` +
+      const flags = [];
+
+      if (lexRule.isCaseInsensitive()) {
+        flags.push('i');
+      }
+
+      return `[/\\A${lexRule.getOriginalMatcher()}/${flags.join('')}, ` +
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 

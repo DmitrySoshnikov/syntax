@@ -82,7 +82,13 @@ const PHPParserGeneratorTrait = {
       const action = this._scopeVars(lexRule.getRawHandler()) + ';';
       this._lexHandlers.push({args: '', action});
 
-      return `['/${lexRule.getRawMatcher()}/', ` +
+      const flags = [];
+
+      if (lexRule.isCaseInsensitive()) {
+        flags.push('i');
+      }
+
+      return `['/${lexRule.getRawMatcher()}/${flags.join('')}', ` +
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 

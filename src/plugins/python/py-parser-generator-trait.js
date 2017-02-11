@@ -68,7 +68,19 @@ const PythonParserGeneratorTrait = {
       const action = lexRule.getRawHandler();
       this._lexHandlers.push({args: 'self', action});
 
-      return `['${lexRule.getRawMatcher()}', ` +
+      let flags = [];
+
+      if (lexRule.isCaseInsensitive()) {
+        flags.push('i');
+      }
+
+      if (flags.length > 0) {
+        flags = `(?${flags.join('')})`
+      } else {
+        flags = '';
+      }
+
+      return `['${flags}${lexRule.getRawMatcher()}', ` +
         `_lex_rule${this._lexHandlers.length}]`;
     });
 

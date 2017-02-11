@@ -24,14 +24,38 @@ export default class LexRule {
    *
    * The `startConditions` allows specifying lexer state, and execute
    * a rule only if a tokenizer is within this state.
+   *
+   * Available options:
+   *
+   *   - case-insensitive: boolean
    */
-  constructor({startConditions, matcher, tokenHandler}) {
+  constructor({
+    startConditions,
+    matcher,
+    tokenHandler,
+    options = {},
+  }) {
     this._startConditions = startConditions;
+    this._options = options;
     this._originalMatcher = matcher;
     this._rawMatcher = `^${matcher}`;
     this._matcher = this._buildMatcher(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
+  }
+
+  /**
+   * Returns options.
+   */
+  getOptions() {
+    return this._options;
+  }
+
+  /**
+   * Whether the rule is case-insensitive.
+   */
+  isCaseInsensitive() {
+    return !!this._options['case-insensitive'];
   }
 
   /**
@@ -114,7 +138,13 @@ export default class LexRule {
   _buildMatcher(rawMatcher) {
     this._matcher = null;
     try {
-      this._matcher = new RegExp(rawMatcher);
+      const flags = [];
+
+      if (this._options['case-insensitive']) {
+        flags.push('i');
+      }
+
+      this._matcher = new RegExp(rawMatcher, flags.join(''));
     } catch (e) {
       /* Skip for other languages */
     }

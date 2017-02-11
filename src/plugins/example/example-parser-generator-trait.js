@@ -162,8 +162,14 @@ const ExampleParserGeneratorTrait = {
 
       this._lexHandlers.push({args: '', action});
 
+      const flags = [];
+
+      if (lexRule.isCaseInsensitive()) {
+        flags.push('i');
+      }
+
       // Example: ["^\s+", "_lexRule1"],
-      return `[/${lexRule.getRawMatcher()}/, ` +
+      return `[/${lexRule.getRawMatcher()}/${flags.join('')}, ` +
         `"_lexRule${this._lexHandlers.length}"]`;
     });
 

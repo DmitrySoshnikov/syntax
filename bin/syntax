@@ -88,12 +88,16 @@ const options = require('nomnom')
       flag: true,
     },
     'generate-inline-parser': {
-      abbr: 'i',
       help: 'Whether to generate a parser module for parsing a passed string',
       flag: true,
     },
     'loc': {
        help: 'Capture token locations (offsets, line and column numbers)',
+       flag: true,
+    },
+    'case-insensitive': {
+       help: 'Sets case-insensitive mode to lexical grammar',
+       abbr: 'i',
        flag: true,
     },
   })
@@ -329,7 +333,11 @@ function getGrammar(grammarFile, mode) {
   // If explicit lexical grammar file was passed, use it.
   const lexGrammarData = getLexGrammarData(options);
   if (lexGrammarData) {
-    grammarData.lex = lexGrammarData;
+    grammarData.lex = Object.assign(
+      {},
+      grammarData.lex || {},
+      lexGrammarData
+    );
   }
 
   const grammarOptions = {
@@ -361,6 +369,18 @@ function getLexGrammarData(options) {
         ['\\s+', /* skip whitespace */''],
       ],
     };
+  }
+
+  if (options['case-insensitive']) {
+    if (!data) {
+      data = {};
+    }
+
+    if (!data.options) {
+      data.options = {};
+    }
+
+    data.options['case-insensitive'] = true;
   }
 
   return data;

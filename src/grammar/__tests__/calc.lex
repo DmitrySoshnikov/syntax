@@ -24,4 +24,8 @@ module.exports = {
     [["comment"], "\\*+\\/", "this.popState();"],
     [["comment"], "\\d+", "return 'NUMBER_IN_COMMENT'"],
   ],
+
+  "options": {
+    "case-insensitive": true,
+  },
 };

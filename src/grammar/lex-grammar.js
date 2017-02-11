@@ -49,9 +49,11 @@ export default class LexGrammar {
     macros,
     rules,
     startConditions,
+    options,
   }) {
     this._macros = macros;
     this._originalRules = rules;
+    this._options = options;
     this._extractMacros(macros, this._originalRules);
 
     this._rules = this._processRules(this._originalRules);
@@ -59,6 +61,13 @@ export default class LexGrammar {
 
     this._startConditions = Object.assign({INITIAL: 0}, startConditions);
     this._rulesByStartConditions = this._processRulesByStartConditions();
+  }
+
+  /**
+   * Returns options.
+   */
+  getOptions() {
+    return this._options;
   }
 
   /**
@@ -139,17 +148,40 @@ export default class LexGrammar {
       let startConditions;
       let matcher;
       let tokenHandler;
+      let options = {};
+
+      // Default options of a particular LexRule are initialized to the
+      // global options of the whole lexical grammar.
+      const defaultOptions = {...this.getOptions()};
 
       if (tokenData.length === 2) {
         [matcher, tokenHandler] = tokenData;
       } else if (tokenData.length === 3) {
-        [startConditions, matcher, tokenHandler] = tokenData;
+
+        // Start conditions, no options.
+        if (
+          Array.isArray(tokenData[0]) &&
+          typeof tokenData[2] === 'string'
+        ) {
+          [startConditions, matcher, tokenHandler] = tokenData;
+        }
+
+        // Trailing options, no start conditions.
+        else if (
+          typeof tokenData[0] === 'string' &&
+          typeof tokenData[2] === 'object'
+        ) {
+          [matcher, tokenHandler, options] = tokenData;
+        }
+      } else if (tokenData.length === 4) {
+        [startConditions, matcher, tokenHandler, options] = tokenData;
       }
 
       return new LexRule({
         startConditions,
         matcher,
         tokenHandler,
+        options: Object.assign(defaultOptions, options),
       });
     });
   }

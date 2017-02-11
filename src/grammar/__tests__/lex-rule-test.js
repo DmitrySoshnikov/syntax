@@ -19,6 +19,44 @@ describe('lex-rule', () => {
     expect(rule.getMatcher().source).toBe("^\\d+");
   });
 
+  it('options', () => {
+    const options = {
+      'case-insensitive': true,
+    };
+
+    const rule = new LexRule({
+      matcher: 'a',
+      options,
+    });
+
+    expect(rule.getOptions()).toEqual(options);
+  });
+
+  it('case-insensitive', () => {
+    let rule = new LexRule({
+      matcher: 'a',
+      options: {
+        'case-insensitive': true,
+      },
+    });
+
+    expect(rule.isCaseInsensitive()).toBe(true);
+
+    let matcher = rule.getMatcher();
+
+    expect(matcher.test('a')).toBe(true);
+    expect(matcher.test('A')).toBe(true);
+
+    rule = new LexRule({matcher: 'a'});
+
+    expect(rule.isCaseInsensitive()).toBe(false);
+
+    matcher = rule.getMatcher();
+
+    expect(matcher.test('a')).toBe(true);
+    expect(matcher.test('A')).toBe(false);
+  });
+
   it('non-JS matcher', () => {
     // PCRE regexp.
     const orginalMatcher = '(?<=[[:space:]])AND(?=[[:space:]])';
