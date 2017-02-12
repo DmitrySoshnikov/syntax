@@ -285,8 +285,9 @@ function parse(string, grammar) {
     }
 
   } catch (e) {
-    console.info(`${colors.red('Rejected: ' + e.message)}\n`);
-    throw e;
+    console.info(`${colors.red(e.stack)}\n`);
+    //throw e;
+    process.exit(1)
   }
 }
 

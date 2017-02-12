@@ -179,13 +179,14 @@ export default class LLParser {
       this._unexpectedEndOfInput();
     }
 
-    this._parseError(
-      `Unexpected token: "${token.value}" at ` +
-      `${token.startLine}:${token.startColumn}.`
+    this._tokenizer.throwUnexpectedToken(
+      token.value,
+      token.startLine,
+      token.startColumn,
     );
   }
 
   _parseError(message) {
-    throw new Error(`Parse error: ${message}`);
+    throw new SyntaxError(message);
   }
 };

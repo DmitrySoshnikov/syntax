@@ -214,9 +214,33 @@ export default class Tokenizer {
       }
     }
 
-    throw new Error(
-      `Unexpected token: "${string[0]}" ` +
-      `at ${this._currentLine}:${this._currentColumn}.`
+    this.throwUnexpectedToken(
+      string[0],
+      this._currentLine,
+      this._currentColumn,
+    );
+  }
+
+  /**
+   * Throws default "Unexpected token" exception, showing the actual
+   * line from the source, pointing with the ^ marker to the bad token.
+   * In addition, shows `line:column` location.
+   */
+  throwUnexpectedToken(symbol, line, column) {
+    const lineSource = this._string
+      .slice(0, -1) // Exclude EOF
+      .split('\n')[line - 1];
+
+    let lineData = '';
+
+    if (lineSource) {
+      const pad = ' '.repeat(column);
+      lineData = '\n\n' + lineSource + '\n' + pad + '^\n';
+    }
+
+    throw new SyntaxError(
+      `${lineData}Unexpected token: "${symbol}" ` +
+      `at ${line}:${column}.`
     );
   }
 
