@@ -19,6 +19,26 @@ describe('lex-rule', () => {
     expect(rule.getMatcher().source).toBe("^\\d+");
   });
 
+  it('lookbehind assertions', () => {
+    const positiveLookbehind = '(?<= )foo';
+    const beginningPositiveLookbehind = '(?<=^ )foo';
+
+    let rule = new LexRule({matcher: positiveLookbehind});
+
+    expect(rule.getOriginalMatcher()).toBe(positiveLookbehind);
+    expect(rule.getRawMatcher()).toBe(beginningPositiveLookbehind);
+    expect(rule.getMatcher()).toBe(null); // JS doesn't support.
+
+    const negativeLookbehind = '(?<! )foo';
+    const beginningNegativeLookbehind = '(?<!^ )foo';
+
+    rule = new LexRule({matcher: negativeLookbehind});
+
+    expect(rule.getOriginalMatcher()).toBe(negativeLookbehind);
+    expect(rule.getRawMatcher()).toBe(beginningNegativeLookbehind);
+    expect(rule.getMatcher()).toBe(null); // JS doesn't support.
+  });
+
   it('options', () => {
     const options = {
       'case-insensitive': true,
@@ -60,13 +80,14 @@ describe('lex-rule', () => {
   it('non-JS matcher', () => {
     // PCRE regexp.
     const orginalMatcher = '(?<=[[:space:]])AND(?=[[:space:]])';
+    const beginningOrginalMatcher = '(?<=^[[:space:]])AND(?=[[:space:]])';
 
     const rule = new LexRule({
       matcher: orginalMatcher,
     });
 
     expect(rule.getMatcher()).toBe(null);
-    expect(rule.getRawMatcher()).toBe(`^${orginalMatcher}`);
+    expect(rule.getRawMatcher()).toBe(beginningOrginalMatcher);
     expect(rule.getOriginalMatcher()).toBe(orginalMatcher);
   });
 
