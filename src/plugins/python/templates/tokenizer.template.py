@@ -21,6 +21,7 @@ EOF_TOKEN = {
 
 class Tokenizer(object):
     _string = None
+    _original_string = None
     _cursor = 0
 
     # Line-based location tracking.
@@ -44,7 +45,8 @@ class Tokenizer(object):
             self.init_string(string)
 
     def init_string(self, string):
-        self._string = string + EOF
+        self._original_string = string
+        self._string = self._original_string + EOF
         self._cursor = 0
         self._tokens_queue = []
 
@@ -117,9 +119,10 @@ class Tokenizer(object):
 
                 return self._to_token(token, yytext)
 
-        raise Exception(
-            'Unexpected token: "' + str(string[0]) + '" at ' +
-            str(self._current_line) + ':' + str(self._current_column) + '.'
+        self.throw_unexpected_token(
+            string[0],
+            self._current_line,
+            self._current_column
         )
 
     def _capture_location(self, matched):
@@ -154,6 +157,24 @@ class Tokenizer(object):
             'start_column': self.token_start_column,
             'end_column': self.token_end_column,
         }
+
+    ##
+    # Throws default "Unexpected token" exception, showing the actual
+    # line from the source, pointing with the ^ marker to the bad token.
+    # In addition, shows `line:column` location.
+    #
+    def throw_unexpected_token(self, symbol, line, column):
+        line_source = self._original_string.split('\n')[line - 1]
+        line_data = ''
+
+        if not line_source is None:
+            pad = ' ' * column;
+            line_data = '\n\n' + line_source + '\n' + pad + '^\n'
+
+        raise Exception(
+            line_data + 'Unexpected token: "' + str(symbol) + '" at ' +
+            str(line) + ':' + str(column) + '.'
+        )
 
     def is_eof(self):
         return self._string[self._cursor] == EOF and \

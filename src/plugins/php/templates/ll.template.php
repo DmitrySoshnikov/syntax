@@ -117,9 +117,11 @@ class yyparse {
     if ($token['value'] === self::EOF) {
       unexpectedEndOfInput();
     }
-    self::parseError(
-      'Unexpected token: "'.$token['value'] . '" at ' .
-      $token['startLine'] . ':' . $token['startColumn'] . '.'
+
+    self::getTokenizer()->throwUnexpectedToken(
+      $token['value'],
+      $token['startLine'],
+      $token['startColumn']
     );
   }
 
@@ -128,7 +130,7 @@ class yyparse {
   }
 
   private static function parseError($message) {
-    throw new \Exception('Parse error: '.$message);
+    throw new \Exception('SyntaxError: '.$message);
   }
 }
 

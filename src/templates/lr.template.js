@@ -195,9 +195,11 @@ function unexpectedToken(token) {
   if (token.value === EOF) {
     unexpectedEndOfInput();
   }
-  parseError(
-    `Unexpected token: "${token.value}" at ` +
-    `${token.startLine}:${token.startColumn}.`
+
+  tokenizer.throwUnexpectedToken(
+    token.value,
+    token.startLine,
+    token.startColumn
   );
 }
 
@@ -206,7 +208,7 @@ function unexpectedEndOfInput() {
 }
 
 function parseError(message) {
-  throw new Error(`Parse error: ${message}`);
+  throw new SyntaxError(message);
 }
 
 module.exports = yyparse;

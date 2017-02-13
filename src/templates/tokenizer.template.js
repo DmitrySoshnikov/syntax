@@ -16,7 +16,8 @@ const EOF_TOKEN = {
 
 tokenizer = {
   initString(string) {
-    this._string = string + EOF;
+    this._originalString = string;
+    this._string = this._originalString + EOF;
     this._cursor = 0;
 
     this._states = ['INITIAL'];
@@ -110,9 +111,30 @@ tokenizer = {
       }
     }
 
-    throw new Error(
-      `Unexpected token: "${string[0]}" ` +
-      `at ${this._currentLine}:${this._currentColumn}.`
+    this.throwUnexpectedToken(
+      string[0],
+      this._currentLine,
+      this._currentColumn
+    );
+  },
+
+  /**
+   * Throws default "Unexpected token" exception, showing the actual
+   * line from the source, pointing with the ^ marker to the bad token.
+   * In addition, shows `line:column` location.
+   */
+  throwUnexpectedToken(symbol, line, column) {
+    const lineSource = this._originalString.split('\n')[line - 1];
+    let lineData = '';
+
+    if (lineSource) {
+      const pad = ' '.repeat(column);
+      lineData = '\n\n' + lineSource + '\n' + pad + '^\n';
+    }
+
+    throw new SyntaxError(
+      `${lineData}Unexpected token: "${symbol}" ` +
+      `at ${line}:${column}.`
     );
   },
 

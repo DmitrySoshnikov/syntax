@@ -476,7 +476,7 @@ describe('tokenizer', () => {
 
   it('unexpected token message', () => {
     const tokenizer = new Tokenizer({
-      string: '1 ^',
+      string: '1 &',
       lexGrammar,
     });
 
@@ -493,7 +493,7 @@ describe('tokenizer', () => {
 
     expect(() => {
       tokenizer.getNextToken();
-    }).toThrow(new Error('Unexpected token: "^" at 1:2.'));
+    }).toThrow(new SyntaxError('\n\n1 &\n  ^\nUnexpected token: "&" at 1:2.'));
   });
 
 })

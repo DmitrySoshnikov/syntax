@@ -20,11 +20,11 @@
 <<MODULE_INCLUDE>>
 
 class yyparse {
-  private static $ps = <<PRODUCTIONS>>;
-  private static $tks = <<TOKENS>>;
-  private static $tbl = <<TABLE>>;
+  private static $productions = <<PRODUCTIONS>>;
+  private static $tokens = <<TOKENS>>;
+  private static $table = <<TABLE>>;
 
-  private static $s = [];
+  private static $stack = [];
   private static $__ = null;
   private static $__loc = null;
 
@@ -88,12 +88,12 @@ class yyparse {
 
     $tokenizer->initString($string);
 
-    $stack = &self::$s;
+    $stack = &self::$stack;
     $stack = ['0'];
 
-    $tokens = &self::$tks;
-    $table = &self::$tbl;
-    $productions = &self::$ps;
+    $tokens = &self::$tokens;
+    $table = &self::$table;
+    $productions = &self::$productions;
 
     $token = $tokenizer->getNextToken();
     $shifted_token = null;
@@ -227,9 +227,11 @@ class yyparse {
     if ($token['value'] === self::EOF) {
       self::unexpectedEndOfInput();
     }
-    self::parseError(
-      'Unexpected token: "'.$token['value'] . '" at ' .
-      $token['startLine'] . ':' . $token['startColumn'] . '.'
+
+    self::getTokenizer()->throwUnexpectedToken(
+      $token['value'],
+      $token['startLine'],
+      $token['startColumn']
     );
   }
 
@@ -238,7 +240,7 @@ class yyparse {
   }
 
   private static function parseError($message) {
-    throw new \Exception('Parse error: '.$message);
+    throw new \Exception('SyntaxError: '.$message);
   }
 }
 

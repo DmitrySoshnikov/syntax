@@ -1,0 +1,90 @@
+/**
+ * Captures location info. Python version.
+ *
+ * In order to capture locations, pass the `--loc` option.
+ *
+ * Locations in handlers are accessible via `@` notation, e.g. @1, @2, etc.
+ * A named accessors are available as well: @foo, @bar.
+ *
+ * A location is an object of structure:
+ *
+ * {
+ *   start_offset,
+ *   end_offset,
+ *   start_line,
+ *   end_line,
+ *   start_column,
+ *   end_colum,
+ * }
+ *
+ * The resulting location is in the @$. It is calculated automatically from
+ * first and last symbol on a RHS handle, and it also can be overridden
+ * manually.
+ *
+ * ./bin/syntax -g examples/calc-loc.py.bnf -m slr1 -o ~/Parser.py -w --loc
+ *
+ */
+
+%{
+
+class BinaryExpression(object):
+    def __init__(self, op, left, right, loc):
+        self.op = op
+        self.left = left
+        self.right = right
+        self.loc = loc
+
+def Loc(s, e):
+    return {
+        'start_offset': s['start_offset'],
+        'end_offset': e['end_offset'],
+        'start_line': s['start_line'],
+        'end_line': e['end_line'],
+        'start_column': s['start_column'],
+        'end_column': e['end_column'],
+    }
+
+class NumericLiteral(object):
+  def __init__(self, value, loc):
+      self.value = value
+      self.loc = loc
+
+def on_parse_end(value):
+  print(value.loc)
+
+%}
+
+%left '+'
+%left '*'
+
+%%
+
+exp
+  : exp '+' exp
+    /* Explicitly calculate location */
+    { $$ = BinaryExpression('+', $1, $3, Loc(@1, @3)) }
+
+  | exp '*' exp
+    /* Use default result location: @$ */
+    { $$ = BinaryExpression('*', $1, $3, @$) }
+
+  | '(' exp ')'
+    { $$ = $2 }
+
+  | number
+    /* Named args and position */
+    { $$ = NumericLiteral($number, @number) }
+  ;
+
+literal
+  : number
+  ;
+
+number
+  : number digit
+    { $$ = int($number + $digit); }
+
+  | digit
+  ;
+
+digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';

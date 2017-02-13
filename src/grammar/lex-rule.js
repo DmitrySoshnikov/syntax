@@ -38,7 +38,7 @@ export default class LexRule {
     this._startConditions = startConditions;
     this._options = options;
     this._originalMatcher = matcher;
-    this._rawMatcher = `^${matcher}`;
+    this._rawMatcher = this._buildRawMatcher(this._originalMatcher);
     this._matcher = this._buildMatcher(this._rawMatcher);
     this._rawHandler = tokenHandler;
     this._handler = this._buildHandler(tokenHandler);
@@ -129,6 +129,29 @@ export default class LexRule {
     }
 
     return data;
+  }
+
+  /**
+   * Tokenizer applies all regexp rules from the beginning of the
+   * non-analized yet substring (i.e. appending ^ to regexp).
+   *
+   * E.g. \d+ becomes ^\d+
+   *
+   * Note: lookbehind assertions should append ^ not at the beginning
+   * of the regexp, but at the begininng of the asserting chars:
+   *
+   * (?<= )a(?= ) becomes (?<=^ )a(?= )
+   */
+  _buildRawMatcher(originalMatcher) {
+    const prefix = originalMatcher.substring(0, 4);
+
+    // Positive or negative lookbehind.
+    if (prefix === '(?<=' || prefix === '(?<!') {
+      return `${prefix}^${originalMatcher.slice(4)}`;
+    }
+
+    // Simple ^.
+    return `^${originalMatcher}`;
   }
 
   /**

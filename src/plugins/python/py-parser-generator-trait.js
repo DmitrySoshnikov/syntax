@@ -3,6 +3,8 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CodeUnit from '../../code-unit';
+
 import fs from 'fs';
 
 /**
@@ -31,6 +33,27 @@ const PythonParserGeneratorTrait = {
       '<<MODULE_INCLUDE>>',
       this._formatIndent(this._grammar.getModuleInclude(), /* no ident */''),
     );
+  },
+
+  /**
+   * Whether locations should be captured, and propagated.
+   */
+  generateCaptureLocations() {
+    this.writeData(
+      '<<CAPTURE_LOCATIONS>>',
+      this._grammar.shouldCaptureLocations() ? 'True' : 'False',
+    );
+  },
+
+  /**
+   * Creates handler prologue for locations. Use default implementation
+   * from CodeUnit, plugins may implement custom logic.
+   */
+  createLocationPrologue(production) {
+    if (production.isEpsilon()) {
+      return '__loc = None;';
+    }
+    return CodeUnit.createLocationPrologue(production);
   },
 
   /**
@@ -133,7 +156,7 @@ const PythonParserGeneratorTrait = {
     return handlers.map(({args, action}, index) => {
       const formatted = this._formatIndent(action);
       return `def ${name}${index + 1}(${args}):\n` +
-        `${STANDARD_SPACES}global __, yytext, yyleng\n` + formatted;
+        `${STANDARD_SPACES}global __, __loc, yytext, yyleng\n` + formatted;
     });
   },
 
