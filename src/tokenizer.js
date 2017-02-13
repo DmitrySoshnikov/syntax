@@ -232,10 +232,7 @@ export default class Tokenizer {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._string
-      .slice(0, -1) // Exclude EOF
-      .split('\n')[line - 1];
-
+    const lineSource = this._originalString.split('\n')[line - 1];
     let lineData = '';
 
     if (lineSource) {
