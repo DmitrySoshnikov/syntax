@@ -286,8 +286,7 @@ function parse(string, grammar) {
 
   } catch (e) {
     console.info(`${colors.red(e.stack)}\n`);
-    //throw e;
-    process.exit(1)
+    process.exit(1);
   }
 }
 

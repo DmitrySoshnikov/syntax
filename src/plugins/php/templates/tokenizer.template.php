@@ -13,6 +13,7 @@ class __SyntaxToolTokenizer {
 
   private $states = array();
   private $string = '';
+  private $originalString = '';
   private $cursor = 0;
   private $tokensQueue = array();
 
@@ -41,6 +42,7 @@ class __SyntaxToolTokenizer {
   <<LEX_RULE_HANDLERS>>
 
   public function initString($string) {
+    $this->originalString = $string;
     $this->states = array('INITIAL');
     $this->string = $string.yyparse::EOF;
     $this->cursor = 0;
@@ -125,9 +127,30 @@ class __SyntaxToolTokenizer {
       }
     }
 
+    $this->throwUnexpectedToken(
+      $string[0],
+      $this->currentLine,
+      $this->currentColumn
+    );
+  }
+
+  /**
+   * Throws default "Unexpected token" exception, showing the actual
+   * line from the source, pointing with the ^ marker to the bad token.
+   * In addition, shows `line:column` location.
+   */
+  public function throwUnexpectedToken($symbol, $line, $column) {
+    $line_source = explode("\n", $this->originalString)[$line - 1];
+    $line_data = '';
+
+    if ($line_source) {
+      $pad = str_repeat(' ', $column);
+      $line_data = "\n\n" . $line_source . "\n" . $pad . "^\n";
+    }
+
     throw new \Exception(
-      'Unexpected token: "' . $string[0] . '" at ' .
-      $this->currentLine . ':' . $this->currentColumn . '.'
+      $line_data . 'Unexpected token: "' . $symbol . '" at ' .
+      $line . ':' . $column . '.'
     );
   }
 

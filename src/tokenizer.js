@@ -81,9 +81,14 @@ export default class Tokenizer {
    */
   initString(string) {
     /**
+     * Originally passed string.
+     */
+    this._originalString = string;
+
+    /**
      * The string followed by the EOF.
      */
-    this._string = string + EOF;
+    this._string = this._originalString + EOF;
 
     /**
      * Tracking cursor (absolute offset).

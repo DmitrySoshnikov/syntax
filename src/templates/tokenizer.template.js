@@ -16,7 +16,8 @@ const EOF_TOKEN = {
 
 tokenizer = {
   initString(string) {
-    this._string = string + EOF;
+    this._originalString = string;
+    this._string = this._originalString + EOF;
     this._cursor = 0;
 
     this._states = ['INITIAL'];
@@ -123,10 +124,7 @@ tokenizer = {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._string
-      .slice(0, -1) // Exclude EOF
-      .split('\n')[line - 1];
-
+    const lineSource = this._originalString.split('\n')[line - 1];
     let lineData = '';
 
     if (lineSource) {
