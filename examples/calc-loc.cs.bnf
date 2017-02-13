@@ -117,7 +117,7 @@ number
   : number digit
     { $$ = Convert.ToInt32($number.ToString() + $digit.ToString()); }
 
-  | /* empty */ { $$ = ""; }
+  | digit
   ;
 
 digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
