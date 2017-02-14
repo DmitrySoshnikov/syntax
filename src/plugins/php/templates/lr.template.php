@@ -105,6 +105,10 @@ class yyparse {
 
       $state = end($stack);
       $column = $tokens[$token['type']];
+
+      if (!isset($table[$state][$column])) {
+          self::unexpectedEndOfInput();
+      }
       $entry = $table[$state][$column];
 
       if (!$entry) {
