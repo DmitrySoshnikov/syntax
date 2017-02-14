@@ -107,13 +107,9 @@ class yyparse {
       $column = $tokens[$token['type']];
 
       if (!isset($table[$state][$column])) {
-          self::unexpectedEndOfInput();
-      }
-      $entry = $table[$state][$column];
-
-      if (!$entry) {
         self::unexpectedToken($token);
       }
+      $entry = $table[$state][$column];
 
       if ($entry[0] === 's') {
         $loc = null;
