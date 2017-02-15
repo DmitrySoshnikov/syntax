@@ -22,6 +22,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Getting list of tokens](#getting-list-of-tokens)
   - [Using custom tokenizer](#using-custom-tokenizer)
   - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
+  - [Access tokenizer from parser semantic actions](#access-tokenizer-from-parser-semantic-actions)
   - [Case-insensitive match](#case-insensitive-match)
 - [Handler arguments notation](#handler-arguments-notation)
   - [Positioned notation](#positioned-notation)
@@ -378,6 +379,21 @@ More information on the topic can be found in [this gist](https://gist.github.co
 As an example take a look at [this example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lexer-start-conditions.g.js), which calculates line numbers in a source file, including line numbers in comments. The comments themselves are skipped during tokenization, however the new lines are handled within comments separately to count those line numbers as well.
 
 Another example is the [grammar for BNF](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g) itself, which we use to parse BNF grammars represented as strings, rather than in JSON format. There we have `action` start condition to correctly parse `{` and `}` of JS code, being inside an actual handler for a grammar rule, which is itself surrounded by  `{` and `}` braces.
+
+#### Access tokenizer from parser semantic actions
+
+It is also possible to access tokenizer instance from the parser semantic actions. It is exposed via the `yy.lexer` object (`yy.tokenizer` is an alias).
+
+Having access to the lexer, it is possible, for example, to change its state, and yield different token types for the same characters.
+
+As an example, differently parsing `{` and `}` begin in an _expression_, or in a _statement_ position in ECMAScript language.
+
+```
+{x: 1} // BlockStatement
+({x: 1}) // ObjectLiteral
+```
+
+A simplified example for this can be found in the [parser-lexer-communication.g](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/parser-lexer-communication.g) grammar example.
 
 #### Case-insensitive match
 
