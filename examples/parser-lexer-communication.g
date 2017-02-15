@@ -4,7 +4,7 @@
  * Note: a tokenizer can be accessed in a semantic action as `yy.lexer`,
  * or `yy.tokenizer`.
  *
- * The grammar above solves the problem of parsing { } in statement position as
+ * The grammar below solves the problem of parsing { } in statement position as
  * a "BlockStatement", and in the expression position as an "ObjectLiteral".
  *
  * Note: there are several other techniques for solving this: lookahead
@@ -35,7 +35,7 @@
  *
  *   ./bin/syntax -g examples/parser-lexer-communication.g -m lalr1 -p '{{}}'
  *
- * Exaple: in the expression position:
+ * Exaple in the expression position:
  *
  *   ./bin/syntax -g examples/parser-lexer-communication.g -m lalr1 -p '({ 1, 2 });'
  *
