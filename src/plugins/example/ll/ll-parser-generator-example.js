@@ -45,10 +45,9 @@ export default class LLParserGeneratorExample extends LLParserGeneratorDefault {
   constructor({
     grammar,
     outputFile,
-    customTokenizer = null,
-    resolveConflicts = false,
+    options = {},
   }) {
-    super({grammar, outputFile, customTokenizer, resolveConflicts})
+    super({grammar, outputFile, options})
       .setTemplate(EXAMPLE_LL_PARSER_TEMPLATE);
 
     /**

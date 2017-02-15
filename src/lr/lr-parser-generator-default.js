@@ -21,9 +21,6 @@ const LR_PARSER_TEMPLATE = fs.readFileSync(
 /**
  * LR parser generator. Creates a parser module for a given grammar, and
  * saves it to the `outputFile`.
- *
- * By default also generates code for a tokenizer, unless
- * `customTokenizer` is passed.
  */
 export default class LRParserGeneratorDefault extends BaseParserGenerator {
 
@@ -33,8 +30,7 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
   constructor({
     grammar,
     outputFile,
-    customTokenizer = null,
-    resolveConflicts = false,
+    options = {},
   }) {
     if (!grammar.getMode().isLR()) {
       throw new Error(`LR parser generator: LR grammar is expected.`);
@@ -43,10 +39,10 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
     const table = new LRParsingTable({
       canonicalCollection: new CanonicalCollection({grammar}),
       grammar,
-      resolveConflicts,
+      resolveConflicts: options.resolveConflicts,
     });
 
-    super({grammar, outputFile, customTokenizer})
+    super({grammar, outputFile, options})
       .setTable(table)
       .setTemplate(LR_PARSER_TEMPLATE);
   }
@@ -87,7 +83,7 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
    */
   generateParseTableData() {
     let originalTable = this._table.get();
-    let table = {};
+    let table = [];
 
     for (let state in originalTable) {
       let row = {};

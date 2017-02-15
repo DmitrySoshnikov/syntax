@@ -7,7 +7,7 @@
  * See `--custom-tokinzer` to skip this generation, and use a custom one.
  */
 
-class __SyntaxToolTokenizer {
+class Tokenizer {
   private static $lexRules = <<LEX_RULES>>;
   private static $lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
 
@@ -148,7 +148,7 @@ class __SyntaxToolTokenizer {
       $line_data = "\n\n" . $line_source . "\n" . $pad . "^\n";
     }
 
-    throw new \Exception(
+    throw new SyntaxException(
       $line_data . 'Unexpected token: "' . $symbol . '" at ' .
       $line . ':' . $column . '.'
     );
@@ -217,4 +217,4 @@ class __SyntaxToolTokenizer {
   }
 }
 
-yyparse::setTokenizer(new __SyntaxToolTokenizer());
+yyparse::setTokenizer(new Tokenizer());

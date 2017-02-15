@@ -17,6 +17,10 @@
  *     --output ~/ParserClassName.php
  */
 
+<<NAMESPACE>>
+
+class SyntaxException extends \Exception {}
+
 <<MODULE_INCLUDE>>
 
 class yyparse {

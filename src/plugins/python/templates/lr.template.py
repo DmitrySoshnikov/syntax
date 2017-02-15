@@ -77,7 +77,8 @@ def parse(string):
 
     _tokenizer.init_string(string)
 
-    stack = ['0']
+    # Init the stack with start state 0.
+    stack = [0]
 
     token = _tokenizer.get_next_token()
     shifted_token = None
@@ -86,7 +87,7 @@ def parse(string):
         if token is None:
             _unexpected_end_of_input()
 
-        state = str(stack[-1])
+        state = stack[-1]
         column = tokens[token['type']]
 
         if not column in table[state].keys():
@@ -114,7 +115,7 @@ def parse(string):
                     'semantic_value': token['value'],
                     'loc': loc,
                 },
-                entry[1:]
+                int(entry[1:]) # Next state.
             ))
             shifted_token = token
             token = _tokenizer.get_next_token()
@@ -165,7 +166,7 @@ def parse(string):
                 if not location_args is None:
                     reduce_stack_entry['loc'] = __loc
 
-                next_state = str(stack[-1])
+                next_state = stack[-1]
                 symbol_to_reduce_with = str(production[0])
 
             stack.extend((reduce_stack_entry, table[next_state][symbol_to_reduce_with]))
@@ -174,8 +175,8 @@ def parse(string):
             stack.pop()
             parsed = stack.pop()
 
-            if len(stack) != 1 or stack[0] != '0' or _tokenizer.has_more_tokens():
-                _unexpected_token(t)
+            if len(stack) != 1 or stack[0] != 0 or _tokenizer.has_more_tokens():
+                _unexpected_token(token)
 
             if parsed.has_key('semantic_value'):
                 on_parse_end(parsed['semantic_value'])

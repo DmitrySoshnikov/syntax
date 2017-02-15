@@ -26,6 +26,20 @@ const PHPParserGeneratorTrait = {
   },
 
   /**
+   * Generates namespace.
+   */
+  generateNamespace() {
+    const ns = this.getOptions().namespace;
+    let nsString = '';
+
+    if (ns && ns !==  '') {
+      nsString = `namespace ${ns};`;
+    }
+
+    this.writeData('<<NAMESPACE>>', nsString);
+  },
+
+  /**
    * Generates parsing table in PHP arrays format.
    */
   generateParseTable() {
@@ -136,8 +150,13 @@ const PHPParserGeneratorTrait = {
     let result = [];
     for (let k in object) {
       let value = object[k];
-      let key = k.replace(/'/g, "\\'");
-      result.push("'" + key + "' => " + this._toPHPArray(value));
+
+      if (Array.isArray(object)) {
+        result.push(this._toPHPArray(value));
+      } else {
+        let key = k.replace(/'/g, "\\'");
+        result.push("'" + key + "' => " + this._toPHPArray(value));
+      }
     }
     return `array(${result.join(', ')})`;
   },

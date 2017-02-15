@@ -17,11 +17,24 @@ export default class BaseParserGenerator {
   /**
    * Instance constructor.
    */
-  constructor({grammar, outputFile, customTokenizer}) {
+  constructor({
+    grammar,
+    outputFile,
+    customTokenizer,
+    options = {},
+  }) {
     this._grammar = grammar;
     this._outputFile = outputFile;
     this._customTokenizer = customTokenizer;
     this._encodeSymbols();
+    this._options = options;
+  }
+
+  /**
+   * Returns options.
+   */
+  getOptions() {
+    return this._options;
   }
 
   /**
@@ -167,9 +180,19 @@ export default class BaseParserGenerator {
   }
 
   /**
+   * Generates a wrapping namespace.
+   */
+  generateNamespace() {
+    /* no-op, plugins can override */
+  }
+
+  /**
    * Generates parser parts.
    */
   generateParserData() {
+    // Generate a wrapping namespace.
+    this.generateNamespace();
+
     // Arbitrary code included to the module.
     this.generateModuleInclude();
 

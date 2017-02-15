@@ -100,8 +100,21 @@ const options = require('nomnom')
        abbr: 'i',
        flag: true,
     },
+    namespace: {
+      help: 'Append a wrapping namespace to generated code',
+      type: 'string',
+    },
   })
   .parse();
+
+/**
+ * Default generator options.
+ */
+const generatorOptions = {
+  customTokenizer: options['custom-tokenizer'],
+  resolveConflicts: options['resolve-conflicts'],
+  namespace: options['namespace'],
+};
 
 /**
  * Set of parsers.
@@ -190,8 +203,7 @@ const parsers = {
       new LRParserGenerator({
         grammar,
         outputFile,
-        customTokenizer: options['custom-tokenizer'],
-        resolveConflicts: options['resolve-conflicts'],
+        options: generatorOptions,
       }).generate();
 
       showGeneratedSuccessMessage(options.output);
@@ -250,7 +262,7 @@ const parsers = {
       new LLParserGenerator({
         grammar,
         outputFile,
-        customTokenizer: options['custom-tokenizer'],
+        options: generatorOptions,
       }).generate();
 
       showGeneratedSuccessMessage(options.output);

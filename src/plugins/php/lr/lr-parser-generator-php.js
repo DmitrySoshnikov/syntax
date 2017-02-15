@@ -28,10 +28,9 @@ export default class LRParserGeneratorPHP extends LRParserGeneratorDefault {
   constructor({
     grammar,
     outputFile,
-    customTokenizer = null,
-    resolveConflicts = false,
+    options = {},
   }) {
-    super({grammar, outputFile, customTokenizer, resolveConflicts})
+    super({grammar, outputFile, options})
       .setTemplate(PHP_LR_PARSER_TEMPLATE);
 
     this._lexHandlers = [];

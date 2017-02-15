@@ -86,7 +86,7 @@ class YYParse
 
     tokenizer.init_string(string)
 
-    @@s = ['0']
+    @@s = [0]
 
     t = tokenizer.get_next_token
     st = nil
@@ -98,7 +98,7 @@ class YYParse
 
       sta = @@s[-1]
       clm = @@tks[t[:type]]
-      e = @@tbl[sta.to_s][clm]
+      e = @@tbl[sta][clm]
 
       if not e
         self.unexpected_token(t)
@@ -138,13 +138,13 @@ class YYParse
           rse[:semantic_value] = @@__
         end
 
-        @@s.push(rse, @@tbl[@@s[-1].to_s][p[0].to_s])
+        @@s.push(rse, @@tbl[@@s[-1]][p[0].to_s])
 
       elsif e == 'acc'
         @@s.pop
         parsed = @@s.pop
 
-        if @@s.length != 1 || @@s[0] != '0' || tokenizer.has_more_tokens
+        if @@s.length != 1 || @@s[0] != 0 || tokenizer.has_more_tokens
           self.unexpected_token(t)
         end
 

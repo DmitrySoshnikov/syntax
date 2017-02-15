@@ -25,8 +25,12 @@ export default class LLParserGeneratorPHP extends LLParserGeneratorDefault {
   /**
    * Instance constructor.
    */
-  constructor({grammar, outputFile, customTokenizer = null}) {
-    super({grammar, outputFile, customTokenizer})
+  constructor({
+    grammar,
+    outputFile,
+    options = {},
+  }) {
+    super({grammar, outputFile, options})
       .setTemplate(PHP_LL_PARSER_TEMPLATE);
 
     this._lexHandlers = [];

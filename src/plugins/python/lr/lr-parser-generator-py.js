@@ -27,10 +27,9 @@ export default class LRParserGeneratorPy extends LRParserGeneratorDefault {
   constructor({
     grammar,
     outputFile,
-    customTokenizer = null,
-    resolveConflicts = false,
+    options = {},
   }) {
-    super({grammar, outputFile, customTokenizer, resolveConflicts})
+    super({grammar, outputFile, options})
       .setTemplate(PY_LR_PARSER_TEMPLATE);
 
     this._lexHandlers = [];

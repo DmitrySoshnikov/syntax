@@ -21,20 +21,17 @@ const LL_PARSER_TEMPLATE = fs.readFileSync(
 /**
  * LL parser generator. Creates a parser module for a given grammar, and
  * saves it to the `outputFile`.
- *
- * By default also generates code for a tokenizer, unless
- * `customTokenizer` is passed.
  */
 export default class LLParserGeneratorDefault extends BaseParserGenerator {
 
   /**
    * Instance constructor.
    */
-  constructor({grammar, outputFile, customTokenizer = null}) {
+  constructor({grammar, outputFile, options = {}}) {
     if (!grammar.getMode().isLL()) {
       throw new Error(`LL parser generator: LL(1) grammar is expected.`);
     }
-    super({grammar, outputFile, customTokenizer})
+    super({grammar, outputFile, options})
       .setTable(new LLParsingTable({grammar}))
       .setTemplate(LL_PARSER_TEMPLATE);
   }
