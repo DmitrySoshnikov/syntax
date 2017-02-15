@@ -119,7 +119,6 @@
     expressionBegin:      [[`ε`,                            `yy.lexer.pushState('expression')`]],
     expressionEnd:        [[`ε`,                            `yy.lexer.popState()`]],
 
-
     ExpressionNode:       [[`NumericLiteral`,               `$$ = $1`],
                            [`ObjectLiteral`,                `$$ = $1`],
                            [`( Expression )`,               `$$ = $2`]],

@@ -386,7 +386,7 @@ It is also possible to access tokenizer instance from the parser semantic action
 
 Having access to the lexer, it is possible, for example, to change its state, and yield different token types for the same characters.
 
-As an example, differently parsing `{` and `}` begin in an _expression_, or in a _statement_ position in ECMAScript language.
+As an example, differently parsing `{` and `}` being in an _expression_ or in a _statement_ position in ECMAScript language:
 
 ```
 {x: 1} // BlockStatement
