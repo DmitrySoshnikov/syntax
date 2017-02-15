@@ -70,6 +70,7 @@ describe('production', () => {
 
     production = new Production({...productionData, isShort: true});
     expect(production.toString()).toBe('   | E + F');
+    expect(production.toFullString()).toBe('E -> E + F');
   });
 
   it('augmented', () => {

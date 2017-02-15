@@ -43,6 +43,15 @@ export default class LRParser {
 
     // Parse object which may define handlers for parse events.
     this._yyparse = CodeUnit.getSandbox().yyparse;
+
+    // Global storage accessible from semantic actions.
+    this._yy = CodeUnit.getSandbox().yy;
+
+    // Parser may access tokenizer, and affect its state.
+    this._yy.tokenizer = this._tokenizer;
+
+    // Alias for tokenizer.
+    this._yy.lexer = this._tokenizer;
   }
 
   getGrammar() {

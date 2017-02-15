@@ -140,6 +140,14 @@ export default class Production {
   }
 
   toString() {
+    return this._toKey(this._isShort);
+  }
+
+  toFullString() {
+    return this._toKey(false);
+  }
+
+  _toKey(isShort = false) {
     let LHS = this._LHS.getSymbol();
 
     let RHS = this._RHS
@@ -148,7 +156,7 @@ export default class Production {
 
     let pad = Array(LHS.length + '->'.length).join(' ');
 
-    return this._isShort
+    return isShort
       ? `${pad} | ${RHS}`
       : `${LHS} -> ${RHS}`
   }
@@ -176,7 +184,8 @@ export default class Production {
           handler(...args);
         } catch (e) {
           console.error(
-            colors.red('\nError in handler:\n\n') +
+            colors.red(`\nError in handler for production `) +
+            colors.bold(this.toFullString()) + `:\n\n` +
             this.getOriginalSemanticAction() + '\n',
           );
           throw e;

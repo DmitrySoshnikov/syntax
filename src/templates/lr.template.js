@@ -52,6 +52,12 @@ const s = [];
 let tokenizer;
 <<TOKENIZER>>
 
+/**
+ * Expose tokenizer so it can be accessed in semantic actions.
+ */
+yy.lexer = tokenizer;
+yy.tokenizer = tokenizer;
+
 const yyparse = {
   parse(string) {
     yyparse.onParseBegin(string);
