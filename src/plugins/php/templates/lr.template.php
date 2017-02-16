@@ -19,7 +19,43 @@
 
 <<NAMESPACE>>
 
+/**
+ * Default exception for syntax errors.
+ */
 class SyntaxException extends \Exception {}
+
+/**
+ * `yy` is a storage which semantic actions may use to
+ * store needed intermediate results or state, which can be
+ * accessed accross semantic actions, and in the tokenizer.
+ *
+ * It also exposes access to the tokenizer, so semantic actions
+ * can change its state.
+ */
+final class yy {
+  /**
+   * Tokenizer instance.
+   */
+  public static $tokenizer = null;
+
+  /**
+   * Alias of the tokenizer instance.
+   */
+  public static $lexer = null;
+
+  /**
+   * User-level storage.
+   */
+  private static $storage = array();
+
+  public function set($name, $value) {
+    self::$storage[$name] = $value;
+  }
+
+  public function get($name) {
+    return self::$storage[$name];
+  }
+}
 
 <<MODULE_INCLUDE>>
 
@@ -110,6 +146,10 @@ class yyparse {
 
   public static function setTokenizer($tokenizer) {
     self::$tokenizer = $tokenizer;
+
+    // Also set it on `yy` so semantic actions can access the tokenizer.
+    yy::$tokenizer = $tokenizer;
+    yy::$lexer = $tokenizer;
   }
 
   public static function getTokenizer() {
