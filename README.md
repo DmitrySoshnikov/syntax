@@ -20,7 +20,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [C# plugin](#c-plugin)
 - [Grammar format](#grammar-format)
   - [JSON-like notation](#json-like-notation)
-  - [Yacc/Bison notation](#yacc-bison-notations)
+  - [Yacc/Bison notation](#yaccbison-notation)
   - [Grammar properties](#grammar-properties)
 - [Lexical grammar and tokenizer](#lexical-grammar-and-tokenizer)
   - [Getting list of tokens](#getting-list-of-tokens)
