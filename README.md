@@ -18,6 +18,10 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
   - [C# plugin](#c-plugin)
+- [Grammar format](#grammar-format)
+  - [JSON-like notation](#json-like-notation)
+  - [Yacc/Bison notation](#yacc-bison-notations)
+  - [Grammar properties](#grammar-properties)
 - [Lexical grammar and tokenizer](#lexical-grammar-and-tokenizer)
   - [Getting list of tokens](#getting-list-of-tokens)
   - [Using custom tokenizer](#using-custom-tokenizer)
@@ -184,6 +188,93 @@ Console.WriteLine(parser.parse("2 + 2 * 2")); // 6
 ```
 
 Parsing hooks example in C# format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.cs.g).
+
+### Grammar format
+
+_Syntax_ support two main notations to define grammars: _JSON-like_ notation, and _Yacc/Bison-style_ notation.
+
+#### JSON-like notation
+
+JSON-"like" is because it's excented JSON notation, and may include any JavaScript syntax (e.g. quotes may be omitted for properties, can use comments, etc):
+
+```
+/**
+ * Basic calculator grammar in JSON notation.
+ */
+
+{
+  // ---------------------------
+  // Lexical grammar.
+
+  lex: {
+    [`\\s+`,        `/* skip whitespace */`],
+    [`\\d+`,        `return 'NUMBER'`],
+    [`\\+`,         `return '+'`],
+    [`\\*`,         `return '*'`],
+    [`\\(`,         `return '('`],
+    [`\\)`,         `return ')'`],
+  },
+
+  // ---------------------------
+  // Operators precedence.
+
+  operators: [
+    [`left`, `+`],
+    [`left`, `*`],
+  ],
+
+  // ---------------------------
+  // Syntactic grammar.
+
+  bnf: {
+    e: [[`e + e`,   `$$ = $1 + $3`],
+        [`e * e`,   `$$ = $1 * $3`],
+        [`( e )`,   `$$ = $2`],
+        [`NUMBER`   `$$ = $1`]],
+  }
+}
+```
+
+As we can see, `lex` defines _lexical grammar_, `bnf` provides _syntactic grammar_, and _operators_ may defines _associativity and precedence_ of needed symbols. List of available [grammar properties](#grammar-properties) is specified below.
+
+#### Yacc/Bison notation
+
+And here is the same grammar in the Yacc/Bison format:
+
+```
+/**
+ * Basic calculator grammar in Yacc/Bison notation.
+ */
+
+%left '+'
+%left '*'
+
+%%
+
+e
+  : e '+' e    { $$ = $1 + $3 }
+  | e '*' e    { $$ = $1 + $3 }
+  | '(' e ')'  { $$ = $2 }
+  | NUMBER     { $$ = $1 }
+  ;
+```
+
+Simple tokens like `'+'` can be defined inline (with quotes), and complex tokens like `NUMBER` has to be defined in the lexical grammar.
+
+> Note: currently Yacc/Bison format doesn't support defining _lexical grammar_, and it has to be defined in a separate file in this case.
+
+A grammar in Yacc/Bison format is also _just parsed_ by _Syntax_ using our [BNF parser](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g). The resulting parsed AST is exactly the corresponding JSON-like notation described above.
+
+#### Grammar properties
+
+Below is the list of available grammar properties.
+
+* `lex` - [lexical grammar](#lexical-grammar-and-tokenizer).
+* `bnf` - syntactic grammar in BNF format.
+* `operators` - associativity and precedence of needed grammar symbols (usually operators, but not necessarily). Can be used to resolve "shift-reduce" conflicts in cases like _"dangling-else"_ problem, math-operators, etc.
+* `moduleInclude` -- the code which is included "as is" into the generated parser module. Usually used to require or define inline classes for AST nodes, and any additional code.
+* `startSymbol` - starting symbol (if not specified, it's inferred from the LHS of the first rule).
+* `tokens` - explicit list of tokens (if not specified, it's automatically inferred from the grammar).
 
 ### Lexical grammar and tokenizer
 
