@@ -123,6 +123,7 @@ const RubyParserGeneratorTrait = {
     return code
       .replace(/yytext/g, 'YYParse.yytext')
       .replace(/yyleng/g, 'YYParse.yyleng')
+      .replace(/\b__loc\b/g, 'YYParse.__loc')
       .replace(/\b__\b/g, 'YYParse.__');
   },
 

@@ -16,12 +16,15 @@
 ##
 
 class YYParse
-  @@ps = <<PRODUCTIONS>>
-  @@tks = <<TOKENS>>
-  @@tbl = <<TABLE>>
+  @@productions = <<PRODUCTIONS>>
+  @@tokens = <<TOKENS>>
+  @@table = <<TABLE>>
 
-  @@s = []
+  @@stack = []
   @@__ = nil
+  @@__loc = nil
+
+  @@should_capture_locations = <<CAPTURE_LOCATIONS>>
 
   @@callbacks = {
     :on_parse_begin => nil,
@@ -33,8 +36,32 @@ class YYParse
   @@yytext = ''
   @@yyleng = 0
 
+  def self.yyloc(s, e)
+    # Epsilon doesn't produce location.
+    if (!s || !e)
+      return e if !s else s
+    end
+
+    return {
+      :start_offset => s[:start_offset],
+      :end_offset => e[:end_offset],
+      :start_line => s[:start_line],
+      :end_line => e[:end_line],
+      :start_column => s[:start_column],
+      :end_column => e[:end_column],
+    }
+  end
+
   def self.__=(__)
     @@__ = __
+  end
+
+  def self.__loc=(__loc)
+    @@__loc = __loc
+  end
+
+  def self.__loc
+    @@__loc
   end
 
   def self.yytext=(yytext)
@@ -86,66 +113,113 @@ class YYParse
 
     tokenizer.init_string(string)
 
-    @@s = [0]
+    @@stack = [0]
 
-    t = tokenizer.get_next_token
-    st = nil
+    token = tokenizer.get_next_token
+    shifted_token = nil
 
     loop do
-      if not t
+      if not token
         self.unexpected_end_of_input
       end
 
-      sta = @@s[-1]
-      clm = @@tks[t[:type]]
-      e = @@tbl[sta][clm]
+      state = @@stack[-1]
+      column = @@tokens[token[:type]]
 
-      if not e
-        self.unexpected_token(t)
+      if !@@table[state].has_key?(column)
+        self.unexpected_token(token)
       end
 
-      if e[0, 1] == 's'
-        @@s.push(
-          {:symbol => @@tks[t[:type]], :semantic_value => t[:value]},
-          e[1..-1].to_i
-        )
-        st = t
-        t = tokenizer.get_next_token
-      elsif e[0, 1] == 'r'
-        pn = e[1..-1].to_i
-        p = @@ps[pn]
-        hsa = p.count > 2
-        saa = hsa ? [] : nil
+      entry = @@table[state][column]
 
-        if p[1] != 0
-          rhsl = p[1]
-          while rhsl > 0
-            rhsl -= 1
-            @@s.pop
-            se = @@s.pop
-            if hsa
-              saa.unshift(se[:semantic_value])
+      if entry[0, 1] == 's'
+        loc = nil
+        if @@should_capture_locations
+          loc = {
+            :start_offset => token[:start_offset],
+            :end_offset => token[:end_offset],
+            :start_line => token[:start_line],
+            :end_line => token[:end_line],
+            :start_column => token[:start_column],
+            :end_column => token[:end_column],
+          }
+        end
+
+        @@stack.push(
+          {
+            :symbol => @@tokens[token[:type]],
+            :semantic_value => token[:value],
+            :loc => loc,
+          },
+          entry[1..-1].to_i
+        )
+        shifted_token = token
+        token = tokenizer.get_next_token
+      elsif entry[0, 1] == 'r'
+        production_number = entry[1..-1].to_i
+        production = @@productions[production_number]
+        has_semantic_action = production.count > 2
+        semantic_value_args = nil
+        location_args = nil
+
+        if has_semantic_action
+          semantic_value_args = []
+
+          if @@should_capture_locations
+            location_args = []
+          end
+        end
+
+        if production[1] != 0
+          rhs_length = production[1]
+          while rhs_length > 0
+            rhs_length -= 1
+            @@stack.pop
+            stack_entry = @@stack.pop
+            if has_semantic_action
+              semantic_value_args.unshift(stack_entry[:semantic_value])
+
+              if @@should_capture_locations
+                location_args.unshift(stack_entry[:loc])
+              end
             end
           end
         end
 
-        rse = {:symbol => p[0]}
+        reduce_stack_entry = {:symbol => production[0]}
 
-        if hsa
-          @@yytext = st ? st[:value] : nil
-          @@yyleng = st ? st[:value].length : nil
-          YYParse.send(p[2], *saa)
-          rse[:semantic_value] = @@__
+        if has_semantic_action
+          @@yytext = shifted_token ? shifted_token[:value] : nil
+          @@yyleng = shifted_token ? shifted_token[:value].length : nil
+
+          semantic_action_args = semantic_value_args
+
+          if @@should_capture_locations
+            semantic_action_args += location_args
+          end
+
+          YYParse.send(production[2], *semantic_action_args)
+          reduce_stack_entry[:semantic_value] = @@__
+
+          if @@should_capture_locations
+            reduce_stack_entry[:loc] = @@__loc
+          end
         end
 
-        @@s.push(rse, @@tbl[@@s[-1]][p[0].to_s])
+        next_state = @@stack[-1]
+        symbol_to_reduce_with = production[0].to_s
 
-      elsif e == 'acc'
-        @@s.pop
-        parsed = @@s.pop
+        @@stack.push(
+          reduce_stack_entry,
+          @@table[next_state][symbol_to_reduce_with]
+        )
 
-        if @@s.length != 1 || @@s[0] != 0 || tokenizer.has_more_tokens
-          self.unexpected_token(t)
+      elsif entry == 'acc'
+        @@stack.pop
+        parsed = @@stack.pop
+
+        if @@stack.length != 1 || @@stack[0] != 0 || tokenizer.has_more_tokens
+          self.unexpected_token(token)
         end
 
         parsed_value = parsed.has_key?(:semantic_value) ? parsed[:semantic_value] : true
@@ -157,7 +231,7 @@ class YYParse
         return parsed_value
       end
 
-      if not tokenizer.has_more_tokens and @@s.length <= 1
+      if not tokenizer.has_more_tokens and @@stack.length <= 1
         break
       end
     end
@@ -167,9 +241,11 @@ class YYParse
     if token[:value] == self::EOF
       self.unexpected_end_of_input()
     end
-    self.parse_error(
-      'Unexpected token: "' + token[:value] + '" at ' +
-      token[:start_line].to_s + ':' + token[:start_column].to_s + '.'
+
+    self.tokenizer.throw_unexpected_token(
+      token[:value],
+      token[:start_line],
+      token[:start_column]
     )
   end
 
@@ -178,7 +254,7 @@ class YYParse
   end
 
   def self.parse_error(message)
-    raise 'Parse error: ' + message
+    raise 'SyntaxError: ' + message
   end
 end
 

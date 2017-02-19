@@ -133,9 +133,11 @@ class YYParse
     if token[:value] == self::EOF
       self.unexpected_end_of_input()
     end
-    self.parse_error(
-      'Unexpected token: "' + token[:value] + '" at ' +
-      token[:start_line].to_s + ':' + token[:start_column].to_s + '.'
+
+    self.tokenizer.throw_unexpected_token(
+      token[:value],
+      token[:start_line],
+      token[:start_column]
     )
   end
 

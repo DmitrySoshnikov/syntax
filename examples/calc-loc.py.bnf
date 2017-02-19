@@ -45,12 +45,12 @@ def Loc(s, e):
     }
 
 class NumericLiteral(object):
-  def __init__(self, value, loc):
-      self.value = value
-      self.loc = loc
+    def __init__(self, value, loc):
+        self.value = value
+        self.loc = loc
 
 def on_parse_end(value):
-  print(value.loc)
+    print(value.loc)
 
 %}
 

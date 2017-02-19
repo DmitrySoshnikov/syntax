@@ -12,6 +12,7 @@ class SyntaxToolTokenizer__
 
 
   @string = ''
+  @original_string = ''
   @cursor = 0
   @tokens_queue = []
   @states = []
@@ -37,7 +38,8 @@ class SyntaxToolTokenizer__
   <<LEX_RULE_HANDLERS>>
 
   def init_string(string)
-    @string = string + YYParse::EOF
+    @original_string = string
+    @string = @original_string + YYParse::EOF
     @cursor = 0
     @tokens_queue = []
     @states = ['INITIAL']
@@ -120,8 +122,27 @@ class SyntaxToolTokenizer__
       end
     }
 
-    raise 'Unexpected token: "' + string[0] + '" at ' +
-      @current_line.to_s + ':' + @current_column.to_s + '.'
+    throw_unexpected_token(string[0], @current_line, @current_column)
+  end
+
+  ##
+  # Throws default "Unexpected token" exception, showing the actual
+  # line from the source, pointing with the ^ marker to the bad token.
+  # In addition, shows `line:column` location.
+  #
+  def throw_unexpected_token(symbol, line, column)
+    line_source = @original_string.split('\n')[line - 1]
+    line_data = ''
+
+    if line_source
+      pad = ' ' * column;
+      line_data = "\n\n" + line_source + "\n" + pad + "^\n"
+    end
+
+    raise (
+      line_data + 'Unexpected token: "' + symbol.to_s + '" at ' +
+      line.to_s + ':' + column.to_s + '.'
+    )
   end
 
   def _capture_location(matched)
