@@ -28,6 +28,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Start conditions of lex rules, and tokenizer states](#start-conditions-of-lex-rules-and-tokenizer-states)
   - [Access tokenizer from parser semantic actions](#access-tokenizer-from-parser-semantic-actions)
   - [Case-insensitive match](#case-insensitive-match)
+- [Working with precedence and associativity](#working-with-precedence-and-associativity)
 - [Handler arguments notation](#handler-arguments-notation)
   - [Positioned notation](#positioned-notation)
   - [Named notation](#named-notation)
@@ -510,6 +511,97 @@ Lexical grammar rules can also be _case-insensitive_. From the command line it's
 ```
 
 See [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/case-insensitive-lex.g) for details.
+
+### Working with precedence and associativity
+
+Precedence and associativity operators allow building more readable and elegant grammars, avoiding different kinds of conflicts, like "shift-reduce".
+
+Supported precedence operators are:
+
+* `%left` -- left-associative;
+* `%right` -- right-associative;
+* `%nonassoc` -- non-associative.
+```
+
+#### Associative precedence
+
+Having the following snippet from the calculator grammar:
+
+```
+%%
+
+e
+  : e '+' e
+  | e '*' e
+  | '(' e ')'
+  | NUMBER
+  ;
+```
+
+we get a _"shift-reduce"_ conflict for the input like:
+
+```
+2 + 2 + 2
+```
+
+Once have parsed `2 + 2`, and having `+` as the lookahead, the parser cannot decided, whether it should _reduce_ parsed `2 + 2` to `e`, _or_ it has to _shift_ further, since `2` itself can be `e` (by `NUMBER` rule), and parser can expect `+` after `e`.
+
+Defining associativity for the `+` operator solves it easily and elegantly:
+
+```
+%left '+'
+%left '*'
+
+%%
+
+e
+  : e '+' e
+  | e '*' e
+  | '(' e ')'
+  | NUMBER
+  ;
+```
+
+Here by `%left '+'` we say that `+` is _left-associative_, which means that parser should parse `2 + 2 + 2` as `(2 + 2) + 2`, and not as `2 + (2 + 2)`. In other words, once the parser have parsed `2 + 2`, and still sees `+` as the lookahead, it chooses to _reduce_ instead of shift, and "shift-reduce" conflict is resolved.
+
+Another example is having the snippet as:
+
+```
+2 + 2 * 2
+```
+
+If parser would reduce in this case, we'd have gotten an invalid mathematical expression, since this expression, without having any grouping parenthesis, should be parsed as `2 + (2 * 2)`, and not as `(2 + 2) * 2`.
+
+To solve this we used `%left '*'` which in our grammar definition stays in order _after_ the `%left '+'`, and which makes `*` operator to have _higher precedence_, than `+`. In this case parser chooses to _shift_ further instead of reducing.
+
+Note, from [JSON-like notation](#json-like-notation) they are defined as:
+
+```js
+operators: [
+  ['left', '+'],
+  ['left', '*'],
+  // etc.
+]
+
+#### Non-associative precedence
+
+Sometimes we don't need any associativity, but just want to specify _precedence_ of some symbols. As a classic example, the [dangling-else](https://en.wikipedia.org/wiki/Dangling_else) problem, for which we use `%nonassoc` operator to resolve it:
+
+```
+%nonassoc THEN
+%nonassoc 'else'
+
+%%
+
+IfStatement
+  : 'if' '(' Expression ')' Statement %prec THEN
+  | 'if' '(' Expression ')' Statement 'else' Statement
+  ;
+```
+
+As we can see, `'else'` token has _higher precedence_ again, since goes after ("virtual") `THEN` token, so there is no "shift-reduce" conflict as well in this case.
+
+Here `%prec` is used in production to specify which precedence to apply, using the "virtual" `THEN` symbol -- in this case it's not a real token (in contrast with `'else'`), but just _precedence name_ in order to refer it from the production.
 
 ### Handler arguments notation
 

@@ -368,12 +368,9 @@ class Tokenizer {
    */
   throwUnexpectedToken(symbol, line, column) {
     const lineSource = this._originalString.split('\n')[line - 1];
-    let lineData = '';
 
-    if (lineSource) {
-      const pad = ' '.repeat(column);
-      lineData = '\n\n' + lineSource + '\n' + pad + '^\n';
-    }
+    const pad = ' '.repeat(column);
+    const lineData = '\n\n' + lineSource + '\n' + pad + '^\n';
 
     throw new SyntaxError(
       `${lineData}Unexpected token: "${symbol}" ` +

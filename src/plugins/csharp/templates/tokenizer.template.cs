@@ -77,6 +77,11 @@ namespace SyntaxParser
     public class Tokenizer
     {
         /**
+         * Original string.
+         */
+        private string mOriginalString;
+
+        /**
          * Tokenizing string.
          */
         private string mString;
@@ -194,7 +199,8 @@ namespace SyntaxParser
 
         public void initString(string tokenizingString)
         {
-            mString = tokenizingString + yyparse.EOF;
+            mOriginalString = tokenizingString;
+            mString = mOriginalString + yyparse.EOF;
             mCursor = 0;
 
             mStates = new Stack<string>();
@@ -303,9 +309,30 @@ namespace SyntaxParser
                 }
             }
 
-            throw new Exception(
-                "Unexpected token: \"" + str[0] + "\" at " +
-                mCurrentLine + ":" + mCurrentColumn + "."
+            throwUnexpectedToken(
+                str[0].ToString(),
+                mCurrentLine,
+                mCurrentColumn
+            );
+
+            return null;
+        }
+
+        /**
+         * Throws default "Unexpected token" exception, showing the actual
+         * line from the source, pointing with the ^ marker to the bad token.
+         * In addition, shows `line:column` location.
+         */
+        public void throwUnexpectedToken(string symbol, int line, int column)
+        {
+            var lineSource = mOriginalString.Split('\n')[line - 1];
+
+            var pad = new String(' ', column);
+            string lineData = "\n\n" + lineSource + "\n" + pad + "^\n";
+
+            throw new SyntaxException(
+                lineData + "Unexpected token: \"" + symbol +"\" " +
+                "at " + line + ":" + column + "."
             );
         }
 

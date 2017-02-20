@@ -165,11 +165,9 @@ class Tokenizer(object):
     #
     def throw_unexpected_token(self, symbol, line, column):
         line_source = self._original_string.split('\n')[line - 1]
-        line_data = ''
 
-        if not line_source is None:
-            pad = ' ' * column;
-            line_data = '\n\n' + line_source + '\n' + pad + '^\n'
+        pad = ' ' * column;
+        line_data = '\n\n' + line_source + '\n' + pad + '^\n'
 
         raise Exception(
             line_data + 'Unexpected token: "' + str(symbol) + '" at ' +

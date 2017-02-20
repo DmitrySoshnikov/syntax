@@ -132,12 +132,9 @@ class SyntaxToolTokenizer__
   #
   def throw_unexpected_token(symbol, line, column)
     line_source = @original_string.split('\n')[line - 1]
-    line_data = ''
 
-    if line_source
-      pad = ' ' * column;
-      line_data = "\n\n" + line_source + "\n" + pad + "^\n"
-    end
+    pad = ' ' * column;
+    line_data = "\n\n" + line_source + "\n" + pad + "^\n"
 
     raise (
       line_data + 'Unexpected token: "' + symbol.to_s + '" at ' +

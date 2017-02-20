@@ -141,12 +141,9 @@ class Tokenizer {
    */
   public function throwUnexpectedToken($symbol, $line, $column) {
     $line_source = explode("\n", $this->originalString)[$line - 1];
-    $line_data = '';
 
-    if ($line_source) {
-      $pad = str_repeat(' ', $column);
-      $line_data = "\n\n" . $line_source . "\n" . $pad . "^\n";
-    }
+    $pad = str_repeat(' ', $column);
+    $line_data = "\n\n" . $line_source . "\n" . $pad . "^\n";
 
     throw new SyntaxException(
       $line_data . 'Unexpected token: "' . $symbol . '" at ' .

@@ -81,6 +81,17 @@ namespace SyntaxParser
     }
 
     /**
+     * SyntaxException.
+     */
+    public class SyntaxException : Exception
+    {
+        public SyntaxException(string message)
+            : base(message)
+        {
+        }
+    }
+
+    /**
      * Base class for the parser. Implements LR parsing algorithm.
      *
      * Should implement at least the following API:
@@ -419,9 +430,11 @@ namespace SyntaxParser
             {
                 unexpectedEndOfInput();
             }
-            parseError(
-                "Unexpected token: \"" + token.Value + "\" at " +
-                token.StartLine + ":" + token.StartColumn + "."
+
+            tokenizer.throwUnexpectedToken(
+                token.Value,
+                token.StartLine,
+                token.StartColumn
             );
         }
 
@@ -432,7 +445,7 @@ namespace SyntaxParser
 
         private void parseError(string message)
         {
-            throw new Exception("Parse error: " + message);
+            throw new SyntaxException("Parse error: " + message);
         }
 
     }
