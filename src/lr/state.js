@@ -31,11 +31,11 @@ export default class State {
    * item can be passed in the constructor, other kernel items can
    * be added later via `add` method.
    */
-  constructor({
+  constructor(
     kernelItems,
     grammar,
     canonicalCollection,
-  }) {
+  ) {
     this._kernelItems = kernelItems;
     this._items = [];
     this._grammar = grammar;
@@ -279,11 +279,11 @@ export default class State {
       // If not, create a new outer state with advanced kernel items.
       if (!outerState) {
 
-        outerState = new State({
-          kernelItems: items.map(item => item.advance()),
-          grammar: this._grammar,
-          canonicalCollection: this._canonicalCollection,
-        });
+        outerState = new State(
+          /* kernelItems */ items.map(item => item.advance()),
+          /* grammar */ this._grammar,
+          /* canonicalCollection */ this._canonicalCollection,
+        );
 
         this._canonicalCollection
           .registerTranstionForItems(items, outerState);

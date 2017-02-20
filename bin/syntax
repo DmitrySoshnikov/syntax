@@ -345,17 +345,12 @@ function getGrammar(grammarFile, mode) {
 
   const grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf');
 
-  if (!grammarData.lex) {
-    grammarData.lex = {
-      rules: [],
-    };
-  }
-
   // If explicit lexical grammar file was passed, use it.
   const lexGrammarData = getLexGrammarData(options);
-  if (lexGrammarData) {
-    grammarData.lex.rules = grammarData.lex.rules
-      .concat(lexGrammarData.rules || []);
+  if (!grammarData.lex) {
+    grammarData.lex = lexGrammarData;
+  } else {
+    grammarData.lex.rules.push(...lexGrammarData.rules);
   }
 
   const grammarOptions = {

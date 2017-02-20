@@ -42,15 +42,16 @@ export default class CanonicalCollection {
 
     // Root item for the augmented production, "closure" and "goto"
     // operations applied on this item build the entire collection.
-    this._rootItem = new LRItem({
-      production: this._grammar.getAugmentedProduction(),
-      grammar: this._grammar,
-      canonicalCollection: this,
-      setsGenerator: new SetsGenerator({grammar}),
-      lookaheadSet: this._grammar.getMode().usesLookaheadSet()
+    this._rootItem = new LRItem(
+      /* production */ this._grammar.getAugmentedProduction(),
+      /* dotPosition */ 0,
+      /* grammar */ this._grammar,
+      /* canonicalCollection */ this,
+      /* setsGenerator */ new SetsGenerator({grammar}),
+      /*lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
         ? {'$': true}
         : null,
-    });
+    );
 
     // Build the entire graph.
     this._rootItem

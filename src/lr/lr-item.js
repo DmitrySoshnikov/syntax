@@ -20,14 +20,14 @@ import {EPSILON} from '../special-symbols';
  * LR(1) = LR(0) + lookahead set.
  */
 export default class LRItem {
-  constructor({
+  constructor(
     production,
-    dotPosition = 0,
+    dotPosition,
     grammar,
     canonicalCollection,
     setsGenerator,
     lookaheadSet = null,
-  }) {
+  ) {
     this._key = LRItem.keyForItem(production, dotPosition, lookaheadSet);
 
     // For LR(1) item, same as key, but withough lookaheads.
@@ -126,26 +126,26 @@ export default class LRItem {
 
     // Main kernel item for the augmented production, that creates a new state.
     if (!this.getState()) {
-      this.setState(new State({
-        kernelItems: [this],
-        grammar: this._grammar,
-        canonicalCollection: this._canonicalCollection,
-        setsGenerator: this._setsGenerator,
-      }));
+      this.setState(new State(
+        /* kernelItems */ [this],
+        /* grammar */ this._grammar,
+        /* canonicalCollection */ this._canonicalCollection,
+        /* setsGenerator */ this._setsGenerator,
+      ));
     }
 
     let productionsForSymbol = this._grammar
       .getProductionsForSymbol(this.getCurrentSymbol());
 
     let addedItems = productionsForSymbol.map(production => {
-      return new LRItem({
+      return new LRItem(
         production,
-        dotPosition: 0,
-        grammar: this._grammar,
-        canonicalCollection: this._canonicalCollection,
-        setsGenerator: this._setsGenerator,
-        lookaheadSet: this._calculateLookaheadSet(),
-      });
+        /* dotPosition */ 0,
+        this._grammar,
+        this._canonicalCollection,
+        this._setsGenerator,
+        /* lookaheadSet */ this._calculateLookaheadSet(),
+      );
     });
 
     this._closured = true;
@@ -407,16 +407,16 @@ export default class LRItem {
       throw new Error(`Item for ${this._production.getRaw()} is final.`);
     }
 
-    return new LRItem({
-      production: this._production,
-      dotPosition: this._dotPosition + 1,
-      grammar: this._grammar,
-      canonicalCollection: this._canonicalCollection,
-      setsGenerator: this._setsGenerator,
+    return new LRItem(
+      this._production,
+      /* dotPosition */ this._dotPosition + 1,
+      this._grammar,
+      this._canonicalCollection,
+      this._setsGenerator,
       // On goto transition lookaheads set doesn't change.
-      lookaheadSet: this._grammar.getMode().usesLookaheadSet()
+      /* lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
         ? {...this.getLookaheadSet()}
         : null,
-    });
+    );
   }
 };
