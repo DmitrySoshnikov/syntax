@@ -349,7 +349,7 @@ function getGrammar(grammarFile, mode) {
   const lexGrammarData = getLexGrammarData(options);
   if (!grammarData.lex) {
     grammarData.lex = lexGrammarData;
-  } else {
+  } else if (lexGrammarData) {
     grammarData.lex.rules.push(...lexGrammarData.rules);
   }
 
