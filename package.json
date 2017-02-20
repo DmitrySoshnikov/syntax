@@ -1,6 +1,6 @@
 {
   "name": "syntax-cli",
-  "version": "0.0.67",
+  "version": "0.0.68",
   "description": "Syntactic analysis toolkit, language agnostic parsers generator.",
   "repository": {
     "type": "git",
