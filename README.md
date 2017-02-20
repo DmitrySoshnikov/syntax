@@ -516,7 +516,7 @@ See [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/example
 
 ### Working with precedence and associativity
 
-Precedence and associativity operators allow building more readable and elegant grammars, avoiding different kinds of conflicts, like "shift-reduce".
+Precedence and associativity operators allow building more readable and elegant grammars, avoiding different kinds of conflicts, like "shift-reduce" conflicts.
 
 Supported precedence operators are:
 
@@ -545,7 +545,7 @@ we get a _"shift-reduce"_ conflict for the input like:
 2 + 2 + 2
 ```
 
-Once have parsed `2 + 2`, and having `+` as the lookahead, the parser cannot decided, whether it should _reduce_ parsed `2 + 2` to `e`, _or_ it has to _shift_ further, since `2` itself can be `e` (by `NUMBER` rule), and parser can expect `+` after `e`.
+Once have parsed the first `2 + 2`, and having `+` as the lookahead, the parser cannot decide, whether it should _reduce_ the parsed `2 + 2` value to `e`, _or_ it should to _shift_ further, since `2` itself can be `e` (by `NUMBER` rule), and parser can expect `+` after `e`.
 
 Defining associativity for the `+` operator solves it easily and elegantly:
 
@@ -571,9 +571,9 @@ Another example is having the snippet as:
 2 + 2 * 2
 ```
 
-If parser would reduce in this case, we'd have gotten an invalid mathematical expression, since this expression, without having any grouping parenthesis, should be parsed as `2 + (2 * 2)`, and not as `(2 + 2) * 2`.
+If parser would reduce in this case, we would get an _invalid mathematical expression_, since this expression, without any grouping parenthesis, should be parsed as `2 + (2 * 2)`, and not as `(2 + 2) * 2`.
 
-To solve this we used `%left '*'` which in our grammar definition stays in order _after_ the `%left '+'`, and which makes `*` operator to have _higher precedence_, than `+`. In this case parser chooses to _shift_ further instead of reducing.
+To solve this we use `%left '*'` which in our grammar definition stays in order _after_ the `%left '+'`, which makes the `*` operator to have a _higher precedence_, than the `+` has. In this case parser chooses to _shift_ further instead of reducing.
 
 Note, from [JSON-like notation](#json-like-notation) they are defined as:
 
@@ -587,7 +587,7 @@ operators: [
 
 #### Non-associative precedence
 
-Sometimes we don't need any associativity, but just want to specify _precedence_ of some symbols. As a classic example, the [dangling-else](https://en.wikipedia.org/wiki/Dangling_else) problem, for which we use `%nonassoc` operator to resolve it:
+Sometimes we don't need any associativity, but just want to specify _precedence_ of some symbols. As a classic example, we can take the [dangling-else](https://en.wikipedia.org/wiki/Dangling_else) problem, for which we use `%nonassoc` operator:
 
 ```
 %nonassoc THEN
@@ -601,11 +601,11 @@ IfStatement
   ;
 ```
 
-As we can see, `'else'` token has _higher precedence_ again, since goes after ("virtual") `THEN` token, so there is no "shift-reduce" conflict as well in this case.
+As we can see, `'else'` token has _higher precedence_ again, since goes after ("virtual") `THEN` token, so there is no "shift-reduce" conflict in this case.
 
 Here `%prec` is used in production to specify which precedence to apply, using the "virtual" `THEN` symbol -- in this case it's not a real token (in contrast with `'else'`), but just _precedence name_ in order to refer it from the production.
 
-You can find it this problem handled in this [grammar example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lang.bnf).
+You can find this problem handled in this [grammar example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lang.bnf).
 
 ### Handler arguments notation
 

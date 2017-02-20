@@ -309,7 +309,10 @@ function lrParse(string, grammar) {
     return LRParser.fromParserGenerator({grammar}).parse(string);
   }
 
-  return new LRParser({grammar}).parse(string);
+  return new LRParser({
+    grammar,
+    resolveConflicts: options['resolve-conflicts'],
+  }).parse(string);
 }
 
 function llParse(string, grammar) {
@@ -342,14 +345,17 @@ function getGrammar(grammarFile, mode) {
 
   const grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf');
 
+  if (!grammarData.lex) {
+    grammarData.lex = {
+      rules: [],
+    };
+  }
+
   // If explicit lexical grammar file was passed, use it.
   const lexGrammarData = getLexGrammarData(options);
   if (lexGrammarData) {
-    grammarData.lex = Object.assign(
-      {},
-      grammarData.lex || {},
-      lexGrammarData
-    );
+    grammarData.lex.rules = grammarData.lex.rules
+      .concat(lexGrammarData.rules || []);
   }
 
   const grammarOptions = {

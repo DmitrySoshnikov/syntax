@@ -17,7 +17,11 @@ import path from 'path';
 const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
-  constructor({grammar, parserModule}) {
+  constructor({
+    grammar,
+    parserModule,
+    resolveConflicts,
+  }) {
     this._grammar = grammar;
     this._parserModule = parserModule;
 
@@ -28,6 +32,7 @@ export default class LRParser {
     this._table = new LRParsingTable({
       canonicalCollection: this._canonicalCollection,
       grammar: this._grammar,
+      resolveConflicts,
     });
 
     this._tokenizer = new Tokenizer({
