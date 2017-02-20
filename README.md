@@ -29,6 +29,8 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Access tokenizer from parser semantic actions](#access-tokenizer-from-parser-semantic-actions)
   - [Case-insensitive match](#case-insensitive-match)
 - [Working with precedence and associativity](#working-with-precedence-and-associativity)
+  - [Associative precedence](#associative-precedence)
+  - [Non-associative precedence](#non-associative-precedence)
 - [Handler arguments notation](#handler-arguments-notation)
   - [Positioned notation](#positioned-notation)
   - [Named notation](#named-notation)
@@ -236,7 +238,7 @@ JSON-"like" is because it's excented JSON notation, and may include any JavaScri
 }
 ```
 
-As we can see, `lex` defines _lexical grammar_, `bnf` provides _syntactic grammar_, and _operators_ may defines _associativity and precedence_ of needed symbols. List of available [grammar properties](#grammar-properties) is specified below.
+As we can see, `lex` defines _lexical grammar_, `bnf` provides _syntactic grammar_, and _operators_ may defines [associativity and precedence](#working-with-precedence-and-associativity) of needed symbols. List of available [grammar properties](#grammar-properties) is specified below.
 
 #### Yacc/Bison notation
 
@@ -521,7 +523,6 @@ Supported precedence operators are:
 * `%left` -- left-associative;
 * `%right` -- right-associative;
 * `%nonassoc` -- non-associative.
-```
 
 #### Associative precedence
 
@@ -582,6 +583,7 @@ operators: [
   ['left', '*'],
   // etc.
 ]
+```
 
 #### Non-associative precedence
 
@@ -602,6 +604,8 @@ IfStatement
 As we can see, `'else'` token has _higher precedence_ again, since goes after ("virtual") `THEN` token, so there is no "shift-reduce" conflict as well in this case.
 
 Here `%prec` is used in production to specify which precedence to apply, using the "virtual" `THEN` symbol -- in this case it's not a real token (in contrast with `'else'`), but just _precedence name_ in order to refer it from the production.
+
+You can find it this problem handled in this [grammar example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/lang.bnf).
 
 ### Handler arguments notation
 
