@@ -24,28 +24,30 @@ const canonicalCollection = new CanonicalCollection({grammar});
 const setsGenerator = new SetsGenerator({grammar});
 
 // $accept -> • E
-const rootItem = new LRItem({
-  production: grammar.getAugmentedProduction(),
+const rootItem = new LRItem(
+  /* production */ grammar.getAugmentedProduction(),
+  /* dotPosition */ 0,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: {$: true},
-});
+  /* lookaheadSet */ {$: true},
+);
 
 // E -> • E + E
-const baseItem = new LRItem({
-  production: grammar.getProduction(1),
+const baseItem = new LRItem(
+  /* production */ grammar.getProduction(1),
+  /* dotPosition */ 0,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: {
+  /* lookaheadSet */ {
     '$': true,
     '/': true,
     '-': true,
     '*': true,
     '+': true,
   },
-});
+);
 
 // E -> E • + E
 const advancedItem = baseItem.advance();
@@ -122,13 +124,13 @@ describe('lr-item', () => {
 
   it('LR0 key for items', () => {
     // E -> • E + E, {'%': true}
-    const otherBaseItem = new LRItem({
-      production: baseItem.getProduction(),
+    const otherBaseItem = new LRItem(
+      /* production */ baseItem.getProduction(),
       grammar,
       canonicalCollection,
       setsGenerator,
-      lookaheadSet: {'%': true}, // Other lookahead set.
-    });
+      /* lookaheadSet */ {'%': true}, // Other lookahead set.
+    );
 
     const items = [
       baseItem,
@@ -191,12 +193,13 @@ describe('lr-item', () => {
   it('is epsilon', () => {
     expect(baseItem.isEpsilonTransition()).toBe(false);
 
-    const epsilonItem = new LRItem({
-      production: new Production({LHS: 'S', RHS: /* empty */'', grammar}),
+    const epsilonItem = new LRItem(
+      /* production */ new Production({LHS: 'S', RHS: /* empty */'', grammar}),
+      /* dotPosition */ 0,
       grammar,
       canonicalCollection,
       setsGenerator,
-    });
+    );
 
     expect(epsilonItem.isEpsilonTransition()).toBe(true);
   });

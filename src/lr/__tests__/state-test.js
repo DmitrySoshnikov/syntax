@@ -25,13 +25,14 @@ const canonicalCollection = new CanonicalCollection({grammar});
 const setsGenerator = new SetsGenerator({grammar});
 
 // $accept -> • E
-const rootItem = new LRItem({
-  production: grammar.getAugmentedProduction(),
+const rootItem = new LRItem(
+  /* production */ grammar.getAugmentedProduction(),
+  /* dotPosition */ 0,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: {$: true},
-});
+  /* lookaheadSet */ {$: true},
+);
 
 const defaultLookaheadSet = {
   '$': true,
@@ -42,84 +43,84 @@ const defaultLookaheadSet = {
 };
 
 // E -> E • + E
-const kernelItem1 = new LRItem({
-  production: grammar.getProduction(1),
-  dotPosition: 1,
+const kernelItem1 = new LRItem(
+  /* production */ grammar.getProduction(1),
+  /* dotPosition */ 1,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: defaultLookaheadSet,
-});
+  /* lookaheadSet */ defaultLookaheadSet,
+);
 
 // E -> E • * E
-const kernelItem2 = new LRItem({
-  production: grammar.getProduction(2),
-  dotPosition: 1,
+const kernelItem2 = new LRItem(
+  /* production */ grammar.getProduction(2),
+  /* dotPosition */ 1,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: defaultLookaheadSet,
-});
+  /* lookaheadSet */ defaultLookaheadSet,
+);
 
 const kernelItems = [
   kernelItem1,
   kernelItem2,
 ];
 
-const state = new State({
+const state = new State(
   kernelItems,
   grammar,
   canonicalCollection,
-});
+);
 
-const otherItem = new LRItem({
-  production: grammar.getProduction(3),
-  dotPosition: 1,
+const otherItem = new LRItem(
+  /* production */ grammar.getProduction(3),
+  /* dotPosition */ 1,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: defaultLookaheadSet,
-});
+  /* lookaheadSet */ defaultLookaheadSet,
+);
 
 state.addItem(otherItem);
 
 const items = kernelItems.concat(otherItem);
 
 // $accept -> E •
-const acceptItem = new LRItem({
-  production: grammar.getAugmentedProduction(),
-  dotPosition: 1,
+const acceptItem = new LRItem(
+  /* production */ grammar.getAugmentedProduction(),
+  /* dotPosition */ 1,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: {$: true},
-});
+  /* lookaheadSet */ {$: true},
+);
 
 const acceptItems = [
   acceptItem,
 ];
 
-const acceptState = new State({
-  kernelItems: acceptItems,
+const acceptState = new State(
+  /* kernelItems */ acceptItems,
   grammar,
   canonicalCollection,
-});
+);
 
 // E -> E + E •
-const finalItem = new LRItem({
-  production: grammar.getProduction(2),
-  dotPosition: 3,
+const finalItem = new LRItem(
+  /* production */ grammar.getProduction(2),
+  /* dotPosition */ 3,
   grammar,
   canonicalCollection,
   setsGenerator,
-  lookaheadSet: defaultLookaheadSet,
-});
+  /* lookaheadSet */ defaultLookaheadSet,
+);
 
-const finalState = new State({
-  kernelItems: [finalItem],
+const finalState = new State(
+  /* kernelItems */ [finalItem],
   grammar,
   canonicalCollection,
-});
+);
 
 describe('state', () => {
 
@@ -137,14 +138,14 @@ describe('state', () => {
     expect(state.isKernelItem(kernelItem1)).toBe(true);
     expect(state.isKernelItem(kernelItem2)).toBe(true);
 
-    const otherItem = new LRItem({
-      production: grammar.getProduction(2),
-      dotPosition: 1,
+    const otherItem = new LRItem(
+      /* production */ grammar.getProduction(2),
+      /* dotPosition */ 1,
       grammar,
       canonicalCollection,
       setsGenerator,
-      lookaheadSet: defaultLookaheadSet,
-    });
+      /* lookaheadSet */ defaultLookaheadSet,
+    );
 
     expect(state.isKernelItem(otherItem)).toBe(false);
     expect(acceptState.isKernelItem(acceptItem)).toBe(true);
