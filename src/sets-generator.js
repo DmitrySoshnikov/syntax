@@ -6,6 +6,8 @@
 import TablePrinter from './table-printer';
 import {EPSILON, EOF} from './special-symbols';
 
+import debug from './debug';
+
 /**
  * Pasrsing sets generator.
  */
@@ -36,7 +38,9 @@ export default class SetsGenerator {
    *       to First(Y1Y2..Yk) as well.
    */
   getFirstSets() {
+    debug.time('Building First sets');
     this._buildSet(this.firstOf);
+    debug.timeEnd('Building First sets');
     return this._firstSets;
   }
 
@@ -130,7 +134,9 @@ export default class SetsGenerator {
    *   then everything in FOLLOW(A) is in FOLLOW(B)
    */
   getFollowSets() {
+    debug.time('Building Follow sets');
     this._buildSet(this.followOf);
+    debug.timeEnd('Building Follow sets');
     return this._followSets;
   }
 
@@ -213,6 +219,7 @@ export default class SetsGenerator {
    */
   getPredictSets() {
     this._predictSets = {};
+    debug.time('Building Predict sets');
 
     this._grammar.getProductions().forEach(production => {
       let LHS = production.getLHS();
@@ -236,6 +243,8 @@ export default class SetsGenerator {
         this._mergeSets(predictSet, this.followOf(LHS));
       }
     });
+
+    debug.timeEnd('Building Predict sets');
 
     return this._predictSets;
   }

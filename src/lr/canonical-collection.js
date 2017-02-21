@@ -7,6 +7,8 @@ import Grammar from '../grammar/grammar';
 import LRItem from './lr-item';
 import SetsGenerator from '../sets-generator';
 
+import debug from '../debug';
+
 /**
  * Canonical collection of LR items.
  *
@@ -40,6 +42,8 @@ export default class CanonicalCollection {
     this._itermediateStates = [];
     this._finalStates = [];
 
+    debug.time('Building canonical collection');
+
     // Root item for the augmented production, "closure" and "goto"
     // operations applied on this item build the entire collection.
     this._rootItem = new LRItem(
@@ -59,9 +63,12 @@ export default class CanonicalCollection {
       .goto();
 
     this._build();
+    debug.timeEnd('Building canonical collection');
 
     if (this._grammar.getMode().isLALR1()) {
+      debug.time('Compressing CLR to LALR');
       this.compressCLRToLALR();
+      debug.timeEnd('Compressing CLR to LALR');
     }
   }
 

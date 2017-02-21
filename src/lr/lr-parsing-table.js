@@ -8,6 +8,7 @@ import GrammarSymbol from '../grammar/grammar-symbol';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
 import colors from 'colors';
+import debug from '../debug';
 
 /**
  * The LR parsing table is built by traversing the graph of the
@@ -106,12 +107,15 @@ export default class LRParsingTable {
     this._grammar = grammar;
     this._shouldResolveConflicts = resolveConflicts;
 
+    debug.time('Building LR parsing table');
+
     this._action = grammar.getTerminals()
       .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
 
     this._goto = grammar.getNonTerminals();
     this._table = {};
     this._build();
+    debug.timeEnd('Building LR parsing table');
   }
 
   get() {

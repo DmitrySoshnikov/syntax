@@ -6,6 +6,7 @@
 import CodeUnit from './code-unit';
 import Grammar from './grammar/grammar';
 import {EOF} from './special-symbols';
+import debug from './debug';
 
 import fs from 'fs';
 
@@ -23,6 +24,7 @@ export default class BaseParserGenerator {
     customTokenizer,
     options = {},
   }) {
+    debug.time('Generating parser module');
     this._grammar = grammar;
     this._outputFile = outputFile;
     this._customTokenizer = customTokenizer;
@@ -137,6 +139,7 @@ export default class BaseParserGenerator {
       this._resultData,
       'utf-8'
     );
+    debug.timeEnd('Generating parser module');
     try {
       return require(this._outputFile);
     } catch (e) {
