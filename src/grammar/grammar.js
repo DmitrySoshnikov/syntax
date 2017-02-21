@@ -14,6 +14,8 @@ import colors from 'colors';
 import fs from 'fs';
 import vm from 'vm';
 
+import debug from '../debug';
+
 /**
  * Class encapsulates operations with a grammar.
  */
@@ -181,7 +183,10 @@ export default class Grammar {
    * and `lex` grammars based on mode.
    */
   static dataFromGrammarFile(grammarFile, grammarType = 'bnf') {
-    return Grammar.dataFromString(fs.readFileSync(grammarFile, 'utf-8'));
+    return Grammar.dataFromString(
+      fs.readFileSync(grammarFile, 'utf-8'),
+      grammarType,
+    );
   }
 
   /**
@@ -206,21 +211,26 @@ export default class Grammar {
   static dataFromString(grammarString, grammarType = 'bnf') {
     let grammarData = null;
 
+    debug.time('Grammar loaded in');
+
     try {
       // Pure JSON representation.
       grammarData = JSON.parse(grammarString);
+      debug.log(`Grammar (${grammarType}) is in JSON format`);
     } catch (e) {
       // JS code.
       try {
         grammarData = vm.runInNewContext(`
           (function() { return (${grammarString});})()
         `);
+        debug.log(`Grammar (${grammarType}) is in JS format`);
       } catch (jsEx) {
         const jsError = jsEx.stack;
         // A grammar as a string, for BNF, and lex.
         if (grammarType) {
           try {
             grammarData = BnfParser.parse(grammarString);
+            debug.log(`Grammar (${grammarType}) is in BNF format`);
           } catch (bnfEx) {
             console.error(
               colors.red('\nParsing grammar in JS-format failed:\n\n') +
@@ -235,6 +245,7 @@ export default class Grammar {
       }
     }
 
+    debug.timeEnd('Grammar loaded in');
     return grammarData;
   }
 

@@ -10,15 +10,11 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const GRAMMAR_MODE = require(ROOT + 'grammar/grammar-mode').MODES;
-const Grammar = require(ROOT + 'grammar/grammar').default;
-
 const options = require('nomnom')
   .script('syntax')
   .options({
     mode: {
       abbr: 'm',
-      help: `Parser mode: ${getModesList()}`,
       transform: normalizeMode,
     },
     grammar: {
@@ -100,12 +96,33 @@ const options = require('nomnom')
        abbr: 'i',
        flag: true,
     },
+    'debug': {
+       help: 'Debug mode (outputs steps and timing)',
+       abbr: 'd',
+       flag: true,
+    },
     namespace: {
       help: 'Append a wrapping namespace to generated code',
       type: 'string',
     },
   })
   .parse();
+
+/**
+ * Setup debug mode.
+ */
+global.SYNTAX_DEBUG = options.debug;
+
+// NOTE: all Syntax tool requires go after debug `global.SYNTAX_DEBUG`
+// is set, since debug module uses it at load time.
+
+const GRAMMAR_MODE = require(ROOT + 'grammar/grammar-mode').MODES;
+const Grammar = require(ROOT + 'grammar/grammar').default;
+const debug = require(ROOT + 'debug').default;
+
+if (global.SYNTAX_DEBUG) {
+  console.info(colors.bold('\nDEBUG mode is: ON\n'));
+}
 
 /**
  * Default generator options.
@@ -556,5 +573,7 @@ function main() {
 }
 
 if (require.main === module) {
-    main();
+  debug.time('Total time');
+  main();
+  debug.timeEnd('Total time');
 }
