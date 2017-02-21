@@ -122,6 +122,10 @@ const finalState = new State(
   canonicalCollection,
 );
 
+function toKeys(items) {
+  return items.map(item => item.getKey());
+}
+
 describe('state', () => {
 
   it('kernal items', () => {
@@ -130,8 +134,8 @@ describe('state', () => {
   });
 
   it('items', () => {
-    expect(state.getItems()).toEqual(items);
-    expect(acceptState.getItems()).toEqual(acceptItems);
+    expect(toKeys(state.getItems())).toEqual(toKeys(items));
+    expect(toKeys(acceptState.getItems())).toEqual(toKeys(acceptItems));
   });
 
   it('is kernel item', () => {

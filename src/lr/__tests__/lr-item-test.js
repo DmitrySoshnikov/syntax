@@ -74,19 +74,30 @@ describe('lr-item', () => {
 
   it('key', () => {
     expect(rootItem.getKey())
-      .toBe('$accept -> • E, #lookaheads= ["$"]');
+      .toBe('0|0|$');
 
     expect(baseItem.getKey())
-      .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
+      .toBe('1|0|$|/|-|*|+');
 
     expect(advancedItem.getKey())
-      .toBe('E -> E • + E, #lookaheads= ["$","/","-","*","+"]');
+      .toBe('1|1|$|/|-|*|+');
   });
 
   it('LR0 key', () => {
-    expect(rootItem.getLR0Key()).toBe('$accept -> • E');
-    expect(baseItem.getLR0Key()).toBe('E -> • E + E');
-    expect(advancedItem.getLR0Key()).toBe('E -> E • + E');
+    expect(rootItem.getLR0Key()).toBe('0|0');
+    expect(baseItem.getLR0Key()).toBe('1|0');
+    expect(advancedItem.getLR0Key()).toBe('1|1');
+  });
+
+  it('toString key', () => {
+    expect(rootItem.toString())
+      .toBe('$accept -> • E, #lookaheads= ["$"]');
+
+    expect(baseItem.toString())
+      .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
+
+    expect(advancedItem.toString())
+      .toBe('E -> E • + E, #lookaheads= ["$","/","-","*","+"]');
   });
 
   it('key for item', () => {
@@ -126,6 +137,7 @@ describe('lr-item', () => {
     // E -> • E + E, {'%': true}
     const otherBaseItem = new LRItem(
       /* production */ baseItem.getProduction(),
+      /* dotPosition */ 0,
       grammar,
       canonicalCollection,
       setsGenerator,
@@ -253,7 +265,7 @@ describe('lr-item', () => {
       '+': true,
     });
 
-    expect(baseItem.getKey())
+    expect(baseItem.toString())
       .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
 
     const newLookaheadSet = {'$': true, '+': true};
@@ -261,7 +273,7 @@ describe('lr-item', () => {
     baseItem.setLookaheadSet(newLookaheadSet);
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
 
-    expect(baseItem.getKey())
+    expect(baseItem.toString())
       .toBe('E -> • E + E, #lookaheads= ["$","+"]');
 
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);

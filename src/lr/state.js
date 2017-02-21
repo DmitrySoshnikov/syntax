@@ -192,7 +192,7 @@ export default class State {
     return this._transitionsForSymbol[symbol];
   }
 
-  setSymbolTransition({item, state}) {
+  setSymbolTransition(item, state) {
     let symbol = item.getCurrentSymbol().getSymbol();
 
     if (!this.hasTransitionOnSymbol(symbol)) {
@@ -254,10 +254,10 @@ export default class State {
         if (item.isFinal()) {
           return;
         }
-        this.setSymbolTransition({
+        this.setSymbolTransition(
           item,
-          state: null,
-        })
+          /* state */ null,
+        )
       });
     }
 
@@ -291,7 +291,10 @@ export default class State {
 
       // And connect our items to it.
       items.forEach(item => {
-        this.setSymbolTransition({item, state: outerState});
+        this.setSymbolTransition(
+          item,
+          /* state */ outerState
+        );
       });
 
     });
@@ -450,7 +453,7 @@ export default class State {
 
         if (!thatItem) {
           throw new Error(
-            `Item ${item.getKey()} presents in state ${this.getNumber()}, ` +
+            `Item ${item.toString()} presents in state ${this.getNumber()}, ` +
             `but is absent in the ${state.getNumber()}.`
           );
         }

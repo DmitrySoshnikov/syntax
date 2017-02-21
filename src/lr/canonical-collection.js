@@ -221,7 +221,7 @@ export default class CanonicalCollection {
     }
 
     console.log(
-      `  - ${item.getKey()}` +
+      `  - ${item.toString()}` +
       (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
     );
   }

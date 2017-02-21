@@ -328,6 +328,9 @@ export default class LRItem {
     // Extend the set.
     this._lookaheadSet = lookaheadSet;
 
+    // Reset toStringKey (will be recalculated on next call to `toString`).
+    this._toStringKey = null;
+
     // And rebuild the key since lookahead set is changed.
     this._key = LRItem.keyForItem(
       this._production,
@@ -366,20 +369,31 @@ export default class LRItem {
   }
 
   toString() {
-    return this.getKey();
+    if (!this._toStringKey) {
+      this._toStringKey = this._getToStringKey()
+    }
+    return this._toStringKey;
   }
 
   static keyForItem(production, dotPosition, lookaheadSet = null) {
-    let RHS = production.getRHS().map(symbol => symbol.getSymbol());
-    RHS.splice(dotPosition, 0, '•');
+    return production.getNumber() + '|' + dotPosition +
+      (lookaheadSet ? ('|' + Object.keys(lookaheadSet).join('|')) : '');
+  }
+
+  /**
+   * Returns key to be displayed in toString.
+   */
+  _getToStringKey() {
+    let RHS = this._production.getRHS().map(symbol => symbol.getSymbol());
+    RHS.splice(this._dotPosition, 0, '•');
 
     let lookaheads = '';
-    if (lookaheadSet) {
+    if (this._lookaheadSet) {
       lookaheads = ', #lookaheads= ' +
-        JSON.stringify(Object.keys(lookaheadSet));
+        JSON.stringify(Object.keys(this._lookaheadSet));
     }
 
-    return `${production.getLHS().getSymbol()} -> ` +
+    return `${this._production.getLHS().getSymbol()} -> ` +
       `${RHS.join(' ')}${lookaheads}`;
   }
 
@@ -387,16 +401,22 @@ export default class LRItem {
    * Returns a key for a set of items.
    */
   static keyForItems(items) {
-    return items.map(item => item.getKey()).sort().join('|');
+    if (!items.key) {
+      items.key = items.map(item => item.getKey()).sort().join('|');
+    }
+    return items.key;
   }
 
   /**
    * Returns an LR(0) key for a set of items (duplicates are removed).
    */
   static lr0KeyForItems(items) {
-    let keysMap = {};
-    items.forEach(item => keysMap[item.getLR0Key()] = true);
-    return Object.keys(keysMap).sort().join('|');
+    if (!items.lr0Key) {
+      let keysMap = {};
+      items.forEach(item => keysMap[item.getLR0Key()] = true);
+      items.lr0Key = Object.keys(keysMap).sort().join('|');
+    }
+    return items.lr0Key;
   }
 
   /**
