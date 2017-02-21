@@ -63,12 +63,15 @@ export default class CanonicalCollection {
       .goto();
 
     this._build();
+
     debug.timeEnd('Building canonical collection');
+    debug.log(`Number of states in the collection: ${this._states.length}`);
 
     if (this._grammar.getMode().isLALR1()) {
       debug.time('Compressing CLR to LALR');
       this.compressCLRToLALR();
       debug.timeEnd('Compressing CLR to LALR');
+      debug.log(`Number of states after compression: ${this._states.length}`);
     }
   }
 

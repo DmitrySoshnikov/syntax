@@ -11,6 +11,10 @@ function emptyFn() {}
  * Debug module.
  */
 const Debug = {
+  isEnabled() {
+    return !!global.SYNTAX_DEBUG;
+  },
+
   string(message) {
     return `${colors.bold('[DEBUG]')} ${message}`;
   },

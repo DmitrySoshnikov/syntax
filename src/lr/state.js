@@ -177,8 +177,8 @@ export default class State {
    * Whether the state is inadequate, i.e. has conflicts.
    */
   isInadequate() {
-    return this._conflicts.sr.length > 0 ||
-      this._conflicts.rr.length > 0;
+    return this.getConflicts().sr.length > 0 ||
+      this.getConflicts().rr.length > 0;
   }
 
   hasTransitionOnSymbol(symbol) {
