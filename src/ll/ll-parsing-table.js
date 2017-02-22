@@ -8,6 +8,7 @@ import SetsGenerator from '../sets-generator';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
 import colors from 'colors';
+import debug from '../debug';
 
 /**
  * LL parsing table.
@@ -64,10 +65,15 @@ export default class LLParsingTable {
   constructor({grammar}) {
     this._grammar = grammar;
     this._setsGenerator = new SetsGenerator({grammar});
-    this._table = this._build();
+
+    debug.time('Building LL parsing table');
 
     this._tableTokens = grammar.getTerminals()
       .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
+
+    this._table = this._build();
+
+    debug.timeEnd('Building LL parsing table');
   }
 
   get() {
@@ -91,7 +97,7 @@ export default class LLParsingTable {
       for (let k = 0; k < tokenSymbols.length; k++) {
         let entry = this._table[nonTerminal][tokenSymbols[k]] || '';
 
-        if (this._entryHasConflict(entry)) {
+        if (this.entryHasConflict(entry)) {
           entry = colors.red(entry);
         }
 
@@ -131,7 +137,7 @@ export default class LLParsingTable {
       for (let token in row) {
         let entry = row[token];
 
-        if (!this._entryHasConflict(entry)) {
+        if (!this.entryHasConflict(entry)) {
           continue;
         }
 
@@ -189,7 +195,7 @@ export default class LLParsingTable {
     return table;
   }
 
-  _entryHasConflict(entry) {
+  entryHasConflict(entry) {
     return entry.includes('/');
   }
 

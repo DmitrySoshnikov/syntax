@@ -11,6 +11,8 @@ import LRParserGeneratorDefault from './lr-parser-generator-default';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
 
+import debug from '../debug';
+
 import os from 'os';
 import path from 'path';
 
@@ -87,11 +89,19 @@ export default class LRParser {
   parse(string) {
     // If parser module has been generated, use it.
     if (this._parserModule) {
+      debug.time('LR parsing from module');
+
+      const value = this._parserModule.parse(string);
+
+      debug.timeEnd('LR parsing from module');
+
       return {
         status: 'accept',
-        value: this._parserModule.parse(string),
+        value,
       };
     }
+
+    debug.time('LR parsing');
 
     if (this._yyparse.onParseBegin) {
       this._yyparse.onParseBegin(string);
@@ -159,6 +169,8 @@ export default class LRParser {
           if (this._yyparse.onParseEnd) {
             this._yyparse.onParseEnd(result.value);
           }
+
+          debug.timeEnd('LR parsing');
 
           return result;
         }

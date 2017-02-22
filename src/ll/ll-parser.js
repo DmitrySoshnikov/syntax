@@ -10,6 +10,8 @@ import LLParserGeneratorDefault from './ll-parser-generator-default';
 import Tokenizer from '../tokenizer';
 import {EOF} from '../special-symbols';
 
+import debug from '../debug';
+
 import os from 'os';
 import path from 'path';
 
@@ -61,11 +63,19 @@ export default class LLParser {
   parse(string) {
     // If parser module has been generated, use it.
     if (this._parserModule) {
+      debug.time('LL parsing from module');
+
+      const value = this._parserModule.parse(string);
+
+      debug.timeEnd('LL parsing from module');
+
       return {
         status: 'accept',
-        value: this._parserModule.parse(string),
+        value,
       };
     }
+
+    debug.time('LL parsing');
 
     this._tokenizer.initString(string);
 
@@ -112,6 +122,8 @@ export default class LLParser {
       );
     }
 
+    debug.timeEnd('LL parsing');
+
     return {
       status: 'accept',
       semanticValue: true,
@@ -133,6 +145,13 @@ export default class LLParser {
 
     if (!nextProductionNumber) {
       this._unexpectedToken(token);
+    }
+
+    if (this._table.entryHasConflict(nextProductionNumber)) {
+      this._parseError(
+        `Found conflict in state ${top.getSymbol()}:${token.type}. ` +
+        `Predicted productions: ${nextProductionNumber}`
+      );
     }
 
     let nextProduction = this._grammar.getProduction(nextProductionNumber);
