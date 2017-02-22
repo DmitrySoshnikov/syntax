@@ -170,27 +170,32 @@ export default class LRItem {
       return null;
     }
 
-    let lookaheadSet;
+    let lookaheads;
 
     let followPosition = this._dotPosition + 1;
     let RHS = this.getProduction().getRHS();
 
     if (followPosition < RHS.length) {
       let lookaheadPart = RHS.slice(followPosition);
-      lookaheadSet = this._setsGenerator.firstOfRHS(lookaheadPart);
+      lookaheads = this._setsGenerator.firstOfRHS(lookaheadPart);
     }
 
-    if (!lookaheadSet) {
-      lookaheadSet = {};
+    let containsEpsilon = false;
+    let lookaheadSet;
+
+    if (lookaheads) {
+      containsEpsilon = lookaheads.hasOwnProperty(EPSILON);
+      delete lookaheads[EPSILON];
+      lookaheadSet = Object.keys(lookaheads);
+    } else {
+      lookaheadSet = [];
     }
 
     // If no follow part, or we got an empty set, use lookahead of
     // the previous item. The previous part should also be merged if
     // the set contains epsilon.
-    if (Object.keys(lookaheadSet).length === 0 ||
-        lookaheadSet.hasOwnProperty(EPSILON)) {
-      delete lookaheadSet[EPSILON];
-      lookaheadSet = {...lookaheadSet, ...this.getLookaheadSet()};
+    if (lookaheadSet.length === 0 || containsEpsilon) {
+      lookaheadSet = lookaheadSet.concat(this.getLookaheadSet());
     }
 
     return lookaheadSet;
@@ -236,14 +241,13 @@ export default class LRItem {
   conflictsWithReduceItem(reduceItem) {
     this._assertReduce();
 
-    let reduceSet = this.calculateReduceSet();
+    let thisReduceSet = this.calculateReduceSet();
 
     if (reduceSet === true) {
       return true;
     }
 
-    let thisReduceSet = Object.keys(reduceSet);
-    let thatReduceSet = Object.keys(reduceItem.calculateReduceSet());
+    let thatReduceSet = reduceItem.calculateReduceSet();
 
     let lookaheadsIntersection = thisReduceSet.filter(symbol => {
       return thatReduceSet.indexOf(symbol) !== -1;
@@ -299,12 +303,12 @@ export default class LRItem {
       case GRAMMAR_MODE.SLR1:
         // SLR(1) reduces in Follow(LHS).
         let LHS = this.getProduction().getLHS();
-        return this._setsGenerator.followOf(LHS);
+        return Object.keys(this._setsGenerator.followOf(LHS));
 
       case GRAMMAR_MODE.LALR1:
       case GRAMMAR_MODE.CLR1:
         // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
-        return {...this._lookaheadSet};
+        return this._lookaheadSet.slice(0);
 
       default:
         throw new Error(
@@ -346,7 +350,7 @@ export default class LRItem {
    */
   mergeLookaheadSet(lookaheadSet) {
     // Extend the set.
-    this.setLookaheadSet({...this._lookaheadSet, ...lookaheadSet});
+    this.setLookaheadSet(this._lookaheadSet.concat(lookaheadSet));
   }
 
   /**
@@ -377,7 +381,7 @@ export default class LRItem {
 
   static keyForItem(production, dotPosition, lookaheadSet = null) {
     return production.getNumber() + '|' + dotPosition +
-      (lookaheadSet ? ('|' + Object.keys(lookaheadSet).join('|')) : '');
+      (lookaheadSet ? ('|' + lookaheadSet.join('|')) : '');
   }
 
   /**
@@ -390,7 +394,7 @@ export default class LRItem {
     let lookaheads = '';
     if (this._lookaheadSet) {
       lookaheads = ', #lookaheads= ' +
-        JSON.stringify(Object.keys(this._lookaheadSet));
+        JSON.stringify(this._lookaheadSet);
     }
 
     return `${this._production.getLHS().getSymbol()} -> ` +
@@ -435,7 +439,7 @@ export default class LRItem {
       this._setsGenerator,
       // On goto transition lookaheads set doesn't change.
       /* lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
-        ? {...this.getLookaheadSet()}
+        ? this.getLookaheadSet().slice(0)
         : null,
     );
   }

@@ -31,16 +31,10 @@ const rootItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ {$: true},
+  /* lookaheadSet */ ['$'],
 );
 
-const defaultLookaheadSet = {
-  '$': true,
-  '/': true,
-  '-': true,
-  '*': true,
-  '+': true,
-};
+const defaultLookaheadSet = ['$', '/', '-', '*', '+'];
 
 // E -> E • + E
 const kernelItem1 = new LRItem(
@@ -93,7 +87,7 @@ const acceptItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ {$: true},
+  /* lookaheadSet */ ['$'],
 );
 
 const acceptItems = [

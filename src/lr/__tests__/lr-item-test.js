@@ -30,7 +30,7 @@ const rootItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ {$: true},
+  /* lookaheadSet */ ['$'],
 );
 
 // E -> • E + E
@@ -40,13 +40,7 @@ const baseItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ {
-    '$': true,
-    '/': true,
-    '-': true,
-    '*': true,
-    '+': true,
-  },
+  /* lookaheadSet */ ['$', '/', '-', '*', '+'],
 );
 
 // E -> E • + E
@@ -134,14 +128,14 @@ describe('lr-item', () => {
   });
 
   it('LR0 key for items', () => {
-    // E -> • E + E, {'%': true}
+    // E -> • E + E, ['%']
     const otherBaseItem = new LRItem(
       /* production */ baseItem.getProduction(),
       /* dotPosition */ 0,
       grammar,
       canonicalCollection,
       setsGenerator,
-      /* lookaheadSet */ {'%': true}, // Other lookahead set.
+      /* lookaheadSet */ ['%'], // Other lookahead set.
     );
 
     const items = [
@@ -257,18 +251,12 @@ describe('lr-item', () => {
   it('lookahead set', () => {
     const baseLookaheadSet = baseItem.getLookaheadSet();
 
-    expect(baseLookaheadSet).toEqual({
-      '$': true,
-      '/': true,
-      '-': true,
-      '*': true,
-      '+': true,
-    });
+    expect(baseLookaheadSet).toEqual(['$', '/', '-', '*', '+']);
 
     expect(baseItem.toString())
       .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
 
-    const newLookaheadSet = {'$': true, '+': true};
+    const newLookaheadSet = ['$', '+'];
 
     baseItem.setLookaheadSet(newLookaheadSet);
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
@@ -278,11 +266,11 @@ describe('lr-item', () => {
 
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
 
-    const mergeSet = {'*': true};
+    const mergeSet = ['*'];
     baseItem.mergeLookaheadSet(mergeSet);
 
     expect(baseItem.getLookaheadSet())
-      .toEqual({...newLookaheadSet, ...mergeSet});
+      .toEqual(newLookaheadSet.concat(mergeSet));
 
     baseItem.setLookaheadSet(baseLookaheadSet);
   });
