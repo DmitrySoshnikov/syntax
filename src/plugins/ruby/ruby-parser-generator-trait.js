@@ -22,7 +22,7 @@ const RubyParserGeneratorTrait = {
    * Generates parser class name.
    */
   generateParserClassName(className) {
-    this.writeData('<<PARSER_CLASS_NAME>>', className);
+    this.writeData('PARSER_CLASS_NAME', className);
   },
 
   /**
@@ -30,7 +30,7 @@ const RubyParserGeneratorTrait = {
    */
   generateParseTable() {
     this.writeData(
-      '<<TABLE>>',
+      'TABLE',
       this._toRubyHash(this.generateParseTableData()),
     );
   },
@@ -39,7 +39,7 @@ const RubyParserGeneratorTrait = {
    * Generates tokens table in Ruby hash format.
    */
   generateTokensTable() {
-    this.writeData('<<TOKENS>>', this._toRubyHash(this._tokens));
+    this.writeData('TOKENS', this._toRubyHash(this._tokens));
   },
 
   /**
@@ -69,7 +69,7 @@ const RubyParserGeneratorTrait = {
    */
   generateBuiltInTokenizer() {
     this.writeData(
-      '<<TOKENIZER>>',
+      'TOKENIZER',
       RUBY_TOKENIZER_TEMPLATE,
     );
   },
@@ -95,7 +95,7 @@ const RubyParserGeneratorTrait = {
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 
-    this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
+    this.writeData('LEX_RULES', `[${lexRules.join(',\n')}]`);
   },
 
   generateLexRulesByStartConditions() {
@@ -110,7 +110,7 @@ const RubyParserGeneratorTrait = {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${this._toRubyHash(result)}`,
     );
   },
@@ -158,7 +158,7 @@ const RubyParserGeneratorTrait = {
       this._lexHandlers,
       '_lex_rule',
     );
-    this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -170,7 +170,7 @@ const RubyParserGeneratorTrait = {
       '_handler',
       /* isStatic */ true,
     );
-    this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
   },
 
   /**

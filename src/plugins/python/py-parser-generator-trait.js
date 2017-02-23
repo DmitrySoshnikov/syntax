@@ -30,7 +30,7 @@ const PythonParserGeneratorTrait = {
    */
   generateModuleInclude() {
     this.writeData(
-      '<<MODULE_INCLUDE>>',
+      'MODULE_INCLUDE',
       this._formatIndent(this._grammar.getModuleInclude(), /* no ident */''),
     );
   },
@@ -40,7 +40,7 @@ const PythonParserGeneratorTrait = {
    */
   generateCaptureLocations() {
     this.writeData(
-      '<<CAPTURE_LOCATIONS>>',
+      'CAPTURE_LOCATIONS',
       this._grammar.shouldCaptureLocations() ? 'True' : 'False',
     );
   },
@@ -80,7 +80,7 @@ const PythonParserGeneratorTrait = {
    * Generates built-in tokenizer instance.
    */
   generateBuiltInTokenizer() {
-    this.writeData('<<TOKENIZER>>', PY_TOKENIZER_TEMPLATE);
+    this.writeData('TOKENIZER', PY_TOKENIZER_TEMPLATE);
   },
 
   /**
@@ -107,7 +107,7 @@ const PythonParserGeneratorTrait = {
         `_lex_rule${this._lexHandlers.length}]`;
     });
 
-    this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
+    this.writeData('LEX_RULES', `[${lexRules.join(',\n')}]`);
   },
 
   generateLexRulesByStartConditions() {
@@ -122,7 +122,7 @@ const PythonParserGeneratorTrait = {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${JSON.stringify(result)}`,
     );
   },
@@ -135,7 +135,7 @@ const PythonParserGeneratorTrait = {
       this._lexHandlers,
       '_lex_rule',
     );
-    this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -146,7 +146,7 @@ const PythonParserGeneratorTrait = {
       this._productionHandlers,
       '_handler',
     );
-    this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
   },
 
   /**

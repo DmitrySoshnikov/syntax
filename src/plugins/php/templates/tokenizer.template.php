@@ -8,8 +8,8 @@
  */
 
 class Tokenizer {
-  private static $lexRules = <<LEX_RULES>>;
-  private static $lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
+  private static $lexRules = {{{LEX_RULES}}};
+  private static $lexRulesByConditions = {{{LEX_RULES_BY_START_CONDITIONS}}};
 
   private $states = array();
   private $string = '';
@@ -39,7 +39,7 @@ class Tokenizer {
     'value' => yyparse::EOF,
   );
 
-  <<LEX_RULE_HANDLERS>>
+  {{{LEX_RULE_HANDLERS}}}
 
   public function initString($string) {
     $this->originalString = $string;

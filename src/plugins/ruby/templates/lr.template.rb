@@ -16,15 +16,15 @@
 ##
 
 class YYParse
-  @@productions = <<PRODUCTIONS>>
-  @@tokens = <<TOKENS>>
-  @@table = <<TABLE>>
+  @@productions = {{{PRODUCTIONS}}}
+  @@tokens = {{{TOKENS}}}
+  @@table = {{{TABLE}}}
 
   @@stack = []
   @@__ = nil
   @@__loc = nil
 
-  @@should_capture_locations = <<CAPTURE_LOCATIONS>>
+  @@should_capture_locations = {{{CAPTURE_LOCATIONS}}}
 
   @@callbacks = {
     :on_parse_begin => nil,
@@ -82,7 +82,7 @@ class YYParse
 
   @@tokenizer = nil
 
-  <<PRODUCTION_HANDLERS>>
+  {{{PRODUCTION_HANDLERS}}}
 
   def self.tokenizer=(tokenizer)
     @@tokenizer = tokenizer
@@ -258,8 +258,8 @@ class YYParse
   end
 end
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
-class <<PARSER_CLASS_NAME>> < YYParse; end
+class {{{PARSER_CLASS_NAME}}} < YYParse; end

@@ -7,8 +7,8 @@
 ##
 
 class SyntaxToolTokenizer__
-  @@lex_rules = <<LEX_RULES>>
-  @@lex_rules_by_conditions = <<LEX_RULES_BY_START_CONDITIONS>>
+  @@lex_rules = {{{LEX_RULES}}}
+  @@lex_rules_by_conditions = {{{LEX_RULES_BY_START_CONDITIONS}}}
 
 
   @string = ''
@@ -35,7 +35,7 @@ class SyntaxToolTokenizer__
     :value => YYParse::EOF
   }
 
-  <<LEX_RULE_HANDLERS>>
+  {{{LEX_RULE_HANDLERS}}}
 
   def init_string(string)
     @original_string = string

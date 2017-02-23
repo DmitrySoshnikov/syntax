@@ -29,7 +29,7 @@ const EOF = "$";
 /**
  * Tokenizer class.
  */
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
 // --------------------------------------------------------------
 // Productions array.
@@ -56,7 +56,7 @@ const EOF = "$";
  *     ...
  * ]
  */
-const productions = <<PRODUCTIONS>>;
+const productions = {{{PRODUCTIONS}}};
 
 // --------------------------------------------------------------
 // Parsing table.
@@ -86,7 +86,7 @@ const productions = <<PRODUCTIONS>>;
  *   ...
  * ]
  */
-const table = <<TABLE>>;
+const table = {{{TABLE}}};
 
 // --------------------------------------------------------------
 // Parsing stack.
@@ -146,7 +146,7 @@ function yyloc(start, end) {
 /**
  * Whether locations should be captured and propagated.
  */
-let shouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
+let shouldCaptureLocations = {{{CAPTURE_LOCATIONS}}};
 
 // --------------------------------------------
 // Parser.
@@ -212,7 +212,7 @@ class yyparse {
    *   __ = _1 + _3;
    * }
    */
-  <<PRODUCTION_HANDLERS>>
+  {{{PRODUCTION_HANDLERS}}}
 
   /**
    * Main parsing method which applies LR-algorithm.
@@ -429,9 +429,9 @@ class yyparse {
  * included to the output generated file. It may also contain callbacks
  * for parsing hooks, such as `onParseBegin`, `onParseEnd`, etc.
  */
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
 /**
  * An actual parser class.
  */
-module.exports = class <<PARSER_CLASS_NAME>> extends yyparse { };
+module.exports = class {{{PARSER_CLASS_NAME}}} extends yyparse { };

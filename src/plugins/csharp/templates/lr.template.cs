@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
 namespace SyntaxParser
 {
@@ -134,7 +134,7 @@ namespace SyntaxParser
          * }
          *
          */
-        private static object[][] mProductions = <<PRODUCTIONS>>;
+        private static object[][] mProductions = {{{PRODUCTIONS}}};
 
         /**
          * Actual parsing table. An array of records, where
@@ -162,7 +162,7 @@ namespace SyntaxParser
          *     ...
          * }
          */
-        private static Dictionary<int, string>[] mTable = <<TABLE>>;
+        private static Dictionary<int, string>[] mTable = {{{TABLE}}};
 
         /**
          * Parsing stack. Stores instances of StackEntry, and state numbers.
@@ -184,7 +184,7 @@ namespace SyntaxParser
         /**
          * Whether locations should be captured and propagated.
          */
-        private bool mShouldCaptureLocations = <<CAPTURE_LOCATIONS>>;
+        private bool mShouldCaptureLocations = {{{CAPTURE_LOCATIONS}}};
 
         /**
          * On parse begin callback.
@@ -224,7 +224,7 @@ namespace SyntaxParser
          *     __ = _1 + _3;
          * }
          */
-        <<PRODUCTION_HANDLERS>>
+        {{{PRODUCTION_HANDLERS}}}
 
         /**
          * Main parsing method which applies LR-algorithm.
@@ -453,10 +453,10 @@ namespace SyntaxParser
     /**
      * An actual parser class.
      */
-    public class <<PARSER_CLASS_NAME>> : yyparse { }
+    public class {{{PARSER_CLASS_NAME}}} : yyparse { }
 }
 
 /**
  * Tokenizer class.
  */
-<<TOKENIZER>>
+{{{TOKENIZER}}}

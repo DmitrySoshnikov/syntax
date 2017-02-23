@@ -83,7 +83,7 @@ class Token {
  * This map is written by the parser generator, which replaces the TOKENS
  * placeholder.
  */
-const tokensMap = <<TOKENS>>;
+const tokensMap = {{{TOKENS}}};
 
 /**
  * Special "end of file" token.
@@ -126,7 +126,7 @@ let yyleng = 0;
  * The parser generator replaces LEX_RULES placeholder with actual data
  * received from Syntax tool.
  */
-const lexRules = <<LEX_RULES>>;
+const lexRules = {{{LEX_RULES}}};
 
 // --------------------------------------------------------------
 
@@ -149,7 +149,7 @@ const lexRules = <<LEX_RULES>>;
  * with actual data received from Syntax tool.
  *
  */
-const lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
+const lexRulesByConditions = {{{LEX_RULES_BY_START_CONDITIONS}}};
 
 // --------------------------------------------------------------
 
@@ -264,7 +264,7 @@ class Tokenizer {
    *   return "NUMBER";
    * }
    */
-  <<LEX_RULE_HANDLERS>>
+  {{{LEX_RULE_HANDLERS}}}
 
   // --------------------------------------------
   // States.

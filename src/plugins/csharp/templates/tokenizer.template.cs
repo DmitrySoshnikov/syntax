@@ -99,7 +99,7 @@ namespace SyntaxParser
          *  {yyparse.EOF, 8},
          */
         private static Dictionary<string, int> mTokensMap = new Dictionary<string, int>()
-        <<TOKENS>>;
+        {{{TOKENS}}};
 
         private static Token EOF_TOKEN = new Token(
             mTokensMap[yyparse.EOF],
@@ -117,7 +117,7 @@ namespace SyntaxParser
          * }
          *
          */
-        private static string[][] mLexRules = <<LEX_RULES>>;
+        private static string[][] mLexRules = {{{LEX_RULES}}};
 
         /**
          * Lex rules grouped by tokenizer state.
@@ -129,7 +129,7 @@ namespace SyntaxParser
          * }
          */
         private static Dictionary<string, int[]> mLexRulesByConditions = new Dictionary<string, int[]>()
-        <<LEX_RULES_BY_START_CONDITIONS>>;
+        {{{LEX_RULES_BY_START_CONDITIONS}}};
 
         /**
          * Stack of lexer states.
@@ -182,7 +182,7 @@ namespace SyntaxParser
          *     return "NUMBER";
          * }
          */
-        <<LEX_RULE_HANDLERS>>
+        {{{LEX_RULE_HANDLERS}}}
 
         // --------------------------------------------
         // Constructor.

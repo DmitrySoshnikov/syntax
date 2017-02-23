@@ -22,7 +22,7 @@ const PHPParserGeneratorTrait = {
    * Generates parser class name.
    */
   generateParserClassName(className) {
-    this.writeData('<<PARSER_CLASS_NAME>>', className);
+    this.writeData('PARSER_CLASS_NAME', className);
   },
 
   /**
@@ -36,7 +36,7 @@ const PHPParserGeneratorTrait = {
       nsString = `namespace ${ns};`;
     }
 
-    this.writeData('<<NAMESPACE>>', nsString);
+    this.writeData('NAMESPACE', nsString);
   },
 
   /**
@@ -44,7 +44,7 @@ const PHPParserGeneratorTrait = {
    */
   generateParseTable() {
     this.writeData(
-      '<<TABLE>>',
+      'TABLE',
       this._toPHPArray(this.generateParseTableData()),
     );
   },
@@ -53,7 +53,7 @@ const PHPParserGeneratorTrait = {
    * Generates tokens table in PHP arrays format.
    */
   generateTokensTable() {
-    this.writeData('<<TOKENS>>', this._toPHPArray(this._tokens));
+    this.writeData('TOKENS', this._toPHPArray(this._tokens));
   },
 
   /**
@@ -83,7 +83,7 @@ const PHPParserGeneratorTrait = {
    */
   generateBuiltInTokenizer() {
     this.writeData(
-      '<<TOKENIZER>>',
+      'TOKENIZER',
       PHP_TOKENIZER_TEMPLATE.replace(/<\?php/g, ''),
     );
   },
@@ -106,7 +106,7 @@ const PHPParserGeneratorTrait = {
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 
-    this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
+    this.writeData('LEX_RULES', `[${lexRules.join(',\n')}]`);
   },
 
   generateLexRulesByStartConditions() {
@@ -121,7 +121,7 @@ const PHPParserGeneratorTrait = {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${this._toPHPArray(result)}`,
     );
   },
@@ -170,7 +170,7 @@ const PHPParserGeneratorTrait = {
       '_lex_rule',
       false
     );
-    this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -182,7 +182,7 @@ const PHPParserGeneratorTrait = {
       '_handler',
       true
     );
-    this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
   },
 
   /**

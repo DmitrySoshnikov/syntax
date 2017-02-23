@@ -8,11 +8,11 @@
 
 import re as _syntax_tool_re
 
-<<LEX_RULE_HANDLERS>>
+{{{LEX_RULE_HANDLERS}}}
 
-_lex_rules = <<LEX_RULES>>
+_lex_rules = {{{LEX_RULES}}}
 
-_lex_rules_by_conditions = <<LEX_RULES_BY_START_CONDITIONS>>
+_lex_rules_by_conditions = {{{LEX_RULES_BY_START_CONDITIONS}}}
 
 EOF_TOKEN = {
   'type': EOF,

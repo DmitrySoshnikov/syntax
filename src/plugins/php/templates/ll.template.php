@@ -17,16 +17,16 @@
  *     --output ~/ParserClassName.php
  */
 
-<<NAMESPACE>>
+{{{NAMESPACE}}}
 
 class SyntaxException extends \Exception {}
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
 class yyparse {
-  private static $ps = <<PRODUCTIONS>>;
-  private static $tks = <<TOKENS>>;
-  private static $tbl = <<TABLE>>;
+  private static $ps = {{{PRODUCTIONS}}};
+  private static $tks = {{{TOKENS}}};
+  private static $tbl = {{{TABLE}}};
 
   private static $s = [];
   private static $__ = null;
@@ -41,7 +41,7 @@ class yyparse {
 
   private static $tokenizer = null;
 
-  <<PRODUCTION_HANDLERS>>
+  {{{PRODUCTION_HANDLERS}}}
 
   public static function setTokenizer($tokenizer) {
     self::$tokenizer = $tokenizer;
@@ -74,7 +74,7 @@ class yyparse {
     $tokenizer->initString($string);
 
     $s = &self::$s;
-    $s = [self::EOF, <<START>>];
+    $s = [self::EOF, {{{START}}}];
 
     $tks = &self::$tks;
     $tbl = &self::$tbl;
@@ -138,6 +138,6 @@ class yyparse {
   }
 }
 
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
-class <<PARSER_CLASS_NAME>> extends yyparse {}
+class {{{PARSER_CLASS_NAME}}} extends yyparse {}

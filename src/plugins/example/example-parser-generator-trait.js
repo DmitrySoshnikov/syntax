@@ -30,7 +30,7 @@ const ExampleParserGeneratorTrait = {
    * Generates parser class name.
    */
   generateParserClassName(className) {
-    this.writeData('<<PARSER_CLASS_NAME>>', className);
+    this.writeData('PARSER_CLASS_NAME', className);
   },
 
   /**
@@ -62,7 +62,7 @@ const ExampleParserGeneratorTrait = {
    */
   generateParseTable() {
     this.writeData(
-      '<<TABLE>>',
+      'TABLE',
       this._toExampleLanguageMap(this.generateParseTableData()),
     );
   },
@@ -72,7 +72,7 @@ const ExampleParserGeneratorTrait = {
    */
   generateTokensTable() {
     this.writeData(
-      '<<TOKENS>>',
+      'TOKENS',
       this._toExampleLanguageMap(this._tokens),
     );
   },
@@ -134,7 +134,7 @@ const ExampleParserGeneratorTrait = {
    * Generates built-in tokenizer instance.
    */
   generateBuiltInTokenizer() {
-    this.writeData('<<TOKENIZER>>', EXAMPLE_TOKENIZER_TEMPLATE);
+    this.writeData('TOKENIZER', EXAMPLE_TOKENIZER_TEMPLATE);
   },
 
   /**
@@ -173,12 +173,12 @@ const ExampleParserGeneratorTrait = {
         `"_lexRule${this._lexHandlers.length}"]`;
     });
 
-    this.writeData('<<LEX_RULES>>', `[ ${lexRules.join(',\n')} ]`);
+    this.writeData('LEX_RULES', `[ ${lexRules.join(',\n')} ]`);
   },
 
   /**
    * Generates lexical rules grouped by start conditions. A map from state
-   * name to the list of lex rule indices from the `<<LEX_RULES>>`.
+   * name to the list of lex rule indices from the `LEX_RULES`.
    *
    * Example:
    *
@@ -200,7 +200,7 @@ const ExampleParserGeneratorTrait = {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${this._toExampleLanguageMap(result)}`,
     );
   },
@@ -225,7 +225,7 @@ const ExampleParserGeneratorTrait = {
       '_lexRule',
       '' /* return type, you can use e.g. 'string' */
     );
-    this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -237,7 +237,7 @@ const ExampleParserGeneratorTrait = {
       '_handler',
       '',  /* return type */
     );
-    this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -247,7 +247,7 @@ const ExampleParserGeneratorTrait = {
    */
   generateProductions() {
     this.writeData(
-      '<<PRODUCTIONS>>',
+      'PRODUCTIONS',
       `[ ${this.generateProductionsData().join(',\n')} ]`
     );
   },
@@ -265,7 +265,7 @@ const ExampleParserGeneratorTrait = {
       `;
     }
 
-    this.writeData('<<MODULE_INCLUDE>>', moduleInclude);
+    this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 
   /**

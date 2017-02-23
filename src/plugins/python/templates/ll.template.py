@@ -27,17 +27,17 @@ def on_parse_begin(string):
 def on_parse_end(parsed):
     pass
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
-<<PRODUCTION_HANDLERS>>
+{{{PRODUCTION_HANDLERS}}}
 
-ps = <<PRODUCTIONS>>
-tks = <<TOKENS>>
-tbl = <<TABLE>>
+ps = {{{PRODUCTIONS}}}
+tks = {{{TOKENS}}}
+tbl = {{{TABLE}}}
 
 s = None
 
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
 def set_tokenizer(custom_tokenizer):
     global _tokenizer
@@ -55,7 +55,7 @@ def parse(string):
 
     _tokenizer.init_string(string)
 
-    s = [EOF, <<START>>]
+    s = [EOF, {{{START}}}]
 
     t = _tokenizer.get_next_token()
     to = None

@@ -6,8 +6,8 @@
  * See `--custom-tokinzer` to skip this generation, and use a custom one.
  */
 
-const lexRules = <<LEX_RULES>>;
-const lexRulesByConditions = <<LEX_RULES_BY_START_CONDITIONS>>;
+const lexRules = {{{LEX_RULES}}};
+const lexRulesByConditions = {{{LEX_RULES_BY_START_CONDITIONS}}};
 
 const EOF_TOKEN = {
   type: EOF,

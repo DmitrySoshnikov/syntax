@@ -16,9 +16,9 @@
 ##
 
 class YYParse
-  @@ps = <<PRODUCTIONS>>
-  @@tks = <<TOKENS>>
-  @@tbl = <<TABLE>>
+  @@ps = {{{PRODUCTIONS}}}
+  @@tks = {{{TOKENS}}}
+  @@tbl = {{{TABLE}}}
 
   @@s = []
   @@__ = nil
@@ -55,7 +55,7 @@ class YYParse
 
   @@tokenizer = nil
 
-  <<PRODUCTION_HANDLERS>>
+  {{{PRODUCTION_HANDLERS}}}
 
   def self.tokenizer=(tokenizer)
     @@tokenizer = tokenizer
@@ -86,7 +86,7 @@ class YYParse
 
     tokenizer.init_string(string)
 
-    @@s = [self::EOF, <<START>>]
+    @@s = [self::EOF, {{{START}}}]
 
     t = tokenizer.get_next_token
     st = nil
@@ -150,8 +150,8 @@ class YYParse
   end
 end
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
-class <<PARSER_CLASS_NAME>> < YYParse; end
+class {{{PARSER_CLASS_NAME}}} < YYParse; end

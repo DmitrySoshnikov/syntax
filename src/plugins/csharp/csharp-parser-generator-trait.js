@@ -22,7 +22,7 @@ const CSharpParserGeneratorTrait = {
    * Generates parser class name.
    */
   generateParserClassName(className) {
-    this.writeData('<<PARSER_CLASS_NAME>>', className);
+    this.writeData('PARSER_CLASS_NAME', className);
   },
 
   /**
@@ -30,7 +30,7 @@ const CSharpParserGeneratorTrait = {
    */
   generateParseTable() {
     this.writeData(
-      '<<TABLE>>',
+      'TABLE',
       this._buildTable(this.generateParseTableData()),
     );
   },
@@ -67,7 +67,7 @@ const CSharpParserGeneratorTrait = {
    */
   generateTokensTable() {
     this.writeData(
-      '<<TOKENS>>',
+      'TOKENS',
       this._toCSharpDictionary(this._tokens, 'string', 'number'),
     );
   },
@@ -107,7 +107,7 @@ const CSharpParserGeneratorTrait = {
    * Generates built-in tokenizer instance.
    */
   generateBuiltInTokenizer() {
-    this.writeData('<<TOKENIZER>>', CSHARP_TOKENIZER_TEMPLATE);
+    this.writeData('TOKENIZER', CSHARP_TOKENIZER_TEMPLATE);
   },
 
   /**
@@ -153,7 +153,7 @@ const CSharpParserGeneratorTrait = {
         `"_lexRule${this._lexHandlers.length}" }`;
     });
 
-    this.writeData('<<LEX_RULES>>', `{ ${lexRules.join(',\n')} }`);
+    this.writeData('LEX_RULES', `{ ${lexRules.join(',\n')} }`);
   },
 
   generateLexRulesByStartConditions() {
@@ -168,7 +168,7 @@ const CSharpParserGeneratorTrait = {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${this._toCSharpDictionary(result, 'string')}`,
     );
   },
@@ -243,7 +243,7 @@ const CSharpParserGeneratorTrait = {
       '_lexRule',
       'object'
     );
-    this.writeData('<<LEX_RULE_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -255,7 +255,7 @@ const CSharpParserGeneratorTrait = {
       '_handler',
       'void'
     );
-    this.writeData('<<PRODUCTION_HANDLERS>>', handlers.join('\n\n'));
+    this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
   },
 
   /**
@@ -263,7 +263,7 @@ const CSharpParserGeneratorTrait = {
    */
   generateProductions() {
     this.writeData(
-      '<<PRODUCTIONS>>',
+      'PRODUCTIONS',
       `{ ${this.generateProductionsData().join(',\n')} }`
     );
   },
@@ -296,7 +296,7 @@ const CSharpParserGeneratorTrait = {
       moduleInclude += defaultModuleInclude;
     }
 
-    this.writeData('<<MODULE_INCLUDE>>', moduleInclude);
+    this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 
   /**

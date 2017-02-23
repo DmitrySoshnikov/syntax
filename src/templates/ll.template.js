@@ -23,14 +23,14 @@ let __;
 
 const EOF = '$';
 
-const ps = <<PRODUCTIONS>>;
-const tks = <<TOKENS>>;
-const tbl = <<TABLE>>;
+const ps = {{{PRODUCTIONS}}};
+const tks = {{{TOKENS}}};
+const tbl = {{{TABLE}}};
 
 const s = [];
 
 let tokenizer;
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
 const yyparse = {
   parse(string) {
@@ -43,7 +43,7 @@ const yyparse = {
     tokenizer.initString(string);
 
     s.length = 0;
-    s.push(EOF, <<START>>);
+    s.push(EOF, {{{START}}});
 
     let t = tokenizer.getNextToken();
     let to = null;
@@ -85,7 +85,7 @@ const yyparse = {
   onParseEnd(parsed) {},
 };
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
 function der(to, t, tt) {
   let npn = tbl[to][tt];

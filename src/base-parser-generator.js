@@ -25,11 +25,27 @@ export default class BaseParserGenerator {
     options = {},
   }) {
     debug.time('Generating parser module');
+
     this._grammar = grammar;
     this._outputFile = outputFile;
     this._customTokenizer = customTokenizer;
     this._encodeSymbols();
     this._options = options;
+
+    const templateTags = this.getTemplateTags();
+    this._openTag = templateTags.open;
+    this._closeTag = templateTags.close;
+  }
+
+  /**
+   * Returns template tags.
+   */
+  getTemplateTags() {
+    // Default template tags, child classes may override.
+    return {
+      open: '{{{',
+      close: '}}}',
+    };
   }
 
   /**
@@ -176,7 +192,7 @@ export default class BaseParserGenerator {
    */
   writeData(templateVariable, data) {
     this._resultData = this._resultData.replace(
-      templateVariable,
+      this._openTag + templateVariable + this._closeTag,
       () => data,
     );
     return this;
@@ -220,7 +236,7 @@ export default class BaseParserGenerator {
    */
   generateCaptureLocations() {
     this.writeData(
-      '<<CAPTURE_LOCATIONS>>',
+      'CAPTURE_LOCATIONS',
       JSON.stringify(this._grammar.shouldCaptureLocations()),
     );
   }
@@ -258,7 +274,7 @@ export default class BaseParserGenerator {
     } else {
       // Require custom tokenizer if was provided.
       this.writeData(
-        '<<TOKENIZER>>',
+        'TOKENIZER',
         `tokenizer = require('${this._customTokenizer}');`,
       );
     }
@@ -268,7 +284,7 @@ export default class BaseParserGenerator {
    * Injects the code passed in the module include directive.
    */
   generateModuleInclude() {
-    this.writeData('<<MODULE_INCLUDE>>', this._grammar.getModuleInclude());
+    this.writeData('MODULE_INCLUDE', this._grammar.getModuleInclude());
   }
 
   /**
@@ -279,7 +295,7 @@ export default class BaseParserGenerator {
       `${__dirname}/./templates/tokenizer.template.js`,
       'utf-8'
     );
-    this.writeData('<<TOKENIZER>>', tokenizerCode);
+    this.writeData('TOKENIZER', tokenizerCode);
   }
 
   /**
@@ -298,7 +314,7 @@ export default class BaseParserGenerator {
       );
     });
 
-    this.writeData('<<LEX_RULES>>', `[${lexRules.join(',\n')}]`);
+    this.writeData('LEX_RULES', `[${lexRules.join(',\n')}]`);
   }
 
   /**
@@ -317,14 +333,14 @@ export default class BaseParserGenerator {
     }
 
     this.writeData(
-      '<<LEX_RULES_BY_START_CONDITIONS>>',
+      'LEX_RULES_BY_START_CONDITIONS',
       `${JSON.stringify(result)}`,
     );
   }
 
   generateProductions() {
     this.writeData(
-      '<<PRODUCTIONS>>',
+      'PRODUCTIONS',
       `[${this.generateProductionsData().join(',\n')}]`
     );
   }
@@ -339,7 +355,7 @@ export default class BaseParserGenerator {
   }
 
   generateTokensTable() {
-    this.writeData('<<TOKENS>>', JSON.stringify(this._tokens));
+    this.writeData('TOKENS', JSON.stringify(this._tokens));
   }
 
   /**
@@ -347,7 +363,7 @@ export default class BaseParserGenerator {
    */
   generateParseTable() {
     this.writeData(
-      '<<TABLE>>',
+      'TABLE',
       JSON.stringify(this.generateParseTableData()),
     );
   }

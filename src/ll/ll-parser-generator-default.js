@@ -98,6 +98,6 @@ export default class LLParserGeneratorDefault extends BaseParserGenerator {
     let startSymbol = this.getEncodedNonTerminal(
       this.getGrammar().getStartSymbol(),
     );
-    this.writeData('<<START>>', `'${startSymbol}'`);
+    this.writeData('START', `'${startSymbol}'`);
   }
 };

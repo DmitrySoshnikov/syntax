@@ -24,7 +24,7 @@ __ = None
 # Location restult.
 __loc = None
 
-should_capture_locations = <<CAPTURE_LOCATIONS>>
+should_capture_locations = {{{CAPTURE_LOCATIONS}}}
 
 EOF = '$'
 
@@ -34,17 +34,17 @@ def on_parse_begin(string):
 def on_parse_end(parsed):
     pass
 
-<<MODULE_INCLUDE>>
+{{{MODULE_INCLUDE}}}
 
-<<PRODUCTION_HANDLERS>>
+{{{PRODUCTION_HANDLERS}}}
 
-productions = <<PRODUCTIONS>>
-tokens = <<TOKENS>>
-table = <<TABLE>>
+productions = {{{PRODUCTIONS}}}
+tokens = {{{TOKENS}}}
+table = {{{TABLE}}}
 
 stack = None
 
-<<TOKENIZER>>
+{{{TOKENIZER}}}
 
 def set_tokenizer(custom_tokenizer):
     global _tokenizer
