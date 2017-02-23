@@ -41,6 +41,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [LR conflicts](#lr-conflicts)
   - [Conflicts resolution](#conflicts-resolution)
 - [Module include, and parser events](#module-include-and-parser-events)
+- [Debug mode](#debug-mode)
 
 
 ### Installation
@@ -840,5 +841,37 @@ The code can also define handlers for some parse events (attaching them to `yypa
 ...
 
 ["E + E",  "$$ = new BinaryExpression($1, $3, $2)"],
+```
+
+### Debug mode
+
+Debug mode allows measuring timing of certain steps, and analyzing other debug information. From the CLI it's activated using `--debug` (`-d`) option:
+
+```
+./bin/syntax -g examples/calc-eval.g -m slr1 -p '2 + 2 * 2' --debug
+
+DEBUG mode is: ON
+
+[DEBUG] Grammar (bnf) is in JS format
+[DEBUG] Grammar loaded in: 2.255ms
+
+Parsing mode: SLR(1).
+
+Parsing:
+
+2 + 2 * 2
+
+[DEBUG] Building canonical collection: 15.219ms
+[DEBUG] Number of states in the collection: 22
+[DEBUG] Building LR parsing table: 4.169ms
+[DEBUG] LR parsing: 2.180ms
+
+✓ Accepted
+
+Parsed value:
+
+6
+
+[DEBUG] Total time: 70.284ms
 ```
 
