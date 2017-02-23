@@ -211,12 +211,14 @@ JSON-"like" is because it's excented JSON notation, and may include any JavaScri
   // Lexical grammar.
 
   lex: {
-    [`\\s+`,        `/* skip whitespace */`],
-    [`\\d+`,        `return 'NUMBER'`],
-    [`\\+`,         `return '+'`],
-    [`\\*`,         `return '*'`],
-    [`\\(`,         `return '('`],
-    [`\\)`,         `return ')'`],
+    rules: [
+      [`\\s+`,        `/* skip whitespace */`],
+      [`\\d+`,        `return 'NUMBER'`],
+      [`\\+`,         `return '+'`],
+      [`\\*`,         `return '*'`],
+      [`\\(`,         `return '('`],
+      [`\\)`,         `return ')'`],
+    ],
   },
 
   // ---------------------------
