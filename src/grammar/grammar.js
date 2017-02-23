@@ -369,7 +369,7 @@ export default class Grammar {
     if (!this._tokens) {
       this._tokens = [];
 
-      let tokensMap = {};
+      this._tokensMap = {};
 
       this._bnf.forEach(production => {
         if (production.isAugmented() || production.isEpsilon()) {
@@ -379,8 +379,8 @@ export default class Grammar {
           let rawSymbol = symbol.getSymbol();
           if (!symbol.isTerminal() &&
               !this._nonTerminalsMap.hasOwnProperty(rawSymbol) &&
-              !tokensMap.hasOwnProperty(rawSymbol)) {
-            tokensMap[rawSymbol] = true;
+              !this._tokensMap.hasOwnProperty(rawSymbol)) {
+            this._tokensMap[rawSymbol] = true;
             this._tokens.push(symbol);
           }
         });
@@ -474,9 +474,7 @@ export default class Grammar {
     }
 
     return symbol.isTerminal() ||
-      this.getTokens().some(token => {
-        return token.getSymbol() === symbol.getSymbol();
-      });
+      this._tokensMap.hasOwnProperty(symbol.getSymbol());
   }
 
   /**
