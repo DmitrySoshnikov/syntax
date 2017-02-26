@@ -69,7 +69,7 @@ const options = require('nomnom')
       help: 'Whether to generate only standalone tokenizer output file',
       flag: true,
     },
-    'tokenize': {
+    tokenize: {
       help: 'Show list of tokens',
       flag: true,
     },
@@ -87,19 +87,23 @@ const options = require('nomnom')
       help: 'Whether to generate a parser module for parsing a passed string',
       flag: true,
     },
-    'loc': {
-       help: 'Capture token locations (offsets, line and column numbers)',
-       flag: true,
+    loc: {
+      help: 'Capture token locations (offsets, line and column numbers)',
+      flag: true,
     },
     'case-insensitive': {
-       help: 'Sets case-insensitive mode to lexical grammar',
-       abbr: 'i',
-       flag: true,
+      help: 'Sets case-insensitive mode to lexical grammar',
+      abbr: 'i',
+      flag: true,
     },
-    'debug': {
-       help: 'Debug mode (outputs steps and timing)',
-       abbr: 'd',
-       flag: true,
+    debug: {
+      help: 'Debug mode (outputs steps and timing)',
+      abbr: 'd',
+      flag: true,
+    },
+    validate: {
+      help: 'Validate a grammar, showing conflicts, number of states, etc.',
+      flag: true,
     },
     namespace: {
       help: 'Append a wrapping namespace to generated code',
@@ -134,6 +138,153 @@ const generatorOptions = {
 };
 
 /**
+ * Returns a parsing table for a grammar.
+ */
+function getLRParsingTable(grammar) {
+  const LRParsingTable = require(ROOT + 'lr/lr-parsing-table').default;
+
+  return new LRParsingTable({
+    grammar,
+    canonicalCollection: getCanonicalCollection(grammar),
+    resolveConflicts: options['resolve-conflicts'],
+  });
+}
+
+/**
+ * Returns a canonical collection for a grammar.
+ */
+function getCanonicalCollection(grammar) {
+  const CanonicalCollection =
+    require(ROOT + 'lr/canonical-collection').default;
+
+  return new CanonicalCollection({grammar});
+}
+
+/**
+ * Validates a grammar.
+ */
+function validateLRGrammar(grammar) {
+  const LRParsingTable = require(ROOT + 'lr/lr-parsing-table').default;
+  const EntryType = LRParsingTable.EntryType;
+
+  const table = getLRParsingTable(grammar);
+
+  const conflictsData = table.getConflictsData();
+  const conflictStates = Object.keys(conflictsData);
+
+  let hasConflicts = false;
+
+  const srConflicts = new Map();
+  const rrConflicts = [];
+
+  // Conflicts in all states.
+  for (const state in conflictsData) {
+    const stateConflicts = conflictsData[state];
+
+    // Conflitcs within a state.
+    for (const symbol in stateConflicts) {
+      const symbolConflict = stateConflicts[symbol];
+
+      if (symbolConflict.resolved === false) {
+        hasConflicts = true;
+        const conflict = symbolConflict.conflict;
+
+        switch (LRParsingTable.getEntryType(conflict)) {
+
+          // Shift-reduce conflict.
+          case EntryType.SR_CONFLICT:
+            const [reducePart, shiftPart] = table.splitSRParts(conflict);
+            const production = grammar.getProduction(reducePart.slice(1));
+            const data = srConflicts.get(production) || [];
+            data.push(symbol);
+            srConflicts.set(production, data);
+            break;
+
+          // Reduce-reduce conflict.
+          case EntryType.RR_CONFLICT:
+            const [reduce1, reduce2] = conflict.split('/');
+            rrConflicts.push({
+              production1: grammar.getProduction(reduce1.slice(1)),
+              production2: grammar.getProduction(reduce2.slice(1)),
+            });
+            break;
+
+          default:
+            throw new Error(
+              'Unknown conflict type: ' + symbolConflict.conflict
+            );
+        }
+      }
+    }
+  }
+
+  // Had conflicts, but all were resolved.
+  if (!hasConflicts) {
+    console.info(
+      colors.green('\n\u2713 Grammar doesn\'t have any conflicts!\n')
+    );
+    return;
+  }
+
+  console.info(
+    colors.red('\nGrammar has the following unresolved conflicts:\n')
+  );
+
+  // Shift-reduce.
+  if (srConflicts.size > 0) {
+    console.info(colors.bold('"Shift-reduce" conflicts:\n'));
+    let i = 1;
+
+    for (let [production, data] of srConflicts.entries()) {
+      let pad = i >= 10 ? '' : ' ';
+      data = data.map(symbol => colors.bold(symbol));
+      console.info(
+        `  ${pad}${i++}. ` +
+        `Production: ${colors.bold(production.toFullString())}, ` +
+        `conflicts with symbols ${data.join(', ')}.`
+      );
+    }
+
+    console.info('');
+  }
+
+  // Reduce-reduce.
+  if (rrConflicts.length > 0) {
+    console.info(colors.bold('"Reduce-reduce" conflicts:\n'));
+    let i = 1;
+
+    for (let {production1, production2} of rrConflicts) {
+      let pad = i >= 10 ? '' : ' ';
+      console.info(
+        `  ${pad}${i++}. ` +
+        `Production: ${colors.bold(production1.toFullString())}, ` +
+        `conflicts with production ${colors.bold(production2.toFullString())}.`
+      );
+    }
+
+    console.info('');
+  }
+
+  // Hint message how the conflicts can be fixed.
+  console.info(
+    `${colors.bold('Possible solutions:')}\n\n` +
+    `  1. Conflicts possibly can be solved by using ` +
+    `${colors.bold('"operators"')} section,\n     where you can specify ` +
+    `${colors.bold('precedence')} and ${colors.bold('associativity')}.\n\n` +
+
+    `  2. By using different parsing mode` +
+
+    (options.mode !== GRAMMAR_MODE.LALR1
+      ? `, e.g. ${colors.bold('LALR1')} instead of ` +
+        colors.bold(options.mode)
+      : ''
+    ) + '.\n\n' +
+
+    `See docs and details in: ${colors.bold('http://bit.ly/2l0zslL')}.\n`
+  );
+}
+
+/**
  * Set of parsers.
  */
 const parsers = {
@@ -160,25 +311,17 @@ const parsers = {
 
     // Canonical collection or LR items.
     if (options.collection) {
-      const CanonicalCollection =
-        require(ROOT + 'lr/canonical-collection').default;
+      getCanonicalCollection(grammar).print();
+    }
 
-      new CanonicalCollection({grammar})
-        .print();
+    // Validates a grammar.
+    if (options.validate) {
+      validateLRGrammar(grammar);
     }
 
     // LR parsing table.
     if (options.table) {
-      const CanonicalCollection =
-        require(ROOT + 'lr/canonical-collection').default;
-
-      const LRParsingTable = require(ROOT + 'lr/lr-parsing-table').default;
-
-      new LRParsingTable({
-        grammar,
-        canonicalCollection: new CanonicalCollection({grammar}),
-        resolveConflicts: options['resolve-conflicts'],
-      }).print();
+      getLRParsingTable(grammar).print();
     }
 
     // Parse a string.

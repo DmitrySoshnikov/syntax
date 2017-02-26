@@ -107,6 +107,9 @@ export default class LRParsingTable {
     this._grammar = grammar;
     this._shouldResolveConflicts = resolveConflicts;
 
+    // Stores conflicts data.
+    this._conflictsData = {};
+
     debug.time('Building LR parsing table');
 
     this._action = grammar.getTerminals()
@@ -120,6 +123,13 @@ export default class LRParsingTable {
 
   get() {
     return this._table;
+  }
+
+  /**
+   * Returns conflicts data.
+   */
+  getConflictsData() {
+    return this._conflictsData;
   }
 
   print() {
@@ -176,16 +186,9 @@ export default class LRParsingTable {
     if (typeof entry === 'number') {
       return EntryType.GOTO;
     } else if (entry.indexOf('/') !== -1) {
-
-      let entryTypes = entry.split('/')
-        .map(e => LRParsingTable.getEntryType(e));
-
-      if (entryTypes.every(type => type === EntryType.REDUCE)) {
-        return EntryType.RR_CONFLICT;
-      }
-
-      return EntryType.SR_CONFLICT;
-
+      return entry.indexOf('s') !== -1
+        ? EntryType.SR_CONFLICT
+        : EntryType.RR_CONFLICT;
     } else if (entry[0] === 's') {
       return EntryType.SHIFT;
     } else if (entry[0] === 'r') {
@@ -198,7 +201,7 @@ export default class LRParsingTable {
   }
 
   _hasConflict(entry) {
-    let entryType = LRParsingTable.getEntryType(entry);
+    const entryType = LRParsingTable.getEntryType(entry);
     return entryType === EntryType.RR_CONFLICT ||
       entryType === EntryType.SR_CONFLICT;
   }
@@ -206,7 +209,10 @@ export default class LRParsingTable {
   _build() {
     this._canonicalCollection.getStates().forEach(state => {
       // Fill actions and goto for this state (row).
-      let row = this._table[state.getNumber()] = {};
+      const row = this._table[state.getNumber()] = {};
+
+      // Whether conflicts are found in this state.
+      let stateHasConflicts = false;
 
       state.getItems().forEach(item => {
 
@@ -252,53 +258,70 @@ export default class LRParsingTable {
         }
       });
 
-      if (Object.keys(row).some(symbol => this._hasConflict(row[symbol]))) {
-        this._resolveConflicts(state, row);
-      }
+      // Resolve conflicts, if any.
+      this._resolveConflicts(state, row);
     });
+  }
+
+  _getStateConflictData(state) {
+    const stateNumber = state.getNumber();
+
+    if (!this._conflictsData.hasOwnProperty(stateNumber)) {
+      this._conflictsData[stateNumber] = {};
+    }
+
+    return this._conflictsData[stateNumber];
+  }
+
+  _initSymbolConflictData(state, symbol, conflict) {
+    this._getStateConflictData(state)[symbol] = {
+      conflict,
+      resolved: false,
+    };
   }
 
   _resolveConflicts(state, row) {
-    if (Object.keys(this._grammar.getOperators()) === 0 &&
-        !this._shouldResolveConflicts) {
-      return;
-    }
-
     Object.keys(row).forEach(symbol => {
-      let entryType = LRParsingTable.getEntryType(row[symbol]);
+      const entryType = LRParsingTable.getEntryType(row[symbol]);
 
       if (entryType === EntryType.SR_CONFLICT) {
-        this._resolveSRConflict(row, symbol);
+        this._initSymbolConflictData(state, symbol, row[symbol]);
+        this._resolveSRConflict(state, row, symbol);
       } else if (entryType === EntryType.RR_CONFLICT) {
-        this._resolveRRConflict(row, symbol);
+        this._initSymbolConflictData(state, symbol, row[symbol]);
+        this._resolveRRConflict(state, row, symbol);
       }
     });
   }
 
-  _resolveSRConflict(row, symbol) {
-    let entry = row[symbol];
-    let operators = this._grammar.getOperators();
+  _resolveSRConflict(state, row, symbol) {
+    const entry = row[symbol];
+    const operators = this._grammar.getOperators();
 
-    let [reducePart, shiftPart] = this._splitSRParts(entry);
+    const [reducePart, shiftPart] = this.splitSRParts(entry);
 
     // Default resolution is to shift if no precedence is specified.
     if (!operators.hasOwnProperty(symbol)) {
       if (this._shouldResolveConflicts) {
         row[symbol] = shiftPart;
+        this._getStateConflictData(state)[symbol].resolved =
+          'no precedence, shift by default';
       }
       return;
     }
 
     // Else, working with operators precedence.
 
-    let {
+    const {
       precedence: symbolPrecedence,
       assoc: symbolAssoc,
     } = operators[symbol];
 
-    let productionPrecedence = this._grammar
+    const productionPrecedence = this._grammar
       .getProduction(reducePart.slice(1))
       .getPrecedence();
+
+    const symbolConflictData = this._getStateConflictData(state)[symbol];
 
     // 1. If production's precedence is higher, the choice is to reduce:
     //
@@ -307,6 +330,8 @@ export default class LRParsingTable {
     //
     if (productionPrecedence > symbolPrecedence) {
       row[symbol] = reducePart;
+      symbolConflictData.resolved =
+        'reduce (higher production precedence)';
     }
 
     // 2. If the symbol's precedence is higher, the choice is to shift:
@@ -316,6 +341,8 @@ export default class LRParsingTable {
     //
     else if (symbolPrecedence > productionPrecedence) {
       row[symbol] = shiftPart;
+      symbolConflictData.resolved =
+        'shift (higher symbol precedence)';
     }
 
     // 3. If they have equal precedence, the choice is made based on the
@@ -335,31 +362,39 @@ export default class LRParsingTable {
       // Left-assoc.
       if (symbolAssoc === 'left') {
         row[symbol] = reducePart;
+        symbolConflictData.resolved = 'reduce (same precedence, left-assoc)';
       } else if (symbolAssoc === 'right') {
         row[symbol] = shiftPart;
+        symbolConflictData.resolved = 'shift (same precedence, right-assoc)';
       } else if (symbolAssoc === 'nonassoc') {
         // No action on `nonassoc`.
         delete rows[symbol];
+        symbolConflictData.resolved = 'removed conflict for nonassoc';
       }
     }
   }
 
-  _resolveRRConflict(row, symbol) {
+  _resolveRRConflict(state, row, symbol) {
     if (!this._shouldResolveConflicts) {
       return;
     }
 
-    let entry = row[symbol];
-    let [r1, r2] = entry.split('/');
+    const entry = row[symbol];
+    const [r1, r2] = entry.split('/');
+
+    const symbolConflictData = this._getStateConflictData(state)[symbol];
 
     // R/R conflicts are resolved by choosing a production that
     // goes first in the grammar (i.e. its number is smaller).
     row[symbol] = Number(r1.slice(1)) < Number(r2.slice(1))
       ? r1
       : r2;
+
+    symbolConflictData.resolved =
+      'first in order production is chosen ' + row[symbol].slice(1);
   }
 
-  _splitSRParts(entry) {
+  splitSRParts(entry) {
     let srConflict = entry.split('/');
 
     return LRParsingTable.getEntryType(srConflict[0]) === EntryType.REDUCE
