@@ -175,6 +175,9 @@ describe('grammar', () => {
 
       expect(grammar.getNonTerminalSymbols())
         .toEqual(grammarData.nonTerminalSymbols);
+
+      expect(grammar.isNonTerminal(grammarData.nonTerminalSymbols[0]))
+        .toBe(true);
     });
 
     // -------------------------------------------------------------
@@ -187,6 +190,11 @@ describe('grammar', () => {
 
       expect(grammar.getTerminalSymbols())
         .toEqual(grammarData.terminalSymbols);
+
+      if (grammarData.terminalSymbols.length > 0) {
+        expect(grammar.isTokenSymbol(grammarData.terminalSymbols[0]))
+          .toBe(true);
+      }
     });
 
     // -------------------------------------------------------------
@@ -199,6 +207,11 @@ describe('grammar', () => {
 
       expect(grammar.getTokenSymbols())
         .toEqual(grammarData.tokenSymbols);
+
+      if (grammarData.tokenSymbols.length > 0) {
+        expect(grammar.isTokenSymbol(grammarData.tokenSymbols[0]))
+          .toBe(true);
+      }
     });
 
     // -------------------------------------------------------------

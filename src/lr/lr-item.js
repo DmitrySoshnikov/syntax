@@ -70,7 +70,7 @@ export default class LRItem {
    */
   shouldClosure() {
     return !this._closured && !this.isFinal() &&
-      !this._grammar.isTokenSymbol(this.getCurrentSymbol());
+      this._grammar.isNonTerminal(this.getCurrentSymbol());
   }
 
   /**

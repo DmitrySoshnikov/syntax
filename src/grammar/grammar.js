@@ -482,6 +482,17 @@ export default class Grammar {
   }
 
   /**
+   * Whether a symbol is a non-terminal in this grammar.
+   */
+  isNonTerminal(symbol) {
+    if (symbol instanceof GrammarSymbol) {
+      symbol = symbol.getSymbol();
+    }
+
+    return this._nonTerminalsMap.hasOwnProperty(symbol);
+  }
+
+  /**
    * Pretty prints the grammar.
    */
   print() {
