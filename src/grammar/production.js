@@ -18,24 +18,24 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor({
+  constructor(
     LHS,
     RHS,
     number,
-    semanticAction = null,
-    isShort = false,
+    semanticAction,
+    isShort,
     grammar,
     precedence,
-  }) {
+  ) {
     this._rawLHS = LHS;
     this._rawRHS = RHS;
     this._number = number;
     this._isAugmented = number === 0;
-    this._isShort = isShort;
+    this._isShort = !!isShort;
     this._grammar = grammar;
     this._normalize();
 
-    if (semanticAction === null) {
+    if (semanticAction == null) {
       semanticAction = this._createDefaultSemanticAction()
     }
 

@@ -25,10 +25,13 @@ export default class GrammarSymbol {
    * "a", " ", "var", etc.
    */
   isTerminal() {
-    const quoteRe = /'|"/;
+    const first = this._symbol[0];
+    const last = this._symbol[this._symbol.length - 1];
 
-    return quoteRe.test(this._symbol[0]) &&
-      quoteRe.test(this._symbol[this._symbol.length - 1]);
+    return (
+      (first === '"' && last === '"') ||
+      (first === "'" && last === "'")
+    );
   }
 
   /**

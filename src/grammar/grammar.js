@@ -156,8 +156,12 @@ export default class Grammar {
       tokens = tokens.split(/\s+/);
     }
 
+    this._tokensMap = {};
     this._tokens = Array.isArray(tokens)
-      ? tokens.map(token => GrammarSymbol.get(token))
+      ? tokens.map(token => {
+          this._tokensMap[token] = true;
+          return GrammarSymbol.get(token)
+        })
       : this.getTokens();
 
     // Lexical grammar.
@@ -299,13 +303,13 @@ export default class Grammar {
     if (!this._terminals) {
       this._terminals = [];
 
-      let terminals = {};
+      this._terminalsMap = {};
 
       this._bnf.forEach(production => {
         production.getRHS().forEach(symbol => {
           if (symbol.isTerminal() &&
-              !terminals.hasOwnProperty(symbol.getSymbol())) {
-            terminals[symbol.getSymbol()] = true;
+              !this._terminalsMap.hasOwnProperty(symbol.getSymbol())) {
+            this._terminalsMap[symbol.getSymbol()] = true;
             this._terminals.push(symbol);
           }
         });
@@ -469,12 +473,12 @@ export default class Grammar {
    * one of the variables from the lexical grammar.
    */
   isTokenSymbol(symbol) {
-    if (!(symbol instanceof GrammarSymbol)) {
-      symbol = GrammarSymbol.get(symbol);
+    if (symbol instanceof GrammarSymbol) {
+      symbol = symbol.getSymbol();
     }
 
-    return symbol.isTerminal() ||
-      this._tokensMap.hasOwnProperty(symbol.getSymbol());
+    return this._terminalsMap.hasOwnProperty(symbol) ||
+      this._tokensMap.hasOwnProperty(symbol);
   }
 
   /**
@@ -577,12 +581,14 @@ export default class Grammar {
 
     if (this._mode.isLR()) {
       // Augmented rule, $accept -> S.
-      let augmentedProduction = new Production({
-        LHS: '$accept',
-        RHS: this._startSymbol,
-        number: number++,
-        grammar: this,
-      });
+      let augmentedProduction = new Production(
+        /* LHS */ '$accept',
+        /* RHS */ this._startSymbol,
+        /* number */ number++,
+        /* semanticAction */ null,
+        /* isShort */ false,
+        /* grammar */ this,
+      );
       processedBnf[0] = augmentedProduction;
     }
 
@@ -610,15 +616,15 @@ export default class Grammar {
           }
         }
 
-        processedBnf.push(new Production({
+        processedBnf.push(new Production(
           LHS,
           RHS,
+          /* number */ number++,
           semanticAction,
+          /* isShort */ k > 0,
+          /* grammar */ this,
           precedence,
-          number: number++,
-          isShort: k > 0,
-          grammar: this,
-        }));
+        ));
       });
     });
 

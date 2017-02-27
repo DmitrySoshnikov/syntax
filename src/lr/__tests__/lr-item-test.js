@@ -200,7 +200,14 @@ describe('lr-item', () => {
     expect(baseItem.isEpsilonTransition()).toBe(false);
 
     const epsilonItem = new LRItem(
-      /* production */ new Production({LHS: 'S', RHS: /* empty */'', grammar}),
+      /* production */ new Production(
+        /* LHS */ 'S',
+        /* RHS */ '',
+        /* number */ 0,
+        /* semanticAction */ null,
+        /* isShort */ false,
+        grammar,
+      ),
       /* dotPosition */ 0,
       grammar,
       canonicalCollection,

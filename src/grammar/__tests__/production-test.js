@@ -21,14 +21,14 @@ const mockGrammar = {
   },
 };
 
-const productionData = {
-  LHS: 'E',
-  RHS: 'E + F',
-  number: 1,
-  isShort: false,
-  grammar: mockGrammar,
-  semanticAction: '$$ = $1 + $3',
-};
+const defaultProductionData = [
+  /* LHS */ 'E',
+  /* RHS */ 'E + F',
+  /* number */ 1,
+  /* semanticAction */ '$$ = $1 + $3',
+  /* isShort */ false,
+  /* grammar */ mockGrammar,
+];
 
 const defaultLoc = {
   startOffset: 1,
@@ -42,14 +42,14 @@ const defaultLoc = {
 describe('production', () => {
 
   it('LHS', () => {
-    const production = new Production(productionData);
+    const production = new Production(...defaultProductionData);
 
     expect(production.getLHS() instanceof GrammarSymbol).toBe(true);
-    expect(production.getLHS().getSymbol()).toBe(productionData.LHS);
+    expect(production.getLHS().getSymbol()).toBe(defaultProductionData[0]);
   });
 
   it('RHS', () => {
-    const production = new Production(productionData);
+    const production = new Production(...defaultProductionData);
     const RHS = production.getRHS();
 
     expect(Array.isArray(RHS)).toBe(true);
@@ -65,36 +65,41 @@ describe('production', () => {
   });
 
   it('full/short', () => {
-    let production = new Production({...productionData, isShort: false});
+    const productionData = [...defaultProductionData];
+    productionData[/* isShort */ 4] = false;
+    let production = new Production(...productionData);
     expect(production.toString()).toBe('E -> E + F');
 
-    production = new Production({...productionData, isShort: true});
+    productionData[/* isShort */ 4] = true;
+    production = new Production(...productionData);
     expect(production.toString()).toBe('   | E + F');
     expect(production.toFullString()).toBe('E -> E + F');
   });
 
   it('augmented', () => {
-    let production = new Production({...productionData, number: 0});
+    const productionData = [...defaultProductionData];
+    productionData[/* number */ 2] = 0;
+    let production = new Production(...productionData);
     expect(production.isAugmented()).toBe(true);
     expect(production.getNumber()).toBe(0);
 
-    production = new Production({...productionData, number: 1});
+    productionData[/* number */ 2] = 1;
+    production = new Production(...productionData);
     expect(production.isAugmented()).toBe(false);
     expect(production.getNumber()).toBe(1);
   });
 
   it('number', () => {
-    let production = new Production(productionData);
+    let production = new Production(...defaultProductionData);
     expect(production.getNumber()).toBe(1);
   });
 
   it('semantic action named args', () => {
     const semanticAction = '$$ = $E + $F';
+    const productionData = [...defaultProductionData];
+    productionData[/* semanticAction */ 3] = semanticAction;
 
-    let production = new Production({
-      ...productionData,
-      semanticAction,
-    });
+    let production = new Production(...productionData);
 
     expect(production.hasSemanticAction()).toBe(true);
 
@@ -107,12 +112,12 @@ describe('production', () => {
 
   it('semantic action', () => {
     // Has semantic action.
-    let production = new Production(productionData);
+    let production = new Production(...defaultProductionData);
 
     expect(production.hasSemanticAction()).toBe(true);
 
     expect(production.getRawSemanticAction())
-      .toBe(productionData.semanticAction);
+      .toBe(defaultProductionData[/* semanticAction */ 3]);
 
     const semanticAction = production.getSemanticAction();
     expect(semanticAction instanceof Function).toBe(true);
@@ -125,28 +130,31 @@ describe('production', () => {
     expect(production.runSemanticAction(args)).toBe(result);
 
     // No semantic action.
-    production = new Production({...productionData, semanticAction: null});
+    const productionData = [...defaultProductionData];
+    productionData[/* semanticAction */ 3] = null;
+
+    production = new Production(...productionData);
 
     expect(production.hasSemanticAction()).toBe(false);
     expect(production.runSemanticAction(args)).toBe(undefined);
   });
 
   it('action with locations', () => {
+    const productionData = [...defaultProductionData];
+    productionData[/* grammar */ 5] = {
+      ...mockGrammar,
+      shouldCaptureLocations() {
+        return true;
+      },
+    };
+
     // Has semantic action.
-    let production = new Production({
-      ...productionData,
-      grammar: {
-        ...mockGrammar,
-        shouldCaptureLocations() {
-          return true;
-        },
-      }
-    });
+    let production = new Production(...productionData);
 
     expect(production.hasSemanticAction()).toBe(true);
 
     expect(production.getRawSemanticAction())
-      .toBe(productionData.semanticAction);
+      .toBe(defaultProductionData[/* semanticAction */ 3]);
 
     const semanticAction = production.getSemanticAction();
     expect(semanticAction instanceof Function).toBe(true);
@@ -160,15 +168,15 @@ describe('production', () => {
   });
 
   it('default location calculation', () => {
-    let production = new Production({
-      ...productionData,
-      grammar: {
-        ...mockGrammar,
-        shouldCaptureLocations() {
-          return true;
-        },
-      }
-    });
+    const productionData = [...defaultProductionData];
+    productionData[/* grammar */ 5] = {
+      ...mockGrammar,
+      shouldCaptureLocations() {
+        return true;
+      },
+    };
+
+    const production = new Production(...productionData);
 
     const $1loc = {
       startOffset: 0,
@@ -206,46 +214,56 @@ describe('production', () => {
   });
 
   it('default propagating action', () => {
-    let production = new Production({
-      ...productionData,
-      RHS: `'foo'`,
-      semanticAction: null,
-    });
+    const productionData = [...defaultProductionData];
+    productionData[/* RHS */ 1] = `'foo'`;
+    productionData[/* semanticAction */ 3] = null;
+
+    const production = new Production(...productionData);
 
     const defaultAction = '$$ = $1';
     expect(production.getRawSemanticAction()).toBe(defaultAction);
   });
 
   it('default epsilon action', () => {
-    let production = new Production({
-      ...productionData,
-      RHS: ``,
-      semanticAction: null,
-    });
+    const productionData = [...defaultProductionData];
+    productionData[/* RHS */ 1] = ``;
+    productionData[/* semanticAction */ 3] = null;
+
+    const production = new Production(...productionData);
 
     expect(production.getRawSemanticAction()).toBe(null);
   });
 
   it('epsilon', () => {
-    let production = new Production({...productionData, RHS: EPSILON});
+    const productionData = [...defaultProductionData];
+    productionData[/* RHS */ 1] = EPSILON;
+
+    let production = new Production(...productionData);
+
     expect(production.isEpsilon()).toBe(true);
 
     // Empty RHS is treated as Epsilon as well.
-    production = new Production({...productionData, RHS: ''});
+    productionData[/* RHS */ 1] = '';
+    production = new Production(...productionData);
     expect(production.isEpsilon()).toBe(true);
   });
 
   it('precedence', () => {
+    const productionData = [...defaultProductionData];
+    productionData[/* precedence */ 6] = 3;
+
     // Explicit.
-    let production = new Production({...productionData, precedence: 3});
+    let production = new Production(...productionData);
     expect(production.getPrecedence()).toBe(3);
 
     // Inferred from grammar's operators (for '+' in 'E + F').
-    production = new Production(productionData);
+    delete productionData[/* precedence */ 6];
+    production = new Production(...productionData);
     expect(production.getPrecedence()).toBe(1);
 
     // No precedence.
-    production = new Production({...productionData, RHS: '( E )'});
+    productionData[/* RHS */ 1] = '( E )';
+    production = new Production(...productionData);
     expect(production.getPrecedence()).toBe(0);
   });
 
