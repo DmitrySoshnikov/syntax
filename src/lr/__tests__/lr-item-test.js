@@ -23,6 +23,12 @@ const grammar = Grammar.fromGrammarFile(
 const canonicalCollection = new CanonicalCollection({grammar});
 const setsGenerator = new SetsGenerator({grammar});
 
+function laSet(arraySet) {
+  const set = {};
+  arraySet.forEach(symbol => set[symbol] = true);
+  return set;
+}
+
 // $accept -> • E
 const rootItem = new LRItem(
   /* production */ grammar.getAugmentedProduction(),
@@ -30,7 +36,7 @@ const rootItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ ['$'],
+  /* lookaheadSet */ laSet(['$']),
 );
 
 // E -> • E + E
@@ -40,7 +46,7 @@ const baseItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ ['$', '/', '-', '*', '+'],
+  /* lookaheadSet */ laSet(['$', '/', '-', '*', '+']),
 );
 
 // E -> E • + E
@@ -135,7 +141,7 @@ describe('lr-item', () => {
       grammar,
       canonicalCollection,
       setsGenerator,
-      /* lookaheadSet */ ['%'], // Other lookahead set.
+      /* lookaheadSet */ laSet(['%']), // Other lookahead set.
     );
 
     const items = [
@@ -258,12 +264,12 @@ describe('lr-item', () => {
   it('lookahead set', () => {
     const baseLookaheadSet = baseItem.getLookaheadSet();
 
-    expect(baseLookaheadSet).toEqual(['$', '/', '-', '*', '+']);
+    expect(baseLookaheadSet).toEqual(laSet(['$', '/', '-', '*', '+']));
 
     expect(baseItem.toString())
       .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
 
-    const newLookaheadSet = ['$', '+'];
+    const newLookaheadSet = laSet(['$', '+']);
 
     baseItem.setLookaheadSet(newLookaheadSet);
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
@@ -273,11 +279,11 @@ describe('lr-item', () => {
 
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
 
-    const mergeSet = ['*'];
+    const mergeSet = laSet(['*']);
     baseItem.mergeLookaheadSet(mergeSet);
 
     expect(baseItem.getLookaheadSet())
-      .toEqual(newLookaheadSet.concat(mergeSet));
+      .toEqual(Object.assign(newLookaheadSet, mergeSet));
 
     baseItem.setLookaheadSet(baseLookaheadSet);
   });

@@ -21,6 +21,12 @@ const grammar = Grammar.fromGrammarFile(
   }
 );
 
+function laSet(arraySet) {
+  const set = {};
+  arraySet.forEach(symbol => set[symbol] = true);
+  return set;
+}
+
 const canonicalCollection = new CanonicalCollection({grammar});
 const setsGenerator = new SetsGenerator({grammar});
 
@@ -31,10 +37,10 @@ const rootItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ ['$'],
+  /* lookaheadSet */ laSet(['$']),
 );
 
-const defaultLookaheadSet = ['$', '/', '-', '*', '+'];
+const defaultLookaheadSet = laSet(['$', '/', '-', '*', '+']);
 
 // E -> E • + E
 const kernelItem1 = new LRItem(
@@ -87,7 +93,7 @@ const acceptItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ ['$'],
+  /* lookaheadSet */ laSet(['$']),
 );
 
 const acceptItems = [

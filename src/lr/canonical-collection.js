@@ -53,7 +53,7 @@ export default class CanonicalCollection {
       /* canonicalCollection */ this,
       /* setsGenerator */ new SetsGenerator({grammar}),
       /*lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
-        ? ['$']
+        ? {'$': true}
         : null,
     );
 

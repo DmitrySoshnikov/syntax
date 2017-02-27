@@ -412,7 +412,7 @@ export default class LRParsingTable {
 
     // SLR(1) considers Follow(LHS), LALR(1) and CLR(1)
     // considers lookahead sets.
-    return reduceSet.includes(terminal.getSymbol());
+    return reduceSet.hasOwnProperty(terminal.getSymbol());
   }
 
   _putActionEntry(row, column, entry) {
