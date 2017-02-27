@@ -175,7 +175,7 @@ function validateLRGrammar(grammar) {
   let hasConflicts = false;
 
   const srConflicts = new Map();
-  const rrConflicts = [];
+  const rrConflicts = new Map();
 
   // Conflicts in all states.
   for (const state in conflictsData) {
@@ -203,7 +203,7 @@ function validateLRGrammar(grammar) {
           // Reduce-reduce conflict.
           case EntryType.RR_CONFLICT:
             const [reduce1, reduce2] = conflict.split('/');
-            rrConflicts.push({
+            rrConflicts.set(conflict, {
               production1: grammar.getProduction(reduce1.slice(1)),
               production2: grammar.getProduction(reduce2.slice(1)),
             });
@@ -249,11 +249,11 @@ function validateLRGrammar(grammar) {
   }
 
   // Reduce-reduce.
-  if (rrConflicts.length > 0) {
+  if (rrConflicts.size > 0) {
     console.info(colors.bold('"Reduce-reduce" conflicts:\n'));
     let i = 1;
 
-    for (let {production1, production2} of rrConflicts) {
+    for (let {production1, production2} of rrConflicts.values()) {
       let pad = i >= 10 ? '' : ' ';
       console.info(
         `  ${pad}${i++}. ` +
@@ -268,7 +268,7 @@ function validateLRGrammar(grammar) {
   // Hint message how the conflicts can be fixed.
   console.info(
     `${colors.bold('Possible solutions:')}\n\n` +
-    `  1. Conflicts possibly can be solved by using ` +
+    `  1. Conflicts possibly can be resolved by using ` +
     `${colors.bold('"operators"')} section,\n     where you can specify ` +
     `${colors.bold('precedence')} and ${colors.bold('associativity')}.\n\n` +
 
@@ -279,6 +279,8 @@ function validateLRGrammar(grammar) {
         colors.bold(options.mode)
       : ''
     ) + '.\n\n' +
+
+    `  3. Restructuring grammar.\n\n` +
 
     `See docs and details in: ${colors.bold('http://bit.ly/2l0zslL')}.\n`
   );

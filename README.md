@@ -40,6 +40,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [LR parsing](#lr-parsing)
   - [LR conflicts](#lr-conflicts)
   - [Conflicts resolution](#conflicts-resolution)
+- [Validating grammar](#validating-grammar)
 - [Module include, and parser events](#module-include-and-parser-events)
 - [Debug mode](#debug-mode)
 
@@ -809,6 +810,48 @@ Parsing mode: LALR(1).
 Parsing: id * id + id
 
 ✓ Accepted
+```
+
+### Validating grammar
+
+By using `--validate` option, it is possible to check whether your grammar is free from different kinds of conflicts, and if it is not, to get needed information about which grammar rules conflict, and wich possible solutions can be applied to resolve them.
+
+For example, discussed above [calculator-assoc-conflict](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc-conflict.g) grammar has _"shift-reduce"_ conflicts in two productions:
+
+```
+./bin/syntax -g examples/calculator-assoc-conflict.g -m slr1 --validate
+
+Parsing mode: SLR(1).
+
+Grammar has the following unresolved conflicts:
+
+"Shift-reduce" conflicts:
+
+   1. Production: E -> E '+' E, conflicts with symbols '+', '*'.
+   2. Production: E -> E '*' E, conflicts with symbols '+', '*'.
+
+Possible solutions:
+
+  1. Conflicts possibly can be resolved by using "operators" section,
+     where you can specify precedence and associativity.
+
+  2. By using different parsing mode, e.g. LALR1 instead of SLR1.
+
+  3. Restructuring grammar.
+```
+
+As we can see, _Syntax_ showed which rules conflict with which lookahead symbols, and provided possible solutions.
+
+In this case, rule `E -> E '+' E` conflicts with lookahead `'+'`, and `'*'`. This means, that if have `id + id + id`, which would expand to `E '+' E '+' E`, the parser wouldn't know whether to _reduce_ first `E '+' E` to `E`, or whether to _shift_ further when it sees the second `'+'` symbol.
+
+By specifying operators precedence, and associativity, we can resolve this conflict, which is done in the [calculator-assoc](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calculator-assoc.g) grammar:
+
+```
+./bin/syntax -g examples/calculator-assoc.g -m slr1 --validate
+
+Parsing mode: SLR(1).
+
+✓ Grammar doesn't have any conflicts!
 ```
 
 ### Module include, and parser events
