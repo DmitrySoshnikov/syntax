@@ -237,7 +237,7 @@ JSON-"like" is because it's excented JSON notation, and may include any JavaScri
     e: [[`e + e`,   `$$ = $1 + $3`],
         [`e * e`,   `$$ = $1 * $3`],
         [`( e )`,   `$$ = $2`],
-        [`NUMBER`   `$$ = $1`]],
+        [`NUMBER`   `$$ = Number($1)`]],
   }
 }
 ```
@@ -262,7 +262,7 @@ e
   : e '+' e    { $$ = $1 + $3 }
   | e '*' e    { $$ = $1 + $3 }
   | '(' e ')'  { $$ = $2 }
-  | NUMBER     { $$ = $1 }
+  | NUMBER     { $$ = Number($1) }
   ;
 ```
 
@@ -285,7 +285,7 @@ Below is the list of available grammar properties.
 
 ### Lexical grammar and tokenizer
 
-Tokenizers use formalism of _regular grammars_ in order to split a string to a list of _tokens_. One of the convenient implementations of the regular grammars is _regular expressions_.
+Tokenizers use formalism of _regular grammars_ in order to split a string into a list of _tokens_. One of the convenient implementations of the regular grammars is _regular expressions_.
 
 A basic format of a lexical grammar should provide at least `rules` section:
 
@@ -447,7 +447,7 @@ module.exports = MyTokenizer;
 
 #### Start conditions of lex rules, and tokenizer states
 
-Built-in tokenizer supports _stateful tokenization_. This means the same lex rule can applied in different states, and result to a different token. For lex rules it's known as _start conditions_.
+Built-in tokenizer supports _stateful tokenization_. This means the same lex rule can be applied in different states, and result to a different token. For lex rules it's known as _start conditions_.
 
 Rules with explicit start conditions are executed _only_ when lexer enters the state corresponding to their names. Start conditions can be _inclusive_ (`%s`, 0), and _exclusive_ (`%x`, 1). Inclusive conditions also include rules _without_ any start conditions, and exclusive conditions do not include other rules when the parser enter their state. The rules with `*` start condition are always included.
 
