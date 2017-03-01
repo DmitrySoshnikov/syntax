@@ -148,7 +148,7 @@ export default class LRParsingTable {
       head: [''].concat(actionSymbols, nonTerminals),
     });
 
-    Object.keys(this._table).forEach(stateNumber => {
+    for (let stateNumber in this._table) {
       let tableRow = this._table[stateNumber];
       let stateLabel = colors.blue(stateNumber);
       let row = {[stateLabel]: []};
@@ -172,7 +172,7 @@ export default class LRParsingTable {
       });
 
       printer.push(row);
-    });
+    }
 
     console.info(printer.toString());
     console.info('');
@@ -281,17 +281,22 @@ export default class LRParsingTable {
   }
 
   _resolveConflicts(state, row) {
-    Object.keys(row).forEach(symbol => {
-      const entryType = LRParsingTable.getEntryType(row[symbol]);
+    for (let symbol in row) {
+      const entry = row[symbol];
+      const entryType = LRParsingTable.getEntryType(entry);
 
+      // Shift-reduce.
       if (entryType === EntryType.SR_CONFLICT) {
-        this._initSymbolConflictData(state, symbol, row[symbol]);
+        this._initSymbolConflictData(state, symbol, entry);
         this._resolveSRConflict(state, row, symbol);
-      } else if (entryType === EntryType.RR_CONFLICT) {
-        this._initSymbolConflictData(state, symbol, row[symbol]);
+      }
+
+      // Reduce-reduce.
+      else if (entryType === EntryType.RR_CONFLICT) {
+        this._initSymbolConflictData(state, symbol, entry);
         this._resolveRRConflict(state, row, symbol);
       }
-    });
+    }
   }
 
   _resolveSRConflict(state, row, symbol) {

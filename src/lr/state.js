@@ -250,27 +250,28 @@ export default class State {
     // new state in the `goto` operation.
     if (!this._transitionsForSymbol) {
       this._transitionsForSymbol = {};
-      this._items.forEach(item => {
+      for (let i = 0; i < this._items.length; i++) {
+        const item = this._items[i];
         if (item.isFinal()) {
-          return;
+          continue;
         }
         this.setSymbolTransition(
           item,
           /* state */ null,
         )
-      });
+      }
     }
 
     // Build the outer states if needed.
-    Object.keys(this._transitionsForSymbol).forEach(symbol => {
-      let transitionsForSymbol = this.getTransitionOnSymbol(symbol);
+    for (const symbol in this._transitionsForSymbol) {
+      const transitionsForSymbol = this.getTransitionOnSymbol(symbol);
 
       // Already calculated the outer state, exit.
       if (transitionsForSymbol.state) {
         return;
       }
 
-      let items = transitionsForSymbol.items;
+      const items = transitionsForSymbol.items;
 
       // See if we already calculated transition for this kernel set.
       let outerState = this._canonicalCollection
@@ -290,22 +291,20 @@ export default class State {
       }
 
       // And connect our items to it.
-      items.forEach(item => {
+      for (let i = 0; i < items.length; i++) {
         this.setSymbolTransition(
-          item,
+          items[i],
           /* state */ outerState
         );
-      });
-
-    });
+      }
+    }
 
     this._visited = true;
 
     // Recursively goto further in the graph.
-    Object.keys(this._transitionsForSymbol).forEach(symbol => {
+    for (const symbol in this._transitionsForSymbol) {
       this.getTransitionOnSymbol(symbol).state.goto();
-    });
-
+    }
   }
 
   isKernelItem(item) {
@@ -370,15 +369,15 @@ export default class State {
    * Merges items with the same LR(0) parts for LALR(1).
    */
   mergeLR0Items() {
-    Object.keys(this._lr0ItemsMap).forEach(lr0Key => {
-      let items = this._lr0ItemsMap[lr0Key];
-      let rootItem = items[0];
+    for (let lr0Key in this._lr0ItemsMap) {
+      const items = this._lr0ItemsMap[lr0Key];
+      const rootItem = items[0];
 
       // Merge the items, keeping only one.
       while (items.length > 1) {
         this.mergeTwoItems(rootItem, items.pop());
       }
-    });
+    }
   }
 
   mergeTwoItems(first, second) {

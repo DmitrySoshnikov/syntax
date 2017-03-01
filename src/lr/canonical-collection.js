@@ -82,14 +82,14 @@ export default class CanonicalCollection {
    * LALR(1) by converting to SLR(1).
    */
   compressCLRToLALR() {
-    Object.keys(this._lr0ItemSets).forEach(lr0StateKey => {
-      let states = this._lr0ItemSets[lr0StateKey];
+    for (let lr0StateKey in this._lr0ItemSets) {
+      const states = this._lr0ItemSets[lr0StateKey];
 
-      let rootState = states[0];
+      const rootState = states[0];
       rootState.mergeLR0Items();
 
       while (states.length > 1) {
-        let state = states.pop();
+        const state = states.pop();
         state.mergeLR0Items();
         rootState.mergeWithState(state);
       }
@@ -99,13 +99,13 @@ export default class CanonicalCollection {
         // connection to the first state in the LR(0) states collection,
         // since only this state will be kept after states are merged.
         if (item.isConnected()) {
-          let outerStates = this.getLR0ItemsSet(item.goto());
-          let outerState = outerStates[0];
+          const outerStates = this.getLR0ItemsSet(item.goto());
+          const outerState = outerStates[0];
           item.connect(outerState);
         }
       });
 
-    });
+    }
 
     // After compression reassign new numbers to states.
     this._remap();
@@ -117,7 +117,7 @@ export default class CanonicalCollection {
     // Collect states by LR(0) items, to reuse and merge the same
     // states in case or LALR(1) mode.
 
-    let lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
+    const lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
 
     if (!this._lr0ItemSets.hasOwnProperty(lr0KeyForItems)) {
       this._lr0ItemSets[lr0KeyForItems] = [];
