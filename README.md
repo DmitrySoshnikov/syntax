@@ -202,7 +202,7 @@ _Syntax_ support two main notations to define grammars: _JSON-like_ notation, an
 
 JSON-"like" is because it's excented JSON notation, and may include any JavaScript syntax (e.g. quotes may be omitted for properties, can use comments, etc):
 
-```
+```js
 /**
  * Basic calculator grammar in JSON notation.
  */
