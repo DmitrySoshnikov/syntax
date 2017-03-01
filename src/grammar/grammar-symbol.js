@@ -66,22 +66,51 @@ export default class GrammarSymbol {
     return `${leftQuote}${this.getTerminalValue()}${rightQuote}`;
   }
 
+  /**
+   * Checks whether a symbol is a non-terminal.
+   */
   isNonTerminal() {
     return !this.isTerminal();
   }
 
+  /**
+   * Checks whether a symbol is Epsilon (instance method).
+   */
   isEpsilon() {
-    return this._symbol === EPSILON;
+    return GrammarSymbol.isEpsilon(this._symbol);
   }
 
+  /**
+   * Checks whether a symbol is an end of file (instance method).
+   */
   isEOF() {
     return this._symbol === EOF;
   }
 
+  /**
+   * Checks whether a symbol is Epsilon (static method).
+   */
+  static isEpsilon(symbol) {
+    return symbol === EPSILON;
+  }
+
+  /**
+   * Checks whether a symbol is EOF (static method).
+   */
+  static isEOF(symbol) {
+    return symbol === EOF;
+  }
+
+  /**
+   * Returns raw symbol.
+   */
   getSymbol() {
     return this._symbol;
   }
 
+  /**
+   * Checks whether the symbol equals to the passed one.
+   */
   isSymbol(symbol) {
     return this.getSymbol() === symbol;
   }

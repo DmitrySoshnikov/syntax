@@ -3,10 +3,14 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import GrammarSymbol from './grammar/grammar-symbol';
 import TablePrinter from './table-printer';
 import {EPSILON, EOF} from './special-symbols';
 
 import debug from './debug';
+
+// Default exclude set on merging.
+const EXCLUDE_EPSILON = {[EPSILON]: true};
 
 /**
  * Pasrsing sets generator.
@@ -56,8 +60,10 @@ export default class SetsGenerator {
    * then the firstOf(S) is {"a": true, "b": true}, where "a" is gotten
    * directly, and "b" by following Y non-terminal.
    */
-  firstOf(grammarSymbol) {
-    let symbol = grammarSymbol.getSymbol();
+  firstOf(symbol) {
+    if (symbol instanceof GrammarSymbol) {
+      symbol = symbol.getSymbol();
+    }
 
     // A set may already be built from some previous analysis
     // of a RHS, so check whether it's already there and don't rebuild.
@@ -68,9 +74,9 @@ export default class SetsGenerator {
     let firstSet = this._firstSets[symbol] = {};
 
     // If it's a terminal, its First set contains just itself.
-    if (this._grammar.isTokenSymbol(grammarSymbol) ||
-        grammarSymbol.isEpsilon() ||
-        grammarSymbol.isEOF()) {
+    if (this._grammar.isTokenSymbol(symbol) ||
+        GrammarSymbol.isEpsilon(symbol) ||
+        GrammarSymbol.isEOF(symbol)) {
       firstSet[symbol] = true;
       return this._firstSets[symbol];
     }
@@ -91,7 +97,8 @@ export default class SetsGenerator {
   firstOfRHS(RHS) {
     let firstSet = {};
 
-    for (let [i, productionSymbol] of RHS.entries()) {
+    for (let i = 0; i < RHS.length; i++) {
+      let productionSymbol = RHS[i];
 
       // Direct epsilon goes to the First set.
       if (productionSymbol.isEpsilon()) {
@@ -104,7 +111,7 @@ export default class SetsGenerator {
 
       // Put the First set of this non-terminal in our set,
       // excluding the EPSILON.
-      this._mergeSets(firstSet, firstOfCurrent, [EPSILON]);
+      this._mergeSets(firstSet, firstOfCurrent, EXCLUDE_EPSILON);
 
       // And if there was no EPSILON, we're done (otherwise, we
       // don't break the loop, and proceed to the next symbol of the RHS.
@@ -143,8 +150,10 @@ export default class SetsGenerator {
   /**
    * Returns Follow set for a particular symbol.
    */
-  followOf(grammarSymbol) {
-    let symbol = grammarSymbol.getSymbol();
+  followOf(symbol) {
+    if (symbol instanceof GrammarSymbol) {
+      symbol = symbol.getSymbol();
+    }
 
     // If was already calculated from some previous run.
     if (this._followSets[symbol]) {
@@ -155,7 +164,7 @@ export default class SetsGenerator {
     let followSet = this._followSets[symbol] = {};
 
     // Start symbol always contain `$` in its follow set.
-    if (grammarSymbol.isSymbol(this._grammar.getStartSymbol())) {
+    if (symbol === this._grammar.getStartSymbol()) {
       followSet[EOF] = true;
     }
 
@@ -165,16 +174,14 @@ export default class SetsGenerator {
       .getProductionsWithSymbol(symbol);
 
     productionsWithSymbol.forEach(production => {
-      let RHS = production.getRHS();
+      let RHS = production.getRHSSymbols();
       let symbolIndex;
 
       // Get the follow symbol of our symbol. A symbol can appear
       // several times on the RHS, e.g. S -> AaAb, so Follow set should
       // be {a, b}. Also a symbol may appear as the last symbol, in
       // which case it should be Follow(LHS).
-      while ((symbolIndex = RHS.findIndex(
-        s => s.getSymbol() === symbol
-      )) !== -1) {
+      while ((symbolIndex = RHS.indexOf(symbol)) !== -1) {
         let followPart = RHS.slice(symbolIndex + 1);
 
         // followOf(symbol) is firstOf(followSymbol),
@@ -183,7 +190,7 @@ export default class SetsGenerator {
           while (followPart.length > 0) {
             let productionSymbol = followPart[0];
             let firstOfFollow = this.firstOf(productionSymbol);
-            this._mergeSets(followSet, firstOfFollow, [EPSILON]);
+            this._mergeSets(followSet, firstOfFollow, EXCLUDE_EPSILON);
             // If no epsilon in the First of follow, we're done.
             if (!firstOfFollow.hasOwnProperty(EPSILON)) {
               break;
@@ -300,7 +307,7 @@ export default class SetsGenerator {
   _mergeSets(to, from, exclude) {
     exclude || (exclude = []);
     for (let k in from) {
-      if (from.hasOwnProperty(k) && exclude.indexOf(k) === -1) {
+      if (from.hasOwnProperty(k) && !exclude.hasOwnProperty(k)) {
         to[k] = from[k];
       }
     }

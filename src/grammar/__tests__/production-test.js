@@ -64,6 +64,22 @@ describe('production', () => {
     expect(RHS[2].getSymbol()).toBe('F');
   });
 
+  it('RHS symbols', () => {
+    const production = new Production(...defaultProductionData);
+    const RHS = production.getRHSSymbols();
+
+    expect(Array.isArray(RHS)).toBe(true);
+    expect(RHS.length).toBe(3);
+
+    RHS.forEach(symbol => {
+      expect(typeof symbol).toBe('string');
+    });
+
+    expect(RHS[0]).toBe('E');
+    expect(RHS[1]).toBe('+');
+    expect(RHS[2]).toBe('F');
+  });
+
   it('full/short', () => {
     const productionData = [...defaultProductionData];
     productionData[/* isShort */ 4] = false;

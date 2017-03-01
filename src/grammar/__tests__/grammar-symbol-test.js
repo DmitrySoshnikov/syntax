@@ -61,8 +61,13 @@ describe('grammar-symbol', () => {
   });
 
   it('special symbols', () => {
+    // EOF.
     expect((new GrammarSymbol(EOF)).isEOF()).toBe(true);
+    expect(GrammarSymbol.isEOF(EOF)).toBe(true);
+
+    // Epsilon.
     expect((new GrammarSymbol(EPSILON)).isEpsilon()).toBe(true);
+    expect(GrammarSymbol.isEpsilon(EPSILON)).toBe(true);
   });
 
 });

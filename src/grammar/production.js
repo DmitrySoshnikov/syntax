@@ -107,6 +107,13 @@ export default class Production {
     return this._RHS;
   }
 
+  getRHSSymbols() {
+    if (!this._rhsSymbols) {
+      this._rhsSymbols = this._RHS.map(symbol => symbol.getSymbol());
+    }
+    return this._rhsSymbols;
+  }
+
   getPrecedence() {
     return this._precedence;
   }
