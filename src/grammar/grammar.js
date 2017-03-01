@@ -152,21 +152,11 @@ export default class Grammar {
     this._nonTerminals = this.getNonTerminals();
     this._terminals = this.getTerminals();
 
-    if (typeof tokens === 'string') {
-      tokens = tokens.split(/\s+/);
-    }
-
-    this._tokensMap = {};
-    this._tokens = Array.isArray(tokens)
-      ? tokens.map(token => {
-          this._tokensMap[token] = true;
-          return GrammarSymbol.get(token)
-        })
-      : this.getTokens();
+    // Process tokens list, or extract from BNF.
+    this._tokens = this._processTokens(tokens);
 
     // Lexical grammar.
     this._lexGrammar = this._createLexGrammar(lex);
-    this._tokens = this._processTokens(tokens);
 
     // Caching maps.
     this._productionsForSymbol = {};
@@ -574,8 +564,13 @@ export default class Grammar {
       tokens = tokens.split(/\s+/);
     }
 
+    this._tokensMap = {};
+
     return Array.isArray(tokens)
-      ? tokens.map(token => GrammarSymbol.get(token))
+      ? tokens.map(token => {
+          this._tokensMap[token] = true;
+          return GrammarSymbol.get(token)
+        })
       : this.getTokens();
   }
 
