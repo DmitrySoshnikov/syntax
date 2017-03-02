@@ -76,7 +76,7 @@ export default class Production {
       }
 
       const index = i + 1;
-      const symbolRe = new RegExp(`(\\$|@)${symbol}`, 'g');
+      const symbolRe = new RegExp(`(\\$|@)${symbol}\\b`, 'g');
 
       semanticAction = semanticAction.replace(symbolRe, `$1${index}`);
     }

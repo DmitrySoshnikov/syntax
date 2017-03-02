@@ -224,9 +224,10 @@ export default class LexGrammar {
       return;
     }
     rules.forEach(lexData => {
+      const index = lexData.length === 3 ? 1 : 0;
       Object.keys(macros).forEach(macro => {
-        if (lexData[0].indexOf(`{${macro}}`) !== -1) {
-          lexData[0] = lexData[0].replace(
+        if (lexData[index].indexOf(`{${macro}}`) !== -1) {
+          lexData[index] = lexData[index].replace(
             new RegExp(`\\{${macro}\\}`, 'g'),
             macros[macro],
           );

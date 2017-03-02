@@ -46,7 +46,7 @@ export default class LRParser {
 
     // Execute module include code which may attach
     // handlers for some events, and define needed data.
-    CodeUnit.eval(this._grammar.getModuleInclude());
+    CodeUnit.eval(this._grammar.getModuleInclude(), /*shouldRewrite*/ false);
 
     // Parse object which may define handlers for parse events.
     this._yyparse = CodeUnit.getSandbox().yyparse;

@@ -23,6 +23,7 @@ module.exports = {
     ["\\/\\*",    "this.pushState('comment');"],
     [["comment"], "\\*+\\/", "this.popState();"],
     [["comment"], "\\d+", "return 'NUMBER_IN_COMMENT'"],
+    [["comment"], "{id}+", "return 'IDENTIFIER_IN_COMMENT'"],
   ],
 
   "options": {

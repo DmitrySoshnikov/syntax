@@ -19,7 +19,7 @@ const startConditions = {
 
 const lexRulesByStartConditions = {
   INITIAL: [0, 1, 2, 3, 4, 5, 6, 7],
-  comment: [0, 8, 9],
+  comment: [0, 8, 9, 10],
 };
 
 describe('lex-grammar', () => {
@@ -55,6 +55,10 @@ describe('lex-grammar', () => {
     expect(rule2.getMatcher().source).toEqual(`^${id}+`);
     expect(rule2.getOriginalMatcher()).toEqual(`${id}+`);
     expect(rule2.getRawMatcher()).toEqual(`^${id}+`);
+
+    // Macro in a rule with a start condition.
+    const rule10 = lexGrammar.getRuleByIndex(10);
+    expect(rule2.getOriginalMatcher()).toEqual(`${id}+`);
   });
 
   it('rules by start conditions', () => {

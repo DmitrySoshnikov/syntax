@@ -83,10 +83,14 @@ const CodeUnit = {
   },
 
   /**
-   * Evaluates the code.
+   * Evaluates the code. If `shouldRewrite` is `true` (default),
+   * rewrites $1, $2, $$, etc. to _1, _2, __, etc.
    */
-  eval(code) {
-    return vm.runInContext(this._rewriteParamsInCode(code), context);
+  eval(code, shouldRewrite = true) {
+    if (shouldRewrite) {
+      code = this._rewriteParamsInCode(code);
+    }
+    return vm.runInContext(code, context);
   },
 
   /**
@@ -178,7 +182,7 @@ const CodeUnit = {
 
     return this.createHandler(
       params,
-      this._rewriteParamsInCode(locationPrologue + action),
+      locationPrologue + action,
     );
   },
 
