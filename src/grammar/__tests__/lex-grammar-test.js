@@ -18,8 +18,8 @@ const startConditions = {
 };
 
 const lexRulesByStartConditions = {
-  INITIAL: [0, 1, 2, 3, 4, 5, 6, 7],
-  comment: [0, 8, 9, 10],
+  INITIAL: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  comment: [0, 1, 9, 10, 11],
 };
 
 describe('lex-grammar', () => {
@@ -49,16 +49,21 @@ describe('lex-grammar', () => {
   });
 
   it('expanded macro', () => {
-    const rule2 = lexGrammar.getRuleByIndex(2);
+    const rule3 = lexGrammar.getRuleByIndex(3);
     const id = lexGrammarData.macros.id;
 
-    expect(rule2.getMatcher().source).toEqual(`^${id}+`);
-    expect(rule2.getOriginalMatcher()).toEqual(`${id}+`);
-    expect(rule2.getRawMatcher()).toEqual(`^${id}+`);
+    expect(rule3.getMatcher().source).toEqual(`^${id}+`);
+    expect(rule3.getOriginalMatcher()).toEqual(`${id}+`);
+    expect(rule3.getRawMatcher()).toEqual(`^${id}+`);
 
     // Macro in a rule with a start condition.
-    const rule10 = lexGrammar.getRuleByIndex(10);
-    expect(rule2.getOriginalMatcher()).toEqual(`${id}+`);
+    const rule11 = lexGrammar.getRuleByIndex(11);
+    expect(rule11.getOriginalMatcher()).toEqual(`${id}+`);
+
+    // Standard macro.
+    const rule1 = lexGrammar.getRuleByIndex(1);
+    // <<EOF>> -> \\$$
+    expect(rule1.getOriginalMatcher()).toEqual(`\\$$`);
   });
 
   it('rules by start conditions', () => {

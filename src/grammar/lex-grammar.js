@@ -14,6 +14,16 @@ import fs from 'fs';
 import vm from 'vm';
 
 /**
+ * Standard macro symbols.
+ */
+const StandardMacros = {
+  /**
+   * End of file macro, matches `$` at the end of the parsing string.
+   */
+  '<<EOF>>': '\\$$',
+};
+
+/**
  * Class encapsulates operations with a lexical grammar.
  */
 export default class LexGrammar {
@@ -223,16 +233,29 @@ export default class LexGrammar {
     if (!macros) {
       return;
     }
+
     rules.forEach(lexData => {
       const index = lexData.length === 3 ? 1 : 0;
-      Object.keys(macros).forEach(macro => {
+
+      // Standard macros.
+      for (let macro in StandardMacros) {
+        if (lexData[index].indexOf(macro) !== -1) {
+          lexData[index] = lexData[index].replace(
+            new RegExp(macro, 'g'),
+            () => StandardMacros[macro],
+          );
+        }
+      }
+
+      for (let macro in macros) {
+        // User-level macros.
         if (lexData[index].indexOf(`{${macro}}`) !== -1) {
           lexData[index] = lexData[index].replace(
             new RegExp(`\\{${macro}\\}`, 'g'),
-            macros[macro],
+            () => macros[macro],
           );
         }
-      })
+      }
     });
   }
 };

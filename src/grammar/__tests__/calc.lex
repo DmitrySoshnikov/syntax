@@ -13,6 +13,9 @@ module.exports = {
 
   "rules": [
     [["*"],       "\\s+", "/*skip whitespace*/"],
+
+    [["*"],       "<<EOF>>", "return 'EOF'"],
+
     ["\\d+",      "return 'NUMBER'"],
     ["{id}+",     "return 'IDENTIFIER'"],
     ["\\(",       "return '('"],
