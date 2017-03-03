@@ -253,6 +253,15 @@ And here is the same grammar in the Yacc/Bison format:
  * Basic calculator grammar in Yacc/Bison notation.
  */
 
+%lex
+
+%%
+
+\s+             /* skip whitespace */
+\d+             return 'NUMBER'
+
+/lex
+
 %left '+'
 %left '*'
 
@@ -266,11 +275,9 @@ e
   ;
 ```
 
-Simple tokens like `'+'` can be defined inline (with quotes), and complex tokens like `NUMBER` has to be defined in the lexical grammar.
+Simple tokens like `'+'` can be defined inline (with quotes), and complex tokens like `NUMBER` has to be defined in the lexical grammar. Lexical and syntactic grammars can also be defined in two separate files.
 
-> Note: currently Yacc/Bison format doesn't support defining _lexical grammar_, and it has to be defined in a separate file in this case.
-
-A grammar in Yacc/Bison format is also _just parsed_ by _Syntax_ using our [BNF parser](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g). The resulting parsed AST is exactly the corresponding JSON-like notation described above.
+A grammar in Yacc/Bison format is also _just parsed_ by _Syntax_ using our [BNF parser](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g). The resulting parsed AST corresponds exactly to the JSON-like notation described above.
 
 #### Grammar properties
 

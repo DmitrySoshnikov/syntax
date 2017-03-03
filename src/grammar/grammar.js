@@ -8,6 +8,7 @@ import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexGrammar from './lex-grammar';
 import LexRule from './lex-rule';
+import LexParser from '../generated/lex-parser.gen';
 import Production from './production';
 
 import colors from 'colors';
@@ -220,26 +221,66 @@ export default class Grammar {
         debug.log(`Grammar (${grammarType}) is in JS format`);
       } catch (jsEx) {
         const jsError = jsEx.stack;
+
         // A grammar as a string, for BNF, and lex.
-        if (grammarType) {
-          try {
-            grammarData = BnfParser.parse(grammarString);
-            debug.log(`Grammar (${grammarType}) is in BNF format`);
-          } catch (bnfEx) {
-            console.error(
-              colors.red('\nParsing grammar in JS-format failed:\n\n') +
-              jsError +'\n',
+        switch (grammarType) {
+          case 'bnf':
+            grammarData = Grammar.parseFromType(
+              BnfParser,
+              grammarType,
+              grammarString,
+              jsError,
             );
-            console.error(
-              colors.red('\nParsing grammar in BNF-format failed:\n\n'),
+
+            // BNF grammar may define lexical grammar inline.
+            if (typeof grammarData.lex === 'string') {
+              grammarData.lex = Grammar.parseFromType(
+                LexParser,
+                'lex',
+                grammarData.lex,
+                jsError,
+              );
+            }
+            break;
+
+
+          case 'lex':
+            grammarData = Grammar.parseFromType(
+              LexParser,
+              grammarType,
+              grammarString,
+              jsError,
             );
-            throw bnfEx;
-          }
+            break;
+
+          default:
+            throw new Error(`Unknown grammar type: ${grammarType}`);
         }
       }
     }
 
     debug.timeEnd('Grammar loaded in');
+    return grammarData;
+  }
+
+  /**
+   * Parses grammar (lex or bnf).
+   */
+  static parseFromType(ParserType, grammarType, grammarString, jsError) {
+    let grammarData = null;
+    try {
+      grammarData = ParserType.parse(grammarString);
+      debug.log(`Grammar (${grammarType}) is in Yacc/Bison format`);
+    } catch (ex) {
+      console.error(
+        colors.red('\nParsing grammar in JS-format failed:\n\n') +
+        jsError +'\n',
+      );
+      console.error(
+        colors.red('\nParsing grammar in Yacc/Bison format failed:\n\n'),
+      );
+      throw ex;
+    }
     return grammarData;
   }
 

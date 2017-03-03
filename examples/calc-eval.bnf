@@ -16,6 +16,15 @@
  *   > -20
  */
 
+%lex
+
+%%
+
+\s+             /* skip whitespace */
+\d+             return 'NUMBER'
+
+/lex
+
 %left '+' '-'
 %left '*' '/'
 %right '^'
@@ -31,5 +40,5 @@ E
   | E '^' E     { $$ = Math.pow($1, $3) }
   | '-' E       %prec UMINUS { $$ = -$2 }
   | '(' E ')'   { $$ = $2 }
-  | '5'         { $$ = 5  }
+  | NUMBER      { $$ = Number($1) }
   ;
