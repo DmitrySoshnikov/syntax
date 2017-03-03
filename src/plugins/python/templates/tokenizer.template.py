@@ -89,13 +89,6 @@ class Tokenizer(object):
         if len(self._tokens_queue) > 0:
             return self._to_token(self._tokens_queue.pop(0))
 
-        if not self.has_more_tokens():
-            return EOF_TOKEN
-
-        elif self.is_eof():
-            self._cursor = self._cursor + 1
-            return EOF_TOKEN
-
         string = self._string[self._cursor:]
 
         lex_rules_for_state = _lex_rules_by_conditions[self.get_current_state()]
@@ -118,6 +111,13 @@ class Tokenizer(object):
                         self._tokens_queue.extend(tokens_to_queue)
 
                 return self._to_token(token, yytext)
+
+        if not self.has_more_tokens():
+            return EOF_TOKEN
+
+        elif self.is_eof():
+            self._cursor = self._cursor + 1
+            return EOF_TOKEN
 
         self.throw_unexpected_token(
             string[0],

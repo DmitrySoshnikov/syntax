@@ -91,13 +91,6 @@ class Tokenizer {
       return $this->toToken(array_shift($this->tokensQueue));
     }
 
-    if (!$this->hasMoreTokens()) {
-      return self::$EOF_TOKEN;
-    } else if ($this->isEOF()) {
-      $this->cursor++;
-      return self::$EOF_TOKEN;
-    }
-
     $string = substr($this->string, $this->cursor);
     $lexRulesForState = static::$lexRulesByConditions[$this->getCurrentState()];
 
@@ -125,6 +118,13 @@ class Tokenizer {
 
         return $this->toToken($token, $matched);
       }
+    }
+
+    if (!$this->hasMoreTokens()) {
+      return self::$EOF_TOKEN;
+    } else if ($this->isEOF()) {
+      $this->cursor++;
+      return self::$EOF_TOKEN;
     }
 
     $this->throwUnexpectedToken(

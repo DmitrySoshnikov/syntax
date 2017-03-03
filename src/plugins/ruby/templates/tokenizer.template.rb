@@ -85,13 +85,6 @@ class SyntaxToolTokenizer__
       return _to_token(@tokens_queue.shift())
     end
 
-    if not has_more_tokens
-      return SyntaxToolTokenizer__::EOF_TOKEN
-    elsif is_eof
-      @cursor += 1
-      return SyntaxToolTokenizer__::EOF_TOKEN
-    end
-
     string = @string[@cursor..-1]
 
     lex_rules_for_state = @@lex_rules_by_conditions[get_current_state]
@@ -121,6 +114,13 @@ class SyntaxToolTokenizer__
         return _to_token(token, matched)
       end
     }
+
+    if not has_more_tokens
+      return SyntaxToolTokenizer__::EOF_TOKEN
+    elsif is_eof
+      @cursor += 1
+      return SyntaxToolTokenizer__::EOF_TOKEN
+    end
 
     throw_unexpected_token(string[0], @current_line, @current_column)
   end

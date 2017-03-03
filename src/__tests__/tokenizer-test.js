@@ -8,14 +8,23 @@ import LexGrammar from '../grammar/lex-grammar';
 import {EOF} from '../special-symbols';
 
 const lexGrammarData = require(__dirname + '/../grammar/__tests__/calc.lex');
+
+// [["*"], "<<EOF>>", "return 'EOF'"],
+const manualEOFRule = lexGrammarData.rules[1];
+
+// Same grammar but without explicit EOF rule.
+const lexGrammarDataNoEOF = JSON.parse(JSON.stringify(lexGrammarData));
+lexGrammarDataNoEOF.rules.splice(1, 1);
+
 const lexGrammar = new LexGrammar(lexGrammarData);
+const lexGrammarNoEOF = new LexGrammar(lexGrammarDataNoEOF);
 
 describe('tokenizer', () => {
 
   it('all tokens', () => {
     const tokenizer = new Tokenizer({
       string: '(2 + 134) * R',
-      lexGrammar,
+      lexGrammar: lexGrammarNoEOF,
     });
 
     expect(tokenizer.getTokens()).toEqual([
@@ -103,7 +112,7 @@ describe('tokenizer', () => {
   it('get next token', () => {
     const tokenizer = new Tokenizer({
       string: '(2 + 134) * R',
-      lexGrammar,
+      lexGrammar: lexGrammarNoEOF,
     });
 
     expect(tokenizer.getNextToken()).toEqual({
@@ -190,6 +199,106 @@ describe('tokenizer', () => {
     expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
   });
 
+  it('get next token (with EOF)', () => {
+    const tokenizer = new Tokenizer({
+      string: '(2 + 134) * R',
+      lexGrammar: lexGrammar,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: '(',
+      value: '(',
+      startOffset: 0,
+      endOffset: 1,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 0,
+      endColumn: 1,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: 'NUMBER',
+      value: '2',
+      startOffset: 1,
+      endOffset: 2,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 1,
+      endColumn: 2,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: '+',
+      value: '+',
+      startOffset: 3,
+      endOffset: 4,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 3,
+      endColumn: 4,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: 'NUMBER',
+      value: '134',
+      startOffset: 5,
+      endOffset: 8,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 5,
+      endColumn: 8,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: ')',
+      value: ')',
+      startOffset: 8,
+      endOffset: 9,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 8,
+      endColumn: 9,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: '*',
+      value: '*',
+      startOffset: 10,
+      endOffset: 11,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 10,
+      endColumn: 11,
+    });
+
+    expect(tokenizer.getNextToken()).toEqual({
+      type: 'IDENTIFIER',
+      value: 'R',
+      startOffset: 12,
+      endOffset: 13,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 12,
+      endColumn: 13,
+    });
+
+    // Here we manually handle EOF as a real token.
+    expect(tokenizer.getNextToken()).toEqual({
+      type: 'EOF',
+      value: '$',
+      startOffset: 13,
+      endOffset: 14,
+      startLine: 1,
+      endLine: 1,
+      startColumn: 13,
+      endColumn: 14,
+    });
+
+    // Once tokens exceeded, always default EOF is returned.
+    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
+    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
+  });
+
   it('EOF', () => {
     const tokenizer = new Tokenizer({
       string: '5',
@@ -213,7 +322,7 @@ describe('tokenizer', () => {
   it('has more tokens', () => {
     const tokenizer = new Tokenizer({
       string: '5',
-      lexGrammar,
+      lexGrammar: lexGrammarNoEOF,
     });
 
     expect(tokenizer.getNextToken()).toEqual({

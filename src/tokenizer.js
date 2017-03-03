@@ -168,13 +168,6 @@ export default class Tokenizer {
       return this._toToken(this._tokensQueue.shift());
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
-      this._cursor++;
-      return EOF_TOKEN;
-    }
-
     // Analyze untokenized yet part of the string starting from
     // the current cursor position (so all regexp are from ^).
     let string = this._string.slice(this._cursor);
@@ -217,6 +210,13 @@ export default class Tokenizer {
 
         return this._toToken(rawToken, yytext);
       }
+    }
+
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    } else if (this.isEOF()) {
+      this._cursor++;
+      return EOF_TOKEN;
     }
 
     this.throwUnexpectedToken(

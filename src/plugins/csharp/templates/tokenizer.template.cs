@@ -261,16 +261,6 @@ namespace SyntaxParser
                 return toToken(mTokensQueue.Dequeue(), "");
             }
 
-            if (!hasMoreTokens())
-            {
-                return EOF_TOKEN;
-            }
-            else if (isEOF())
-            {
-                mCursor++;
-                return EOF_TOKEN;
-            }
-
             var str = mString.Substring(mCursor);
             var lexRulesForState = mLexRulesByConditions[getCurrentState()];
 
@@ -307,6 +297,16 @@ namespace SyntaxParser
 
                     return toToken((string)tokenType, matched);
                 }
+            }
+
+            if (!hasMoreTokens())
+            {
+                return EOF_TOKEN;
+            }
+            else if (isEOF())
+            {
+                mCursor++;
+                return EOF_TOKEN;
             }
 
             throwUnexpectedToken(

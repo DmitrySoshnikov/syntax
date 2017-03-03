@@ -72,13 +72,6 @@ tokenizer = {
       return this._toToken(this._tokensQueue.shift());
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
-      this._cursor++;
-      return EOF_TOKEN;
-    }
-
     let string = this._string.slice(this._cursor);
     let lexRulesForState = lexRulesByConditions[this.getCurrentState()];
 
@@ -109,6 +102,13 @@ tokenizer = {
 
         return this._toToken(token, yytext);
       }
+    }
+
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    } else if (this.isEOF()) {
+      this._cursor++;
+      return EOF_TOKEN;
     }
 
     this.throwUnexpectedToken(
