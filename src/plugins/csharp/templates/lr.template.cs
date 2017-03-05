@@ -426,7 +426,7 @@ namespace SyntaxParser
 
         private void unexpectedToken(Token token)
         {
-            if (token.Value == EOF)
+            if (token.Type == Tokenizer.EOF_TOKEN.Type)
             {
                 unexpectedEndOfInput();
             }

@@ -184,7 +184,7 @@ let tokenizer;
  * See `--custom-tokinzer` to skip this generation, and use a custom one.
  */
 
-const lexRules = [[/^\$$/, function() { return 'EOF' }, ["*"]],
+const lexRules = [[/^$/, function() { return 'EOF' }, ["*"]],
 [/^\/\*(.|\n|\r)*?\*\//, function() { return 'ACTION_BODY' }, ["action"]],
 [/^\/\/.*/, function() { return 'ACTION_BODY' }, ["action"]],
 [/^\/[^ \/]*?['"{}'][^ ]*?\//, function() { return 'ACTION_BODY' }, ["action"]],
@@ -215,7 +215,7 @@ const lexRules = [[/^\$$/, function() { return 'EOF' }, ["*"]],
 [/^\{/, function() { yy.depth = 0; this.begin('action'); return '{' }, ["indented"]],
 [/^%\{(.|\n)*?%\}/, function() { this.begin('trail'); yytext = yytext.slice(2, -2); return 'ACTION' }, ["indented"]],
 [/^%\{(.|\n)*?%\}/, function() { yytext = yytext.slice(2, -2); return 'ACTION' }, ],
-[/^.+\$$/, function() { this.begin('rules'); yytext = yytext.slice(0, -1); return ['ACTION', 'EOF'] }, ["indented"]],
+[/^.+/, function() { this.begin('rules'); return 'ACTION' }, ["indented"]],
 [/^.+/, function() { this.begin('rules'); return 'ACTION' }, ["indented"]],
 [/^\/\*(.|\n|\r)*?\*\//, function() { /* ignore */ }, ],
 [/^\/\/.*/, function() { /* ignore */ }, ],
@@ -252,18 +252,17 @@ const lexRules = [[/^\$$/, function() { return 'EOF' }, ["*"]],
 [/^\{/, function() { return '{' }, ],
 [/^\}/, function() { return '}' }, ],
 [/^./, function() { /* ignore bad characters */ }, ],
-[/^(.|\n)+\$$/, function() { yytext = yytext.slice(0, -1); return ['CODE', 'EOF'] }, ["code"]]];
+[/^(.|\n)+/, function() { return 'CODE' }, ["code"]]];
 const lexRulesByConditions = {"INITIAL":[0,30,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67],"indented":[0,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67],"trail":[0,27,30,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67],"rules":[0,14,15,16,17,18,30,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67],"code":[0,68],"start_condition":[0,23,24,25,26],"options":[0,19,20,21,22],"conditions":[0,10,11,12,13],"action":[0,1,2,3,4,5,6,7,8,9]};
 
 const EOF_TOKEN = {
   type: EOF,
-  value: EOF,
+  value: '',
 };
 
 tokenizer = {
   initString(string) {
-    this._originalString = string;
-    this._string = this._originalString + EOF;
+    this._string = string;
     this._cursor = 0;
 
     this._states = ['INITIAL'];
@@ -318,6 +317,10 @@ tokenizer = {
       return this._toToken(this._tokensQueue.shift());
     }
 
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    }
+
     let string = this._string.slice(this._cursor);
     let lexRulesForState = lexRulesByConditions[this.getCurrentState()];
 
@@ -326,7 +329,14 @@ tokenizer = {
       let lexRule = lexRules[lexRuleIndex];
 
       let matched = this._match(string, lexRule[0]);
-      if (matched) {
+
+      // Manual handling of EOF token (the end of string). Return it
+      // as `EOF` symbol.
+      if (string === '' && matched === '') {
+        this._cursor++;
+      }
+
+      if (matched !== null) {
         yytext = matched;
         yyleng = yytext.length;
         let token = lexRule[1].call(this);
@@ -350,9 +360,7 @@ tokenizer = {
       }
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
+    if (this.isEOF()) {
       this._cursor++;
       return EOF_TOKEN;
     }
@@ -370,7 +378,7 @@ tokenizer = {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._originalString.split('\n')[line - 1];
+    const lineSource = this._string.split('\n')[line - 1];
     let lineData = '';
 
     if (lineSource) {
@@ -439,12 +447,11 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF &&
-      this._cursor === this._string.length - 1;
+    return this._cursor === this._string.length;
   },
 
   hasMoreTokens() {
-    return this._cursor < this._string.length;
+    return this._cursor <= this._string.length;
   },
 
   _match(string, regexp) {
@@ -634,7 +641,7 @@ const yyparse = {
   
 
 function unexpectedToken(token) {
-  if (token.value === EOF) {
+  if (token.type === EOF) {
     unexpectedEndOfInput();
   }
 

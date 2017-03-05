@@ -16,12 +16,11 @@ _lex_rules_by_conditions = {{{LEX_RULES_BY_START_CONDITIONS}}}
 
 EOF_TOKEN = {
   'type': EOF,
-  'value': EOF
+  'value': ''
 }
 
 class Tokenizer(object):
     _string = None
-    _original_string = None
     _cursor = 0
 
     # Line-based location tracking.
@@ -45,8 +44,8 @@ class Tokenizer(object):
             self.init_string(string)
 
     def init_string(self, string):
-        self._original_string = string
-        self._string = self._original_string + EOF
+        self._string = string
+        self._string_len = len(string)
         self._cursor = 0
         self._tokens_queue = []
 
@@ -89,6 +88,9 @@ class Tokenizer(object):
         if len(self._tokens_queue) > 0:
             return self._to_token(self._tokens_queue.pop(0))
 
+        if not self.has_more_tokens():
+            return EOF_TOKEN
+
         string = self._string[self._cursor:]
 
         lex_rules_for_state = _lex_rules_by_conditions[self.get_current_state()]
@@ -97,6 +99,12 @@ class Tokenizer(object):
             lex_rule = _lex_rules[lex_rule_index]
 
             matched = self._match(string, lex_rule[0])
+
+            # Manual handling of EOF token (the end of string). Return it
+            # as `EOF` symbol.
+            if string == '' and matched == '':
+                self._cursor += 1
+
             if matched != None:
                 yytext = matched
                 yyleng = len(yytext)
@@ -112,11 +120,8 @@ class Tokenizer(object):
 
                 return self._to_token(token, yytext)
 
-        if not self.has_more_tokens():
-            return EOF_TOKEN
-
-        elif self.is_eof():
-            self._cursor = self._cursor + 1
+        if self.is_eof():
+            self._cursor += 1
             return EOF_TOKEN
 
         self.throw_unexpected_token(
@@ -164,7 +169,7 @@ class Tokenizer(object):
     # In addition, shows `line:column` location.
     #
     def throw_unexpected_token(self, symbol, line, column):
-        line_source = self._original_string.split('\n')[line - 1]
+        line_source = self._string.split('\n')[line - 1]
 
         pad = ' ' * column;
         line_data = '\n\n' + line_source + '\n' + pad + '^\n'
@@ -175,11 +180,10 @@ class Tokenizer(object):
         )
 
     def is_eof(self):
-        return self._string[self._cursor] == EOF and \
-            self._cursor == len(self._string) - 1
+        return self._cursor == self._string_len
 
     def has_more_tokens(self):
-        return self._cursor < len(self._string)
+        return self._cursor <= self._string_len
 
     def _match(self, string, regexp):
         matched = _syntax_tool_re.search(regexp, string)

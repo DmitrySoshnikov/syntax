@@ -65,7 +65,7 @@ const yyparse = {
       der(s.pop(), t, tt);
     }
 
-    if (s[0] !== EOF || t.value !== EOF) {
+    if (s[0] !== EOF || t.type !== EOF) {
       parseError(`stack is not empty: ${s}, ${t.value}`);
     }
 
@@ -96,7 +96,7 @@ function der(to, t, tt) {
 }
 
 function unexpectedToken(token) {
-  if (token.value === EOF) {
+  if (token.type === EOF) {
     unexpectedEndOfInput();
   }
 

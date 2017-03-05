@@ -81,14 +81,9 @@ export default class Tokenizer {
    */
   initString(string) {
     /**
-     * Originally passed string.
+     * Tokenizing string.
      */
-    this._originalString = string;
-
-    /**
-     * The string followed by the EOF.
-     */
-    this._string = this._originalString + EOF;
+    this._string = string;
 
     /**
      * Tracking cursor (absolute offset).
@@ -168,6 +163,10 @@ export default class Tokenizer {
       return this._toToken(this._tokensQueue.shift());
     }
 
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    }
+
     // Analyze untokenized yet part of the string starting from
     // the current cursor position (so all regexp are from ^).
     let string = this._string.slice(this._cursor);
@@ -179,7 +178,14 @@ export default class Tokenizer {
 
     for (let lexRule of lexRulesForState) {
       let matched = this._match(string, lexRule.getMatcher());
-      if (matched) {
+
+      // Manual handling of EOF token (the end of string). Return it
+      // as `EOF` symbol.
+      if (string === '' && matched === '') {
+        this._cursor++;
+      }
+
+      if (matched !== null) {
         let yytext, rawToken;
 
         try {
@@ -212,9 +218,7 @@ export default class Tokenizer {
       }
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
+    if (this.isEOF()) {
       this._cursor++;
       return EOF_TOKEN;
     }
@@ -232,7 +236,7 @@ export default class Tokenizer {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._originalString.split('\n')[line - 1];
+    const lineSource = this._string.split('\n')[line - 1];
     let lineData = '';
 
     if (lineSource) {
@@ -289,12 +293,11 @@ export default class Tokenizer {
   }
 
   isEOF() {
-    return this._string[this._cursor] === EOF &&
-      this._cursor === this._string.length - 1;
+    return this._cursor === this._string.length;
   }
 
   hasMoreTokens() {
-    return this._cursor < this._string.length;
+    return this._cursor <= this._string.length;
   }
 
   /**

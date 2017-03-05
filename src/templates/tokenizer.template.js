@@ -11,13 +11,12 @@ const lexRulesByConditions = {{{LEX_RULES_BY_START_CONDITIONS}}};
 
 const EOF_TOKEN = {
   type: EOF,
-  value: EOF,
+  value: '',
 };
 
 tokenizer = {
   initString(string) {
-    this._originalString = string;
-    this._string = this._originalString + EOF;
+    this._string = string;
     this._cursor = 0;
 
     this._states = ['INITIAL'];
@@ -72,6 +71,10 @@ tokenizer = {
       return this._toToken(this._tokensQueue.shift());
     }
 
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    }
+
     let string = this._string.slice(this._cursor);
     let lexRulesForState = lexRulesByConditions[this.getCurrentState()];
 
@@ -80,7 +83,14 @@ tokenizer = {
       let lexRule = lexRules[lexRuleIndex];
 
       let matched = this._match(string, lexRule[0]);
-      if (matched) {
+
+      // Manual handling of EOF token (the end of string). Return it
+      // as `EOF` symbol.
+      if (string === '' && matched === '') {
+        this._cursor++;
+      }
+
+      if (matched !== null) {
         yytext = matched;
         yyleng = yytext.length;
         let token = lexRule[1].call(this);
@@ -104,9 +114,7 @@ tokenizer = {
       }
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
+    if (this.isEOF()) {
       this._cursor++;
       return EOF_TOKEN;
     }
@@ -124,7 +132,7 @@ tokenizer = {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._originalString.split('\n')[line - 1];
+    const lineSource = this._string.split('\n')[line - 1];
     let lineData = '';
 
     if (lineSource) {
@@ -193,12 +201,11 @@ tokenizer = {
   },
 
   isEOF() {
-    return this._string[this._cursor] === EOF &&
-      this._cursor === this._string.length - 1;
+    return this._cursor === this._string.length;
   },
 
   hasMoreTokens() {
-    return this._cursor < this._string.length;
+    return this._cursor <= this._string.length;
   },
 
   _match(string, regexp) {

@@ -189,7 +189,7 @@ def parse(string):
             break
 
 def _unexpected_token(token):
-    if token['value'] == EOF:
+    if token['type'] == EOF:
         _unexpected_end_of_input()
 
     _tokenizer.throw_unexpected_token(

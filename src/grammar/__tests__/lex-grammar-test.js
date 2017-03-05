@@ -4,6 +4,7 @@
  */
 
 import LexGrammar from '../lex-grammar';
+import {EOF} from '../../special-symbols';
 
 const lexGrammarData = require(__dirname + '/calc.lex');
 const lexGrammar = new LexGrammar(lexGrammarData);
@@ -62,8 +63,8 @@ describe('lex-grammar', () => {
 
     // Standard macro.
     const rule1 = lexGrammar.getRuleByIndex(1);
-    // <<EOF>> -> \\$$
-    expect(rule1.getOriginalMatcher()).toEqual(`\\$$`);
+    // <<EOF>> -> $
+    expect(rule1.getOriginalMatcher()).toEqual(EOF);
   });
 
   it('rules by start conditions', () => {

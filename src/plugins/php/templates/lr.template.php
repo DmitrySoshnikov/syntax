@@ -314,7 +314,7 @@ class yyparse {
   }
 
   private static function unexpectedToken($token) {
-    if ($token['value'] === self::EOF) {
+    if ($token['type'] === self::EOF) {
       self::unexpectedEndOfInput();
     }
 

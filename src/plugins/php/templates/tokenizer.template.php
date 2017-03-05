@@ -13,7 +13,7 @@ class Tokenizer {
 
   private $states = array();
   private $string = '';
-  private $originalString = '';
+  private $stringLen = 0;
   private $cursor = 0;
   private $tokensQueue = array();
 
@@ -36,16 +36,16 @@ class Tokenizer {
 
   private static $EOF_TOKEN = array(
     'type' => yyparse::EOF,
-    'value' => yyparse::EOF,
+    'value' => '',
   );
 
   {{{LEX_RULE_HANDLERS}}}
 
   public function initString($string) {
-    $this->originalString = $string;
-    $this->states = array('INITIAL');
-    $this->string = $string.yyparse::EOF;
+    $this->string = $string;
+    $this->stringLen = strlen($this->string);
     $this->cursor = 0;
+    $this->states = array('INITIAL');
     $this->tokensQueue = array();
 
     $this->currentLine = 1;
@@ -91,6 +91,10 @@ class Tokenizer {
       return $this->toToken(array_shift($this->tokensQueue));
     }
 
+    if (!$this->hasMoreTokens()) {
+      return self::$EOF_TOKEN;
+    }
+
     $string = substr($this->string, $this->cursor);
     $lexRulesForState = static::$lexRulesByConditions[$this->getCurrentState()];
 
@@ -98,7 +102,14 @@ class Tokenizer {
       $lex_rule = self::$lexRules[$lex_rule_index];
 
       $matched = $this->match($string, $lex_rule[0]);
-      if ($matched) {
+
+      // Manual handling of EOF token (the end of string). Return it
+      // as `EOF` symbol.
+      if (!$string && $matched === '') {
+        $this->cursor++;
+      }
+
+      if ($matched !== null) {
         yyparse::$yytext = $matched;
         yyparse::$yyleng = strlen($matched);
         $token = call_user_func(array($this, $lex_rule[1]));
@@ -120,9 +131,7 @@ class Tokenizer {
       }
     }
 
-    if (!$this->hasMoreTokens()) {
-      return self::$EOF_TOKEN;
-    } else if ($this->isEOF()) {
+    if ($this->isEOF()) {
       $this->cursor++;
       return self::$EOF_TOKEN;
     }
@@ -140,7 +149,7 @@ class Tokenizer {
    * In addition, shows `line:column` location.
    */
   public function throwUnexpectedToken($symbol, $line, $column) {
-    $line_source = explode("\n", $this->originalString)[$line - 1];
+    $line_source = explode("\n", $this->string)[$line - 1];
 
     $pad = str_repeat(' ', $column);
     $line_data = "\n\n" . $line_source . "\n" . $pad . "^\n";
@@ -194,12 +203,11 @@ class Tokenizer {
   }
 
   public function isEOF() {
-    return $this->string[$this->cursor] == yyparse::EOF &&
-      $this->cursor == strlen($this->string) - 1;
+    return $this->cursor == $this->stringLen;
   }
 
   public function hasMoreTokens() {
-    return $this->cursor < strlen($this->string);
+    return $this->cursor <= $this->stringLen;
   }
 
   private function match($string, $regexp) {

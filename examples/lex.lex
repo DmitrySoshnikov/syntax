@@ -61,7 +61,7 @@
     [[`indented`],          `\\{`,                `yy.depth = 0; this.begin('action'); return '{'`],
     [[`indented`],          `%\\{(.|{BR})*?%\\}`, `this.begin('trail'); yytext = yytext.slice(2, -2); return 'ACTION'`],
     [`%\\{(.|{BR})*?%\\}`,                        `yytext = yytext.slice(2, -2); return 'ACTION'`],
-    [[`indented`],          `.+<<EOF>>`,          `this.begin('rules'); yytext = yytext.slice(0, -1); return ['ACTION', 'EOF']`],
+    [[`indented`],          `.+`,                 `this.begin('rules'); return 'ACTION'`],
     [[`indented`],          `.+`,                 `this.begin('rules'); return 'ACTION'`],
 
     [`\\/\\*(.|\\n|\\r)*?\\*\\/`,                 `/* ignore */`],
@@ -109,6 +109,6 @@
     [`\\}`,                                       `return '}'`],
     [`.`,                                         `/* ignore bad characters */`],
 
-    [[`code`],      `(.|{BR})+<<EOF>>`,           `yytext = yytext.slice(0, -1); return ['CODE', 'EOF']`],
+    [[`code`],      `(.|{BR})+`,                  `return 'CODE'`],
   ],
 }

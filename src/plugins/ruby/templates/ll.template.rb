@@ -114,7 +114,7 @@ class YYParse
       self.der(@@s.length, t, tt)
     end
 
-    if @@s[0] != self::EOF || t[:value] != self::EOF
+    if @@s[0] != self::EOF || t[:type] != self::EOF
       self.parse_error('stack is not empty');
     end
 
@@ -130,7 +130,7 @@ class YYParse
   end
 
   def self.unexpected_token(token)
-    if token[:value] == self::EOF
+    if token[:type] == self::EOF
       self.unexpected_end_of_input()
     end
 

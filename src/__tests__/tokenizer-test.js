@@ -285,13 +285,13 @@ describe('tokenizer', () => {
     // Here we manually handle EOF as a real token.
     expect(tokenizer.getNextToken()).toEqual({
       type: 'EOF',
-      value: '$',
+      value: '',
       startOffset: 13,
-      endOffset: 14,
+      endOffset: 13,
       startLine: 1,
       endLine: 1,
       startColumn: 13,
-      endColumn: 14,
+      endColumn: 13,
     });
 
     // Once tokens exceeded, always default EOF is returned.

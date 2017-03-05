@@ -102,7 +102,7 @@ class yyparse {
       self::der(array_pop($s), $t, $tt);
     }
 
-    if ($s[0] !== self::EOF || $t['value'] !== self::EOF) {
+    if ($s[0] !== self::EOF || $t['type'] !== self::EOF) {
       self::parseError('stack is not empty');
     }
 
@@ -118,7 +118,7 @@ class yyparse {
   }
 
   private static function unexpectedToken($token) {
-    if ($token['value'] === self::EOF) {
+    if ($token['type'] === self::EOF) {
       unexpectedEndOfInput();
     }
 

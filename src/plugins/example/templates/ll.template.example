@@ -200,7 +200,7 @@ class yyparse {
       this._doDerivation(stack.pop(), token);
     }
 
-    if (stack[0] !== EOF || token.value !== EOF) {
+    if (stack[0] !== EOF || token.type !== EOF) {
       this.parseError(`stack is not empty: ${stack}, ${token.value}`);
     }
 
@@ -220,7 +220,7 @@ class yyparse {
   }
 
   unexpectedToken(token) {
-    if (token.value == EOF) {
+    if (token.type == EOF) {
       this.unexpectedEndOfInput();
     }
 

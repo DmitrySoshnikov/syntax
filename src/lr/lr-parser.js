@@ -184,7 +184,7 @@ export default class LRParser {
   }
 
   _unexpectedToken(token) {
-    if (token.value === EOF) {
+    if (token.type === EOF) {
       this._unexpectedEndOfInput();
     }
 

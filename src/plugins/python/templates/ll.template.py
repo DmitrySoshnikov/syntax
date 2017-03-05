@@ -78,7 +78,7 @@ def parse(string):
         der(s.pop(), t, tt)
 
 
-    if s[0] != EOF or t['value'] != EOF:
+    if s[0] != EOF or t['type'] != EOF:
         _parse_error('stack is not empty: ' + str(s) + ', ' + str(t['value']))
 
     return True
@@ -92,7 +92,7 @@ def der(to, t, tt):
     s.extend(ps[int(npn)][0])
 
 def _unexpected_token(token):
-    if token['value'] == EOF:
+    if token['type'] == EOF:
         _unexpected_end_of_input()
 
     _tokenizer.throw_unexpected_token(

@@ -90,7 +90,7 @@ const tokensMap = {{{TOKENS}}};
  */
 const EOF_TOKEN = new Token({
   type: Number(tokensMap[EOF]),
-  value: EOF,
+  value: '',
 });
 
 /**
@@ -187,14 +187,9 @@ class Tokenizer {
   initString(tokenizingString) {
 
     /**
-     * Originally passed string.
+     * A tokenizing string.
      */
-    this._originalString = tokenizingString;
-
-    /**
-     * A tokenizing string, always followed by the `EOF` symbol.
-     */
-    this._string = this._originalString + EOF;
+    this._string = tokenizingString;
 
     /**
      * Stack of the tokenizer states. Initialized to the `INITIAL` state.
@@ -298,6 +293,10 @@ class Tokenizer {
       return this._toToken(this._tokensQueue.shift());
     }
 
+    if (!this.hasMoreTokens()) {
+      return EOF_TOKEN;
+    }
+
     // Get the rest of the string which is not analyzed yet.
     let string = this._string.slice(this._cursor);
 
@@ -312,7 +311,14 @@ class Tokenizer {
       let lexRule = lexRules[lexRuleIndex];
 
       let matched = this._match(string, lexRule[0]);
-      if (matched) {
+
+      // Manual handling of EOF token (the end of string). Return it
+      // as `EOF` symbol.
+      if (string === '' && matched === '') {
+        this._cursor++;
+      }
+
+      if (matched !== null) {
 
         // Update global vars (they can be modified by the rule handler).
         yytext = matched;
@@ -347,9 +353,7 @@ class Tokenizer {
       }
     }
 
-    if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
-    } else if (this.isEOF()) {
+    if (this.isEOF()) {
       this._cursor++;
       return EOF_TOKEN;
     }
@@ -367,7 +371,7 @@ class Tokenizer {
    * In addition, shows `line:column` location.
    */
   throwUnexpectedToken(symbol, line, column) {
-    const lineSource = this._originalString.split('\n')[line - 1];
+    const lineSource = this._string.split('\n')[line - 1];
 
     const pad = ' '.repeat(column);
     const lineData = '\n\n' + lineSource + '\n' + pad + '^\n';
@@ -421,12 +425,11 @@ class Tokenizer {
   }
 
   isEOF() {
-    return this._string[this._cursor] === EOF &&
-      this._cursor === this._string.length - 1;
+    return this._cursor === this._string.length;
   }
 
   hasMoreTokens() {
-    return this._cursor < this._string.length;
+    return this._cursor <= this._string.length;
   }
 
   /**

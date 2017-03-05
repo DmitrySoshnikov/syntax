@@ -248,7 +248,7 @@ const yyparse = {
 {{{MODULE_INCLUDE}}}
 
 function unexpectedToken(token) {
-  if (token.value === EOF) {
+  if (token.type === EOF) {
     unexpectedEndOfInput();
   }
 

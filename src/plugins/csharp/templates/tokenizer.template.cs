@@ -77,11 +77,6 @@ namespace SyntaxParser
     public class Tokenizer
     {
         /**
-         * Original string.
-         */
-        private string mOriginalString;
-
-        /**
          * Tokenizing string.
          */
         private string mString;
@@ -101,7 +96,7 @@ namespace SyntaxParser
         private static Dictionary<string, int> mTokensMap = new Dictionary<string, int>()
         {{{TOKENS}}};
 
-        private static Token EOF_TOKEN = new Token(
+        public static Token EOF_TOKEN = new Token(
             mTokensMap[yyparse.EOF],
             yyparse.EOF
         );
@@ -199,8 +194,7 @@ namespace SyntaxParser
 
         public void initString(string tokenizingString)
         {
-            mOriginalString = tokenizingString;
-            mString = mOriginalString + yyparse.EOF;
+            mString = tokenizingString;
             mCursor = 0;
 
             mStates = new Stack<string>();
@@ -261,6 +255,11 @@ namespace SyntaxParser
                 return toToken(mTokensQueue.Dequeue(), "");
             }
 
+            if (!hasMoreTokens())
+            {
+                return EOF_TOKEN;
+            }
+
             var str = mString.Substring(mCursor);
             var lexRulesForState = mLexRulesByConditions[getCurrentState()];
 
@@ -268,6 +267,14 @@ namespace SyntaxParser
             {
                 var lexRule = mLexRules[i];
                 var matched = match(str, new Regex(lexRule[0]));
+
+                // Manual handling of EOF token (the end of string). Return it
+                // as `EOF` symbol.
+                if (str.Length == 0 && matched != null && matched.Length == 0)
+                {
+                    mCursor++;
+                }
+
                 if (matched != null)
                 {
                     yyparse.yytext = matched;
@@ -299,11 +306,7 @@ namespace SyntaxParser
                 }
             }
 
-            if (!hasMoreTokens())
-            {
-                return EOF_TOKEN;
-            }
-            else if (isEOF())
+            if (isEOF())
             {
                 mCursor++;
                 return EOF_TOKEN;
@@ -325,7 +328,7 @@ namespace SyntaxParser
          */
         public void throwUnexpectedToken(string symbol, int line, int column)
         {
-            var lineSource = mOriginalString.Split('\n')[line - 1];
+            var lineSource = mString.Split('\n')[line - 1];
 
             var pad = new String(' ', column);
             string lineData = "\n\n" + lineSource + "\n" + pad + "^\n";
@@ -378,13 +381,12 @@ namespace SyntaxParser
 
         public bool hasMoreTokens()
         {
-            return mCursor < mString.Length;
+            return mCursor <= mString.Length;
         }
 
         public bool isEOF()
         {
-            return mString[mCursor] == yyparse.EOF[0] &&
-                mCursor == mString.Length - 1;
+            return mCursor == mString.Length;
         }
 
         private string match(string str, Regex re)

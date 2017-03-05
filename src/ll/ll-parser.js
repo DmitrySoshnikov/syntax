@@ -115,7 +115,7 @@ export default class LLParser {
 
     // At the end the stack should contain only `$`,
     // as well as the last token should be the `$` marker.
-    if (!this._stack[0].isEOF() || token.value !== EOF) {
+    if (!this._stack[0].isEOF() || token.type !== EOF) {
       this._parseError(
         'stack is not empty: ' +
         this._stack.map(s => s.getSymbol()) + `, ${token.value}`
@@ -194,7 +194,7 @@ export default class LLParser {
   }
 
   _unexpectedToken(token) {
-    if (token.value === EOF) {
+    if (token.type === EOF) {
       this._unexpectedEndOfInput();
     }
 

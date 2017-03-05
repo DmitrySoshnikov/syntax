@@ -400,7 +400,7 @@ class yyparse {
   }
 
   unexpectedToken(token) {
-    if (token.value == EOF) {
+    if (token.type == EOF) {
       this.unexpectedEndOfInput();
     }
 

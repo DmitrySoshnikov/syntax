@@ -8,6 +8,7 @@ import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
 import Production from './production';
+import {EOF} from '../special-symbols';
 
 import colors from 'colors';
 import fs from 'fs';
@@ -20,7 +21,7 @@ const StandardMacros = {
   /**
    * End of file macro, matches `$` at the end of the parsing string.
    */
-  '<<EOF>>': '\\$$',
+  '<<EOF>>': EOF,
 };
 
 /**
@@ -230,10 +231,6 @@ export default class LexGrammar {
    * this functions expands it to [0-9].
    */
   _extractMacros(macros, rules) {
-    if (!macros) {
-      return;
-    }
-
     rules.forEach(lexData => {
       const index = lexData.length === 3 ? 1 : 0;
 
@@ -245,6 +242,10 @@ export default class LexGrammar {
             () => StandardMacros[macro],
           );
         }
+      }
+
+      if (!macros) {
+        return;
       }
 
       for (let macro in macros) {

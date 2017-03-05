@@ -12,7 +12,6 @@ class SyntaxToolTokenizer__
 
 
   @string = ''
-  @original_string = ''
   @cursor = 0
   @tokens_queue = []
   @states = []
@@ -32,14 +31,13 @@ class SyntaxToolTokenizer__
 
   EOF_TOKEN = {
     :type => YYParse::EOF,
-    :value => YYParse::EOF
+    :value => ''
   }
 
   {{{LEX_RULE_HANDLERS}}}
 
   def init_string(string)
-    @original_string = string
-    @string = @original_string + YYParse::EOF
+    @string = string
     @cursor = 0
     @tokens_queue = []
     @states = ['INITIAL']
@@ -85,6 +83,10 @@ class SyntaxToolTokenizer__
       return _to_token(@tokens_queue.shift())
     end
 
+    if not has_more_tokens
+      return SyntaxToolTokenizer__::EOF_TOKEN
+    end
+
     string = @string[@cursor..-1]
 
     lex_rules_for_state = @@lex_rules_by_conditions[get_current_state]
@@ -94,7 +96,13 @@ class SyntaxToolTokenizer__
 
       matched = match(string, lex_rule[0])
 
-      if matched
+      # Manual handling of EOF token (the end of string). Return it
+      # as `EOF` symbol.
+      if string == '' and matched == ''
+        @cursor += 1
+      end
+
+      if matched != nil
         YYParse.yytext = matched
         YYParse.yyleng = matched.length
         token = self.send(lex_rule[1])
@@ -115,9 +123,7 @@ class SyntaxToolTokenizer__
       end
     }
 
-    if not has_more_tokens
-      return SyntaxToolTokenizer__::EOF_TOKEN
-    elsif is_eof
+    if is_eof
       @cursor += 1
       return SyntaxToolTokenizer__::EOF_TOKEN
     end
@@ -131,7 +137,7 @@ class SyntaxToolTokenizer__
   # In addition, shows `line:column` location.
   #
   def throw_unexpected_token(symbol, line, column)
-    line_source = @original_string.split('\n')[line - 1]
+    line_source = @string.split('\n')[line - 1]
 
     pad = ' ' * column;
     line_data = "\n\n" + line_source + "\n" + pad + "^\n"
@@ -178,11 +184,11 @@ class SyntaxToolTokenizer__
   end
 
   def is_eof
-    return @string[@cursor, 1] == YYParse::EOF && @cursor == @string.length - 1
+    return @cursor == @string.length
   end
 
   def has_more_tokens
-    return @cursor < @string.length
+    return @cursor <= @string.length
   end
 
   def match(string, regexp)

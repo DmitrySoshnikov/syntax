@@ -238,7 +238,7 @@ class YYParse
   end
 
   def self.unexpected_token(token)
-    if token[:value] == self::EOF
+    if token[:type] == self::EOF
       self.unexpected_end_of_input()
     end
 
