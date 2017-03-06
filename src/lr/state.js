@@ -92,21 +92,21 @@ export default class State {
    * Whether this state is final.
    */
   isFinal() {
-    return this.getItems().length === 1 && this.getItems()[0].isFinal();
+    return this._items.length === 1 && this._items[0].isFinal();
   }
 
   /**
    * Whether the state is accepting.
    */
   isAccept() {
-    return this.isFinal() && this.getItems()[0].getProduction().isAugmented();
+    return this.isFinal() && this._items[0].getProduction().isAugmented();
   }
 
   /**
    * Returns all reduce items in this set.
    */
   getReduceItems() {
-    return this.getItems().filter(item => item.isReduce());
+    return this._items.filter(item => item.isReduce());
   }
 
   /**
@@ -135,7 +135,7 @@ export default class State {
     }
 
     // "shift-reduce" conflicts.
-    this.getItems().forEach(item => {
+    this._items.forEach(item => {
       if (!item.isShift()) {
         return;
       }
@@ -430,14 +430,7 @@ export default class State {
    * This is used in LALR(1) mode when is compressed from CLR(1).
    */
   mergeWithState(state) {
-    if (!this._grammar.getMode().isLALR1()) {
-      throw new Error(
-        `States can be merged only in LALR(1) mode. ` +
-        `This mode is ${this._grammar.getMode().toString()}.`
-      );
-    }
-
-    if (state.getItems().length !== this.getItems().length) {
+    if (this._items.length !== this._items.length) {
       throw new Error(
         `LALR(1): State ${state.getNumber()} is not compatible ` +
         `with state ${this.getNumber()}.`
@@ -447,7 +440,7 @@ export default class State {
     if (LRItem.keyForItems(this.getKernelItems()) !==
         LRItem.keyForItems(state.getKernelItems())) {
 
-      this.getItems().forEach(item => {
+      this._items.forEach(item => {
         let thatItem = state.getItemByLR0Key(item.getLR0Key());
 
         if (!thatItem) {
