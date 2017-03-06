@@ -34,6 +34,7 @@ export default class LRItem {
     this._lr0Key = LRItem.keyForItem(production, dotPosition, null);
 
     this._production = production;
+    this._RHS = this._production.getRHS();
     this._dotPosition = dotPosition;
     this._grammar = grammar;
     this._canonicalCollection = canonicalCollection;
@@ -125,19 +126,19 @@ export default class LRItem {
     }
 
     // Main kernel item for the augmented production, that creates a new state.
-    if (!this.getState()) {
-      this.setState(new State(
+    if (!this._state) {
+      this._state = new State(
         /* kernelItems */ [this],
         /* grammar */ this._grammar,
         /* canonicalCollection */ this._canonicalCollection,
         /* setsGenerator */ this._setsGenerator,
-      ));
+      );
     }
 
-    let productionsForSymbol = this._grammar
+    const productionsForSymbol = this._grammar
       .getProductionsForSymbol(this.getCurrentSymbol().getSymbol());
 
-    let addedItems = productionsForSymbol.map(production => {
+    const addedItems = productionsForSymbol.map(production => {
       return new LRItem(
         production,
         /* dotPosition */ 0,
@@ -149,9 +150,9 @@ export default class LRItem {
     });
 
     this._closured = true;
-    this.getState().addItems(addedItems);
+    this._state.addItems(addedItems);
 
-    return this.getState();
+    return this._state;
   }
 
   /**
@@ -204,7 +205,7 @@ export default class LRItem {
    */
   goto() {
     if (!this._outerState) {
-      this.getState().goto();
+      this._state.goto();
     }
 
     return this._outerState;
@@ -214,7 +215,7 @@ export default class LRItem {
    * The symbol at the dot position.
    */
   getCurrentSymbol() {
-    return this._production.getRHS()[this._dotPosition];
+    return this._RHS[this._dotPosition];
   }
 
   /**
@@ -266,8 +267,7 @@ export default class LRItem {
    * The item `S -> • ε` (or its short equivalent `S -> •`) is final as well.
    */
   isFinal() {
-    return this._dotPosition === this._production.getRHS().length ||
-      this.isEpsilonTransition();
+    return this._dotPosition === this._RHS.length || this.isEpsilonTransition();
   }
 
   /**
@@ -386,7 +386,7 @@ export default class LRItem {
    * Returns key to be displayed in toString.
    */
   _getToStringKey() {
-    let RHS = this._production.getRHS().map(symbol => symbol.getSymbol());
+    let RHS = this._RHS.map(symbol => symbol.getSymbol());
     RHS.splice(this._dotPosition, 0, '•');
 
     let lookaheads = '';
@@ -425,10 +425,6 @@ export default class LRItem {
    * Returns an a new item with an advanced dot position.
    */
   advance() {
-    if (this.isFinal()) {
-      throw new Error(`Item for ${this._production.getRaw()} is final.`);
-    }
-
     return new LRItem(
       this._production,
       /* dotPosition */ this._dotPosition + 1,
