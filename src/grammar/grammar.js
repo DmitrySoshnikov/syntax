@@ -447,16 +447,11 @@ export default class Grammar {
    * Returns productions for a specific non-terminal.
    */
   getProductionsForSymbol(symbol) {
-    if (symbol instanceof GrammarSymbol) {
-      symbol = symbol.getSymbol();
-    }
-
     if (!this._productionsForSymbol.hasOwnProperty(symbol)) {
       this._productionsForSymbol[symbol] = this._bnf.filter(production => {
         return production.getLHS().isSymbol(symbol);
       });
     }
-
     return this._productionsForSymbol[symbol];
   }
 
@@ -464,16 +459,11 @@ export default class Grammar {
    * Returns productions where a non-terminal is used (appears on RHS).
    */
   getProductionsWithSymbol(symbol) {
-    if (symbol instanceof GrammarSymbol) {
-      symbol = symbol.getSymbol();
-    }
-
     if (!this._productionsWithSymbol.hasOwnProperty(symbol)) {
       this._productionsWithSymbol[symbol] = this._bnf.filter(production => {
-        return production.getRHS().some(s => s.getSymbol() === symbol);
+        return production.getRHSSymbolsMap().hasOwnProperty(symbol);
       });
     }
-
     return this._productionsWithSymbol[symbol];
   }
 

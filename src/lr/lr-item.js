@@ -135,7 +135,7 @@ export default class LRItem {
     }
 
     let productionsForSymbol = this._grammar
-      .getProductionsForSymbol(this.getCurrentSymbol());
+      .getProductionsForSymbol(this.getCurrentSymbol().getSymbol());
 
     let addedItems = productionsForSymbol.map(production => {
       return new LRItem(

@@ -80,6 +80,17 @@ describe('production', () => {
     expect(RHS[2]).toBe('F');
   });
 
+  it('RHS symbols map', () => {
+    const production = new Production(...defaultProductionData);
+    const rhsSymbolsMap = production.getRHSSymbolsMap();
+
+    expect(Object.keys(rhsSymbolsMap).length).toBe(3);
+
+    expect(rhsSymbolsMap.hasOwnProperty('E')).toBe(true);
+    expect(rhsSymbolsMap.hasOwnProperty('+')).toBe(true);
+    expect(rhsSymbolsMap.hasOwnProperty('F')).toBe(true);
+  });
+
   it('full/short', () => {
     const productionData = [...defaultProductionData];
     productionData[/* isShort */ 4] = false;

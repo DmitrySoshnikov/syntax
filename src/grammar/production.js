@@ -99,14 +99,23 @@ export default class Production {
     return this._isAugmented;
   }
 
+  /**
+   * Returns LHS symbol.
+   */
   getLHS() {
     return this._LHS;
   }
 
+  /**
+   * Returns an array of symbols on RHS (aka "handle").
+   */
   getRHS() {
     return this._RHS;
   }
 
+  /**
+   * Same as `getRHS`, but returns raw symbols.
+   */
   getRHSSymbols() {
     if (!this._rhsSymbols) {
       this._rhsSymbols = this._RHS.map(symbol => symbol.getSymbol());
@@ -114,26 +123,57 @@ export default class Production {
     return this._rhsSymbols;
   }
 
+  /**
+   * A map for faster searches whether a symbol is used on RHS.
+   */
+  getRHSSymbolsMap() {
+    if (!this._rhsSymbolsMap) {
+      this._rhsSymbolsMap = {};
+      this._RHS.forEach(
+        symbol => this._rhsSymbolsMap[symbol.getSymbol()] = true
+      );
+    }
+    return this._rhsSymbolsMap;
+  }
+
+  /**
+   * Returns precedence of this production.
+   */
   getPrecedence() {
     return this._precedence;
   }
 
+  /**
+   * Returns original semantic action.
+   */
   getOriginalSemanticAction() {
     return this._orginialSemanticAction;
   }
 
+  /**
+   * Returns semantic action string.
+   */
   getRawSemanticAction() {
     return this._rawSemanticAction;
   }
 
+  /**
+   * Returns semantic action function.
+   */
   getSemanticAction() {
     return this._semanticAction;
   }
 
+  /**
+   * Whether this production has semantic action.
+   */
   hasSemanticAction() {
     return this._semanticAction !== null;
   }
 
+  /**
+   * Executes semantic action.
+   */
   runSemanticAction(args) {
     if (!this._semanticAction) {
       return;
@@ -141,15 +181,24 @@ export default class Production {
     return this._semanticAction(...args);
   }
 
+  /**
+   * Whether this production is epsilon.
+   */
   isEpsilon() {
     let RHS = this.getRHS();
     return RHS.length === 1 && RHS[0].isEpsilon();
   }
 
+  /**
+   * String representation.
+   */
   toString() {
     return this._toKey(this._isShort);
   }
 
+  /**
+   * String representation in full notation.
+   */
   toFullString() {
     return this._toKey(false);
   }
