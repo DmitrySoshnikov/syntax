@@ -268,7 +268,7 @@ export default class State {
 
       // Already calculated the outer state, exit.
       if (transitionsForSymbol.state) {
-        return;
+        continue;
       }
 
       const items = transitionsForSymbol.items;
