@@ -43,6 +43,10 @@ let __;
 let __loc;
 
 function yyloc(start, end) {
+  if (!shouldCaptureLocations) {
+    return null;
+  }
+
   // Epsilon doesn't produce location.
   if (!start || !end) {
     return start || end;
@@ -98,6 +102,19 @@ yy.tokenizer = tokenizer;
  * Parsing module.
  */
 const yyparse = {
+  /**
+   * Sets parsing options.
+   */
+  setOptions(options) {
+    if (options.hasOwnProperty('captureLocations')) {
+      shouldCaptureLocations = options.captureLocations;
+    }
+    return this;
+  },
+
+  /**
+   * Parses a string.
+   */
   parse(string) {
     yyparse.onParseBegin(string);
 

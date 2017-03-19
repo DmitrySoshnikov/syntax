@@ -125,6 +125,10 @@ let __loc = null;
  * or calculate custom location format.
  */
 function yyloc(start, end) {
+  if (!shouldCaptureLocations) {
+    return null;
+  }
+
   // Epsilon doesn't produce location.
   if (!start || !end) {
     return start || end;
@@ -213,6 +217,16 @@ class yyparse {
    * }
    */
   {{{PRODUCTION_HANDLERS}}}
+
+  /**
+   * Sets parsing options.
+   */
+  setOptions(options) {
+    if (options.hasOwnProperty('captureLocations')) {
+      shouldCaptureLocations = options.captureLocations;
+    }
+    return this;
+  }
 
   /**
    * Main parsing method which applies LR-algorithm.
