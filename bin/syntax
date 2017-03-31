@@ -193,7 +193,9 @@ function validateLRGrammar(grammar) {
 
           // Shift-reduce conflict.
           case EntryType.SR_CONFLICT:
-            const [reducePart, shiftPart] = table.splitSRParts(conflict);
+            const srParts = table.splitSRParts(conflict);
+            const reducePart = srParts[0];
+            const shiftPart = srParts[1];
             const production = grammar.getProduction(reducePart.slice(1));
             const data = srConflicts.get(production) || [];
             data.push(symbol);
@@ -202,7 +204,9 @@ function validateLRGrammar(grammar) {
 
           // Reduce-reduce conflict.
           case EntryType.RR_CONFLICT:
-            const [reduce1, reduce2] = conflict.split('/');
+            const rrParts = conflict.split('/');
+            const reduce1 = rrParts[0];
+            const reduce2 = rrParts[1];
             rrConflicts.set(conflict, {
               production1: grammar.getProduction(reduce1.slice(1)),
               production2: grammar.getProduction(reduce2.slice(1)),
@@ -235,8 +239,10 @@ function validateLRGrammar(grammar) {
     console.info(colors.bold('"Shift-reduce" conflicts:\n'));
     let i = 1;
 
-    for (let [production, data] of srConflicts.entries()) {
-      let pad = i >= 10 ? '' : ' ';
+    for (let productionData of srConflicts.entries()) {
+      const production = productionData[0];
+      const data = productionData[1];
+      const pad = i >= 10 ? '' : ' ';
       data = data.map(symbol => colors.bold(symbol));
       console.info(
         `  ${pad}${i++}. ` +
@@ -253,8 +259,10 @@ function validateLRGrammar(grammar) {
     console.info(colors.bold('"Reduce-reduce" conflicts:\n'));
     let i = 1;
 
-    for (let {production1, production2} of rrConflicts.values()) {
-      let pad = i >= 10 ? '' : ' ';
+    for (let productions of rrConflicts.values()) {
+      const production1 = productions.production1;
+      const production2 = productions.production2;
+      const pad = i >= 10 ? '' : ' ';
       console.info(
         `  ${pad}${i++}. ` +
         `Production: ${colors.bold(production1.toFullString())}, ` +
