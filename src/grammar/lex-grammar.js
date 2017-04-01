@@ -3,7 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import BnfParser from '../generated/bnf-parser.gen';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
@@ -215,8 +214,8 @@ export default class LexGrammar {
         // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
         return (inclusive && !lexRule.hasStartConditions()) ||
           (lexRule.hasStartConditions() &&
-           (lexRule.getStartConditions().includes(condition) ||
-            lexRule.getStartConditions().includes('*')));
+           (lexRule.getStartConditions().indexOf(condition) !== -1 ||
+            lexRule.getStartConditions().indexOf('*') !== -1));
       });
 
       rulesByConditions[condition] = rules;

@@ -3,12 +3,12 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import BnfParser from '../generated/bnf-parser.gen';
+import BnfParser from '../generated/bnf-parser.gen.js';
 import GrammarMode from './grammar-mode';
 import GrammarSymbol from './grammar-symbol';
 import LexGrammar from './lex-grammar';
 import LexRule from './lex-rule';
-import LexParser from '../generated/lex-parser.gen';
+import LexParser from '../generated/lex-parser.gen.js';
 import Production from './production';
 
 import colors from 'colors';

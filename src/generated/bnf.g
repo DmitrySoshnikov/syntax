@@ -56,27 +56,27 @@
   },
 
   "moduleInclude": `
-    let tokens;
-    let operators;
-    let extra;
+    let __bnfParserTokens;
+    let __bnfParserOperators;
+    let __bnfParserExtra;
 
     yyparse.onParseBegin = () => {
-      tokens = [];
-      operators = [];
-      extra = {};
+      __bnfParserTokens = [];
+      __bnfParserOperators = [];
+      __bnfParserExtra = {};
     };
   `,
 
   "bnf": {
     "Spec":         [["DeclList %% Productions", `
-                      const spec = Object.assign({bnf: $3}, extra);
+                      const spec = Object.assign({bnf: $3}, __bnfParserExtra);
 
-                      if (operators.length) {
-                        spec.operators = operators;
+                      if (__bnfParserOperators.length) {
+                        spec.operators = __bnfParserOperators;
                       }
 
                       if (tokens.length) {
-                        spec.tokens = tokens.join(' ');
+                        spec.tokens = __bnfParserTokens.join(' ');
                       }
 
                       $$ = spec;
@@ -88,13 +88,13 @@
     "Declarations": ["Declaration",
                      "Declarations Declaration"],
 
-    "Declaration":  [["LEX_BLOCK",                  "extra.lex = $1"],
-                     ["MODULE_INCLUDE",             "extra.moduleInclude = $1"],
-                     ["%start LHS",                 "extra.start = $2"],
-                     ["%left OperatorList",         "operators.push(['left'].concat($2))"],
-                     ["%right OperatorList",        "operators.push(['right'].concat($2))"],
-                     ["%nonassoc OperatorList",     "operators.push(['nonassoc'].concat($2))"],
-                     ["%token OperatorList",        "tokens.push(...$2)"]],
+    "Declaration":  [["LEX_BLOCK",                  "__bnfParserExtra.lex = $1"],
+                     ["MODULE_INCLUDE",             "__bnfParserExtra.moduleInclude = $1"],
+                     ["%start LHS",                 "__bnfParserExtra.start = $2"],
+                     ["%left OperatorList",         "__bnfParserOperators.push(['left'].concat($2))"],
+                     ["%right OperatorList",        "__bnfParserOperators.push(['right'].concat($2))"],
+                     ["%nonassoc OperatorList",     "__bnfParserOperators.push(['nonassoc'].concat($2))"],
+                     ["%token OperatorList",        "__bnfParserTokens.push(...$2)"]],
 
     "OperatorList": [["Primary",                    "$$ = [$1]"],
                      ["OperatorList Primary",       "$$ = $1; $1.push($2)"]],
