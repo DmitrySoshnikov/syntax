@@ -44,6 +44,6 @@
   "devDependencies": {
     "babel": "^6.2.0",
     "shelljs": "^0.7.5",
-    "jest-cli": "^17.0.3"
+    "jest-cli": "^19.0.2"
   }
 }

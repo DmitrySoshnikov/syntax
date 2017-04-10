@@ -73,14 +73,14 @@ export default class LRParser {
     return this._canonicalCollection;
   }
 
-  static fromParserGenerator({grammar}) {
+  static fromParserGenerator({grammar, options}) {
     // Generate parser in the temp directory.
     const outputFile = path.resolve(os.tmpdir(), '.syntax-parser.js');
 
     const parserModule = new LRParserGeneratorDefault({
       grammar,
       outputFile,
-      resolveConflicts: true,
+      options,
     }).generate();
 
     return new LRParser({grammar, parserModule});

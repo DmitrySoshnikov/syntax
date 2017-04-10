@@ -43,7 +43,7 @@ let __;
 let __loc;
 
 function yyloc(start, end) {
-  if (!shouldCaptureLocations) {
+  if (!yy.options.captureLocations) {
     return null;
   }
 
@@ -61,8 +61,6 @@ function yyloc(start, end) {
     endColumn: end.endColumn,
   };
 }
-
-let shouldCaptureLocations = false;
 
 const EOF = '$';
 
@@ -477,30 +475,59 @@ yy.lexer = tokenizer;
 yy.tokenizer = tokenizer;
 
 /**
+ * Global parsing options. Some options can be shadowed per
+ * each `parse` call, if the optations are passed.
+ *
+ * Initalized to the `captureLocations` which is passed
+ * from the generator. Other options can be added at runtime.
+ */
+yy.options = {
+  captureLocations: false,
+};
+
+/**
  * Parsing module.
  */
 const yyparse = {
   /**
-   * Sets parsing options.
+   * Sets global parsing options.
    */
   setOptions(options) {
-    if (options.hasOwnProperty('captureLocations')) {
-      shouldCaptureLocations = options.captureLocations;
-    }
+    yy.options = options;
     return this;
+  },
+
+  /**
+   * Returns parsing options.
+   */
+  getOptions() {
+    return yy.options;
   },
 
   /**
    * Parses a string.
    */
-  parse(string) {
-    yyparse.onParseBegin(string);
-
+  parse(string, parseOptions) {
     if (!tokenizer) {
       throw new Error(`Tokenizer instance wasn't specified.`);
     }
 
     tokenizer.initString(string);
+
+    /**
+     * If parse options are passed, override global parse options for
+     * this call, and later restore global options.
+     */
+    let globalOptions = yy.options;
+    if (parseOptions) {
+      yy.options = Object.assign({}, yy.options, parseOptions);
+    }
+
+    /**
+     * Allow callers to do setup work based on the
+     * parsing string, and passed options.
+     */
+    yyparse.onParseBegin(string, tokenizer, yy.options);
 
     stack.length = 0;
     stack.push(0);
@@ -510,6 +537,8 @@ const yyparse = {
 
     do {
       if (!token) {
+        // Restore options.
+        yy.options = globalOptions;
         unexpectedEndOfInput();
       }
 
@@ -517,6 +546,7 @@ const yyparse = {
       let column = tokens[token.type];
 
       if (!table[state].hasOwnProperty(column)) {
+        yy.options = globalOptions;
         unexpectedToken(token);
       }
 
@@ -526,7 +556,7 @@ const yyparse = {
       if (entry[0] === 's') {
         let loc = null;
 
-        if (shouldCaptureLocations) {
+        if (yy.options.captureLocations) {
           loc = {
             startOffset: token.startOffset,
             endOffset: token.endOffset,
@@ -553,7 +583,7 @@ const yyparse = {
         let semanticValueArgs = hasSemanticAction ? [] : null;
 
         const locationArgs = (
-          hasSemanticAction && shouldCaptureLocations
+          hasSemanticAction && yy.options.captureLocations
             ? []
             : null
         );
@@ -612,15 +642,21 @@ const yyparse = {
         if (stack.length !== 1 ||
             stack[0] !== 0 ||
             tokenizer.hasMoreTokens()) {
+          // Restore options.
+          yy.options = globalOptions;
           unexpectedToken(token);
         }
 
         if (parsed.hasOwnProperty('semanticValue')) {
+          yy.options = globalOptions;
           yyparse.onParseEnd(parsed.semanticValue);
           return parsed.semanticValue;
         }
 
         yyparse.onParseEnd();
+
+        // Restore options.
+        yy.options = globalOptions;
         return true;
       }
 
@@ -636,7 +672,7 @@ const yyparse = {
     return tokenizer;
   },
 
-  onParseBegin(string) {},
+  onParseBegin(string, tokenizer, options) {},
   onParseEnd(parsed) {},
 };
 
