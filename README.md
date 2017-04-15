@@ -1,4 +1,4 @@
-# syntax [![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli)
+# syntax [![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli) [![npm downloads](https://img.shields.io/npm/dt/syntax-cli.svg)](https://www.npmjs.com/package/syntax-cli)
 
 Syntactic analysis toolkit, language agnostic parsers generator.
 
