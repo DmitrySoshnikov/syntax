@@ -59,6 +59,9 @@ export default class LRParser {
 
     // Alias for tokenizer.
     this._yy.lexer = this._tokenizer;
+
+    // Whether locations should be captured.
+    this._yy.captureLocations = grammar.shouldCaptureLocations();
   }
 
   getGrammar() {
