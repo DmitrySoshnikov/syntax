@@ -54,6 +54,9 @@ export default class LRParser {
     // Global storage accessible from semantic actions.
     this._yy = CodeUnit.getSandbox().yy;
 
+    // Parse options.
+    this._yy.options = {}
+
     // Parser may access tokenizer, and affect its state.
     this._yy.tokenizer = this._tokenizer;
 
@@ -61,7 +64,7 @@ export default class LRParser {
     this._yy.lexer = this._tokenizer;
 
     // Whether locations should be captured.
-    this._yy.captureLocations = grammar.shouldCaptureLocations();
+    this._yy.options.captureLocations = grammar.shouldCaptureLocations();
   }
 
   getGrammar() {
