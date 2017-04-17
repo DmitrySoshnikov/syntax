@@ -109,11 +109,11 @@ export default class LRParser {
 
     debug.time('LR parsing');
 
-    if (this._yyparse.onParseBegin) {
-      this._yyparse.onParseBegin(string);
-    }
-
     this._tokenizer.initString(string);
+
+    if (this._yyparse.onParseBegin) {
+      this._yyparse.onParseBegin(string, this._tokenizer, this._yy.options);
+    }
 
     this._stack = [];
 
