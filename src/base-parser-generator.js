@@ -305,12 +305,7 @@ export default class BaseParserGenerator {
     let lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
       return (
         `[${lexRule.getMatcher()}, ` +
-        `function() { ${lexRule.getRawHandler()} }, ` +
-        `${
-          lexRule.hasStartConditions()
-            ? JSON.stringify(lexRule.getStartConditions())
-            : ''
-        }]`
+        `function() { ${lexRule.getRawHandler()} }]`
       );
     });
 

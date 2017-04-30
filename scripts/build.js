@@ -9,6 +9,12 @@ const colors = require('colors');
 
 console.info(colors.bold('Building...\n'));
 
+// Need to checkout to working copies of the generated parser if
+// they got corrupted with current changes. The parsers are regenerated
+// further in the build steps.
+exec(`git checkout "src/generated/lex-parser.gen.js"`);
+exec(`git checkout "src/generated/bnf-parser.gen.js"`);
+
 // ----------------------------------------------------------
 // 1. Templates
 
