@@ -127,7 +127,7 @@ class Tokenizer {
           }
         }
 
-        return $this->toToken($token, $matched);
+        return $this->toToken($token, yyparse::$yytext);
       }
     }
 
