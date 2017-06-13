@@ -5,7 +5,7 @@
 
 import vm from 'vm';
 
-const SANDBOX = Object.assign(Object.create(global), {
+const SANDBOX = Object.assign(global, {
   /**
    * Matched text of the tokenizer.
    */
