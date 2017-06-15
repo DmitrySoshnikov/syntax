@@ -218,6 +218,8 @@ fn main() {
 }
 ```
 
+Check out [README](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/rust/README.md) file from rust directory for more information.
+
 ### Grammar format
 
 _Syntax_ support two main notations to define grammars: _JSON-like_ notation, and _Yacc/Bison-style_ notation.
