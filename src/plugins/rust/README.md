@@ -93,7 +93,7 @@ Expr
 
         |$1: i32, $3: i32| -> i32;
 
-        $$ = $1 + $2
+        $$ = $1 + $3
     }
 
     // ---------------------------------------
@@ -103,7 +103,7 @@ Expr
 
         |$1: i32, $3: i32| -> i32;
 
-        $$ = $1 * $2
+        $$ = $1 * $3
     }
 
     // ---------------------------------------
@@ -128,6 +128,16 @@ Expr
 ```
 
 > NOTE: here we used example in Bison/Yacc format. You can also check [the example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.rs.g) in JSON format.
+
+Since Rust is a strongly and (mostly) statically typed language, we need to define _types_ of all the _used_ arguments in production handlers. They are defined in the Rust’s closure notation.
+
+For example, before being able to do a mathematical operation of `$$ = $1 + $3` in the first `Expr + Expr` production, we need to define the types of the used arguments, and the result type:
+
+```
+|$1: i32, $3: i32| -> i32;
+```
+
+If the argument is just propagated without any operation, the type declarations can be omitted, as in the last production `( Expr )` where we just return the `$$ = $2`.
 
 ### 5. Generate the parser
 
