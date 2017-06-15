@@ -156,7 +156,7 @@ Notice how we specified output file to be the `lib.rs` from our `syntax` crate. 
 Now in the `main.rs` we can require an use the parser:
 
 
-```js
+```rust
 extern crate syntax;
 
 use syntax::Parser;
