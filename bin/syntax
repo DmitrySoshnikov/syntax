@@ -241,7 +241,7 @@ function validateLRGrammar(grammar) {
 
     for (let productionData of srConflicts.entries()) {
       const production = productionData[0];
-      const data = productionData[1];
+      let data = productionData[1];
       const pad = i >= 10 ? '' : ' ';
       data = data.map(symbol => colors.bold(symbol));
       console.info(
@@ -366,6 +366,7 @@ const parsers = {
         'php': require(ROOT + 'plugins/php/lr/lr-parser-generator-php.js').default,
         'rb' : require(ROOT + 'plugins/ruby/lr/lr-parser-generator-ruby.js').default,
         'cs' : require(ROOT + 'plugins/csharp/lr/lr-parser-generator-csharp.js').default,
+        'rs' : require(ROOT + 'plugins/rust/lr/lr-parser-generator-rust.js').default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;

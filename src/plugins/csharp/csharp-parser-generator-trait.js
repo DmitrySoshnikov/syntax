@@ -192,7 +192,7 @@ const CSharpParserGeneratorTrait = {
       case 'string': return `"${key}"`;
       case 'number': return Number(key);
       default:
-        throw new Exception('_dictKey: Incorrect type ' + keyType);
+        throw new Error('_dictKey: Incorrect type ' + keyType);
     }
   },
 
@@ -209,7 +209,7 @@ const CSharpParserGeneratorTrait = {
       case 'string': return `"${value}"`;
       case 'number': return Number(value);
       default:
-        throw new Exception('_dictValue: Incorrect value ' + valueType);
+        throw new Error('_dictValue: Incorrect value ' + valueType);
     }
   },
 
