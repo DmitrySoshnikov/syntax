@@ -18,6 +18,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
   - [C# plugin](#c-plugin)
+  - [Rust plugin](#rust-plugin)
 - [Grammar format](#grammar-format)
   - [JSON-like notation](#json-like-notation)
   - [Yacc/Bison notation](#yaccbison-notation)
@@ -193,6 +194,29 @@ Console.WriteLine(parser.parse("2 + 2 * 2")); // 6
 ```
 
 Parsing hooks example in C# format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.cs.g).
+
+#### Rust plugin
+
+Rust is a system programming language focusing on efficiency and memory safety. Syntax has support for generating parsers in Rust. See the [simple example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.rs.g), and an example of [generating an AST](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-ast.rs.g) with recursive structures.
+
+```
+./bin/syntax -g examples/calc.rs.g -m lalr1 -o lib.rs
+```
+
+Callers can create a crate (called `syntax` in the example below), which contains the parser, and use it as:
+
+```rust
+extern crate syntax;
+
+use syntax::Parser;
+
+fn main() {
+    let mut parser = Parser::new();
+
+    let result = parser.parse("2 + 2 * 2");
+    println!("{:?}", result); // 6
+}
+```
 
 ### Grammar format
 
