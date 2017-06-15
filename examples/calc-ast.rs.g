@@ -54,14 +54,14 @@ pub type TResult = Node;
 /**
  * Hook executed on parse begin.
  */
-fn on_parse_begin(parser: &mut Parser, string: &'static str) {
+fn on_parse_begin(_parser: &mut Parser, string: &'static str) {
     println!("Parsing: {:?}", string);
 }
 
 /**
  * Hook executed on parse end.
  */
-fn on_parse_end(parser: &mut Parser, result: &TResult) {
+fn on_parse_end(_parser: &mut Parser, result: &TResult) {
     println!("Parsed: {:?}", result);
 }
 
