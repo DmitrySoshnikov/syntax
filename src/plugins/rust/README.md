@@ -60,6 +60,12 @@ We use simple calculator grammar for the example. In the `syntax/grammar.g` add:
 
 %%
 
+// -----------------------------------------------
+// Lexical grammar.
+//
+// Uses regexp to produce list of tokens.
+// Return values is a token type.
+
 \s+     /* skip whitespace */ return "";
 \d+     return "NUMBER";
 
@@ -71,8 +77,25 @@ We use simple calculator grammar for the example. In the `syntax/grammar.g` add:
 
 /lex
 
+// -----------------------------------------------
+// Operator precedence.
+//
+// The `*` goes after `+`, so `2 + 2 * 2` is
+// correctly parsed as `2 + (2 * 2)`.
+//
+// Also both are left-associative, meaning
+// `2 + 2 + 2` is `(2 + 2) + 2`, which is important
+// when we build AST nodes.
+
 %left +
 %left *
+
+// -----------------------------------------------
+// Module include.
+//
+// The code which is included "as is" to the generated
+// parser. Should at least contain `TResult` -- the
+// type of the final parsed value.
 
 %{
 
@@ -84,6 +107,12 @@ type TResult = i32;
 
 %%
 
+// -----------------------------------------------
+// Syntactic grammar (BNF).
+//
+// Defines an actual syntactic structure of
+// our program.
+
 Expr
 
     // ---------------------------------------
@@ -91,6 +120,7 @@ Expr
 
     : Expr + Expr {
 
+        // Types of used args, and the return type.
         |$1: i32, $3: i32| -> i32;
 
         $$ = $1 + $3
@@ -124,7 +154,6 @@ Expr
         $$ = $2
 
     };
-
 ```
 
 > NOTE: here we used example in Bison/Yacc format. You can also check [the example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.rs.g) in JSON format.
