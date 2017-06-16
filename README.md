@@ -116,7 +116,7 @@ See [this instruction](https://github.com/DmitrySoshnikov/syntax/blob/master/src
 
 #### JavaScript default
 
-Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, _PHP_, _Ruby_, and _C#_. The target language is determined by the output file extension.
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, _PHP_, _Ruby_, _C#_, and _Rust_. The target language is determined by the output file extension.
 
 #### Python plugin
 
