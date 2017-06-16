@@ -36,7 +36,7 @@
           println!("on_parse_begin: {:?}", string);
       }
 
-      fn on_parse_end(parser: &mut Parser, parsed: TResult) {
+      fn on_parse_end(parser: &mut Parser, parsed: &TResult) {
           println!("on_parse_end: {:?}", parsed);
       }
 
