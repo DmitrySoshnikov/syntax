@@ -144,12 +144,6 @@ pub struct Parser {
     states_stack: Vec<usize>,
 
     /**
-     * A result value of a production handler.
-     * In the grammar usually used as $$.
-     */
-    result_value: SV,
-
-    /**
      * Tokenizer instance.
      */
     tokenizer: Tokenizer,
@@ -166,12 +160,9 @@ impl Parser {
      */
     pub fn new() -> Parser {
         Parser {
-
             // Stacks.
             values_stack: Vec::new(),
             states_stack: Vec::new(),
-
-            result_value: SV::Undefined,
 
             tokenizer: Tokenizer::new(),
 
