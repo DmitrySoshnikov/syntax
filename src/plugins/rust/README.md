@@ -168,6 +168,14 @@ For example, before being able to do a mathematical operation of `$$ = $1 + $3` 
 
 If the argument is just propagated without any operation, the type declarations can be omitted, as in the last production `( Expr )` where we just return the `$$ = $2`.
 
+Notice also, that in the third `NUMBER` production, we get direct matched token value via the `yytext` variable. Since we don't use arguments, the type declaration of the production defines only return type, having empty arguments:
+
+```
+|| -> i32;
+```
+
+We could also access the matched token via the `$1.value`, and for this the type declaration would be `|$1: Token| -> i32`.
+
 ### 5. Generate the parser
 
 Now using _Syntax_ tool, let's generate the parser from our grammar:
