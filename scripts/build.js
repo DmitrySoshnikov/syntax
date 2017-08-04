@@ -47,7 +47,7 @@ console.info(colors.bold('\nDone.\n'));
 // 3. Transpiling JS code
 
 console.info(colors.bold('[3/5] Transpiling JS code...\n'));
-exec(`"node_modules/.bin/babel" ${process.argv[2] || ''} src/ --out-dir dist/ --presets es2015,stage-1,stage-2 --ignore templates/,__tests__`);
+exec(`"node_modules/.bin/babel" ${process.argv[2] || ''} src/ --out-dir dist/ --ignore templates/,__tests__`);
 console.info(colors.bold('\nDone.'));
 
 // ----------------------------------------------------------
@@ -55,7 +55,7 @@ console.info(colors.bold('\nDone.'));
 
 console.info(colors.bold('\n[4/5] Rebuilding LEX parser...'));
 exec(`"./bin/syntax" -g src/generated/lex.bnf -l src/generated/lex.lex -m lalr1 -o src/generated/lex-parser.gen.js`);
-exec(`"node_modules/.bin/babel" src/generated/lex-parser.gen.js -o dist/generated/lex-parser.gen.js --presets es2015,stage-1,stage-2`);
+exec(`"node_modules/.bin/babel" src/generated/lex-parser.gen.js -o dist/generated/lex-parser.gen.js`);
 console.info(colors.bold('Done.\n'));
 
 // ----------------------------------------------------------
@@ -63,6 +63,6 @@ console.info(colors.bold('Done.\n'));
 
 console.info(colors.bold('[5/5] Rebuilding BNF parser...'));
 exec(`"./bin/syntax" -g src/generated/bnf.g -m lalr1 -o src/generated/bnf-parser.gen.js`);
-exec(`"node_modules/.bin/babel" src/generated/bnf-parser.gen.js -o dist/generated/bnf-parser.gen.js --presets es2015,stage-1,stage-2`);
+exec(`"node_modules/.bin/babel" src/generated/bnf-parser.gen.js -o dist/generated/bnf-parser.gen.js`);
 
 console.info(colors.bold('All done.\n'));
