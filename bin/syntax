@@ -13,6 +13,11 @@ const vm = require('vm');
 const options = require('nomnom')
   .script('syntax')
   .options({
+    version: {
+      abbr: 'v',
+      help: 'Print current version',
+      flag: true,
+    },
     mode: {
       abbr: 'm',
       transform: normalizeMode,
@@ -707,6 +712,15 @@ function tokenize(string, lexGrammar) {
 }
 
 function main() {
+  if (options.version) {
+    const pkg = require('../package.json');
+    console.info(`v${pkg.version}`);
+
+    if (!options.grammar && !options.lex) {
+      return;
+    }
+  }
+
   if (!options.grammar && !options.lex) {
     error(`\nError: expected at least --grammar or --lex parameters.\n`);
     return;
