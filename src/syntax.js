@@ -20,7 +20,7 @@ export {default as SetsGenerator} from './sets-generator';
 
 // LR parsing.
 export {default as CanonicalCollection} from './lr/canonical-collection';
-export {default as Closure} from './lr/closure';
+export {default as State} from './lr/state';
 export {default as LRItem} from './lr/lr-item';
 export {default as LRParser} from './lr/lr-parser';
 export {default as LRParsingTable} from './lr/lr-parsing-table';
