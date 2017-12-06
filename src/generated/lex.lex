@@ -8,7 +8,7 @@
 {
   macros: {
     NAME: `[a-zA-Z_][a-zA-Z0-9_-]*`,
-    BR:   `\\n`,
+    BR:   `(?:\\r?\\n)`,
   },
 
   startConditions: {

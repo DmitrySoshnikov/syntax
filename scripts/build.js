@@ -54,7 +54,7 @@ console.info(colors.bold('\nDone.'));
 // 4. Rebuilding LEX parser
 
 console.info(colors.bold('\n[4/5] Rebuilding LEX parser...'));
-exec(`"./bin/syntax" -g src/generated/lex.bnf -l src/generated/lex.lex -m lalr1 -o src/generated/lex-parser.gen.js`);
+exec(`node "./bin/syntax" -g src/generated/lex.bnf -l src/generated/lex.lex -m lalr1 -o src/generated/lex-parser.gen.js`);
 exec(`"node_modules/.bin/babel" src/generated/lex-parser.gen.js -o dist/generated/lex-parser.gen.js`);
 console.info(colors.bold('Done.\n'));
 
@@ -62,7 +62,7 @@ console.info(colors.bold('Done.\n'));
 // 4. Rebuilding BNF parser
 
 console.info(colors.bold('[5/5] Rebuilding BNF parser...'));
-exec(`"./bin/syntax" -g src/generated/bnf.g -m lalr1 -o src/generated/bnf-parser.gen.js`);
+exec(`node "./bin/syntax" -g src/generated/bnf.g -m lalr1 -o src/generated/bnf-parser.gen.js`);
 exec(`"node_modules/.bin/babel" src/generated/bnf-parser.gen.js -o dist/generated/bnf-parser.gen.js`);
 
 console.info(colors.bold('All done.\n'));
