@@ -27,7 +27,6 @@ describe('lex-rule', () => {
 
     expect(rule.getOriginalMatcher()).toBe(positiveLookbehind);
     expect(rule.getRawMatcher()).toBe(beginningPositiveLookbehind);
-    expect(rule.getMatcher()).toBe(null); // JS doesn't support.
 
     const negativeLookbehind = '(?<! )foo';
     const beginningNegativeLookbehind = '(?<!^ )foo';
@@ -36,7 +35,6 @@ describe('lex-rule', () => {
 
     expect(rule.getOriginalMatcher()).toBe(negativeLookbehind);
     expect(rule.getRawMatcher()).toBe(beginningNegativeLookbehind);
-    expect(rule.getMatcher()).toBe(null); // JS doesn't support.
   });
 
   it('options', () => {
@@ -86,7 +84,6 @@ describe('lex-rule', () => {
       matcher: orginalMatcher,
     });
 
-    expect(rule.getMatcher()).toBe(null);
     expect(rule.getRawMatcher()).toBe(beginningOrginalMatcher);
     expect(rule.getOriginalMatcher()).toBe(orginalMatcher);
   });
