@@ -34,13 +34,7 @@ export default class CanonicalCollection {
     this._lr0ItemSets = {};
 
     // All the states that form this collection.
-    this._states = [];
-
-    // These two sub-collections is only for better table output:
-    // we want to have all final states to go as last rows in
-    // the parsing table.
-    this._itermediateStates = [];
-    this._finalStates = [];
+    this._states = new Set();
 
     debug.time('Building canonical collection');
 
@@ -62,16 +56,16 @@ export default class CanonicalCollection {
       .closure()
       .goto();
 
-    this._build();
+    this._remap();
 
     debug.timeEnd('Building canonical collection');
-    debug.log(`Number of states in the collection: ${this._states.length}`);
+    debug.log(`Number of states in the collection: ${this._states.size}`);
 
     if (this._grammar.getMode().isLALR1()) {
       debug.time('Compressing CLR to LALR');
       this.compressCLRToLALR();
       debug.timeEnd('Compressing CLR to LALR');
-      debug.log(`Number of states after compression: ${this._states.length}`);
+      debug.log(`Number of states after compression: ${this._states.size}`);
     }
   }
 
@@ -112,7 +106,7 @@ export default class CanonicalCollection {
   }
 
   registerState(state) {
-    this._getStateCollection(state).push(state);
+    this._states.add(state);
 
     // Collect states by LR(0) items, to reuse and merge the same
     // states in case or LALR(1) mode.
@@ -127,31 +121,17 @@ export default class CanonicalCollection {
   }
 
   unregisterState(state) {
-    let collection = this._getStateCollection(state);
-
-    let stateIndex = collection.indexOf(state);
-    if (stateIndex === -1) {
-      collection.splice(stateIndex, 1);
-    }
-
-    stateIndex = this._states.indexOf(state);
-    if (stateIndex !== -1) {
-      this._states.splice(stateIndex, 1);
-    }
+    this._states.delete(state);
 
     let keyForItems = LRItem.keyForItems(state.getKernelItems());
     delete this._kernelSetsTransitions[keyForItems];
 
     let lr0KeyForItems = LRItem.lr0KeyForItems(state.getKernelItems());
     let lr0States = this._lr0ItemSets[lr0KeyForItems];
-    stateIndex = lr0States.indexOf(state);
+    let stateIndex = lr0States.indexOf(state);
     if (stateIndex !== -1) {
       lr0States.splice(stateIndex, 1);
     }
-  }
-
-  _getStateCollection(state) {
-    return state.isFinal() ? this._finalStates : this._itermediateStates;
   }
 
   getStates() {
@@ -244,14 +224,10 @@ export default class CanonicalCollection {
     return this.getRoot().getState();
   }
 
-  _build() {
-    // Build all states form itermediate and final states, and
-    // also allocate the state number for each state.
-    this._states.push(...this._itermediateStates, ...this._finalStates);
-    this._remap();
-  }
-
   _remap() {
-    this._states.forEach((state, number) => state.setNumber(number));
+    let number = 0;
+    for (const state of this._states) {
+      state.setNumber(number++);
+    }
   }
 };
