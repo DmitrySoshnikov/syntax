@@ -178,7 +178,7 @@ def parse(string):
             if len(stack) != 1 or stack[0] != 0 or _tokenizer.has_more_tokens():
                 _unexpected_token(token)
 
-            if parsed.has_key('semantic_value'):
+            if 'semantic_value' in parsed.has_key:
                 on_parse_end(parsed['semantic_value'])
                 return parsed['semantic_value']
 

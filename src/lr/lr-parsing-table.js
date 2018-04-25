@@ -373,7 +373,7 @@ export default class LRParsingTable {
         symbolConflictData.resolved = 'shift (same precedence, right-assoc)';
       } else if (symbolAssoc === 'nonassoc') {
         // No action on `nonassoc`.
-        delete rows[symbol];
+        delete row[symbol];
         symbolConflictData.resolved = 'removed conflict for nonassoc';
       }
     }
