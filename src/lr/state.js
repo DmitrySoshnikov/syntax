@@ -106,7 +106,10 @@ export default class State {
    * Returns all reduce items in this set.
    */
   getReduceItems() {
-    return this._items.filter(item => item.isReduce());
+    if (!this._reduceItems) {
+      this._reduceItems = this._items.filter(item => item.isReduce());
+    }
+    return this._reduceItems;
   }
 
   /**

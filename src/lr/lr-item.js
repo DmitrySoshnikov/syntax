@@ -48,6 +48,9 @@ export default class LRItem {
 
     this._reduceSet = null;
 
+    // Next (advanced) item for this production.
+    this._next = null;
+
     // LR(1) items maintain lookahead.
     this._lookaheadSet = lookaheadSet;
   }
@@ -97,10 +100,35 @@ export default class LRItem {
   }
 
   /**
+   * Whether this item is a beginning item, i.e. has the dot
+   * cursor at the very begin.
+   */
+  isBeginning() {
+    return this._dotPosition === 0;
+  }
+
+  /**
+   * Returns next item of this item.
+   */
+  getNext() {
+    return this._next;
+  }
+
+  /**
    * Connects this item to the outer closure state.
    */
   connect(state) {
     this._outerState = state;
+
+    // Update next item.
+    const nextKey = LRItem.keyForItem(
+      this._production,
+      this._dotPosition + 1,
+      this._lookaheadSet
+    );
+
+    const next = state.getItemByKey(nextKey);
+    this._next = next;
   }
 
   /**
@@ -287,9 +315,16 @@ export default class LRItem {
    */
   getReduceSet() {
     if (!this._reduceSet) {
-      this._reduceSet = this.calculateReduceSet();
+      this.setReduceSet(this.calculateReduceSet());
     }
     return this._reduceSet;
+  }
+
+  /**
+   * Sets explicit reduce set (usually in building LALR by SLR).
+   */
+  setReduceSet(reduceSet) {
+    this._reduceSet = reduceSet;
   }
 
   calculateReduceSet() {
@@ -303,9 +338,9 @@ export default class LRItem {
         let LHS = this.getProduction().getLHS();
         return this._setsGenerator.followOf(LHS);
 
-      case GRAMMAR_MODE.LALR1:
       case GRAMMAR_MODE.CLR1:
-        // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
+      case GRAMMAR_MODE.LALR1:
+        // CLR(1) consider lookahead of the LR(1) item.
         return Object.assign({}, this._lookaheadSet);
 
       default:
@@ -425,7 +460,7 @@ export default class LRItem {
    * Returns an a new item with an advanced dot position.
    */
   advance() {
-    return new LRItem(
+    const next = new LRItem(
       this._production,
       /* dotPosition */ this._dotPosition + 1,
       this._grammar,
@@ -436,5 +471,7 @@ export default class LRItem {
         ? Object.assign({}, this.getLookaheadSet())
         : null,
     );
+    this._next = next;
+    return next;
   }
 };

@@ -322,6 +322,10 @@ const parsers = {
     return this._genericLR(GRAMMAR_MODE.LALR1, options);
   },
 
+  LALR1_BY_SLR1() {
+    return this._genericLR(GRAMMAR_MODE.LALR1_BY_SLR1, options);
+  },
+
   _genericLR(mode, options) {
     const grammar = getGrammar(options.grammar, mode);
 

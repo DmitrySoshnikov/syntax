@@ -609,15 +609,18 @@ export default class Grammar {
     let processedBnf = [];
     let nonTerminals = Object.keys(originalBnf);
 
+    const isDefaultLR = this._mode.isLR() && !this._mode.isLALR1Extended();
+
     // LR grammar uses augmented 0-production.
-    let number = this._mode.isLR() ? 0 : 1;
+    let number = isDefaultLR ? 0 : 1;
 
     if (!this._startSymbol) {
       this._startSymbol = nonTerminals[0];
     }
 
-    if (this._mode.isLR()) {
-      // Augmented rule, $accept -> S.
+    // Augmented rule, $accept -> S. The LALR(1) extended
+    // grammar already have this rule.
+    if (isDefaultLR) {
       let augmentedProduction = new Production(
         /* LHS */ '$accept',
         /* RHS */ this._startSymbol,

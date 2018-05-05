@@ -35,6 +35,38 @@ export default class GrammarSymbol {
   }
 
   /**
+   * Returns original symbol from an extended name. 1X3 => X
+   */
+  getOrignialSymbol() {
+    if (!this._originalSymbol) {
+      this._originalSymbol = this._symbol
+        .replace(/^\d+\|/, '')
+        .replace(/\|(?:\d+|\$)$/, '');
+    }
+    return this._originalSymbol;
+  }
+
+  /**
+   * Returns start context (in extended LALR 1X3 => 1)
+   */
+  getStartContext() {
+    if (!this._startContext) {
+      this._startContext = Number(this._symbol.match(/^(\d+)\|/)[1]);
+    }
+    return this._startContext;
+  }
+
+  /**
+   * Returns start context (in extended LALR 1X3 => 1)
+   */
+  getEndContext() {
+    if (!this._endContext) {
+      this._endContext = Number(this._symbol.match(/\|(\d+)$/)[1]);
+    }
+    return this._endContext;
+  }
+
+  /**
    * Returns a symbol from the registry, or creates one.
    */
   static get(symbol) {
@@ -91,7 +123,7 @@ export default class GrammarSymbol {
    * Checks whether a symbol is Epsilon (static method).
    */
   static isEpsilon(symbol) {
-    return symbol === EPSILON;
+    return symbol.includes(EPSILON);
   }
 
   /**
