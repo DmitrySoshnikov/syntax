@@ -16,7 +16,6 @@ const EXCLUDE_EPSILON = {[EPSILON]: true};
  * Pasrsing sets generator.
  */
 export default class SetsGenerator {
-
   /**
    * Constructs First, Follow, and Predict sets
    * for a given grammar.
@@ -71,12 +70,14 @@ export default class SetsGenerator {
       return this._firstSets[symbol];
     }
 
-    let firstSet = this._firstSets[symbol] = {};
+    let firstSet = (this._firstSets[symbol] = {});
 
     // If it's a terminal, its First set contains just itself.
-    if (this._grammar.isTokenSymbol(symbol) ||
-        GrammarSymbol.isEpsilon(symbol) ||
-        GrammarSymbol.isEOF(symbol)) {
+    if (
+      this._grammar.isTokenSymbol(symbol) ||
+      GrammarSymbol.isEpsilon(symbol) ||
+      GrammarSymbol.isEOF(symbol)
+    ) {
       firstSet[symbol] = true;
       return this._firstSets[symbol];
     }
@@ -161,7 +162,7 @@ export default class SetsGenerator {
     }
 
     // Else init and calculate.
-    let followSet = this._followSets[symbol] = {};
+    let followSet = (this._followSets[symbol] = {});
 
     // Start symbol always contain `$` in its follow set.
     if (symbol === this._grammar.getStartSymbol()) {
@@ -170,8 +171,7 @@ export default class SetsGenerator {
 
     // We need to analyze all productions where our
     // symbol is used (i.e. where it appears on RHS).
-    let productionsWithSymbol = this._grammar
-      .getProductionsWithSymbol(symbol);
+    let productionsWithSymbol = this._grammar.getProductionsWithSymbol(symbol);
 
     productionsWithSymbol.forEach(production => {
       let RHS = production.getRHSSymbols();
@@ -205,7 +205,8 @@ export default class SetsGenerator {
         // we should merge followOf(LHS) to the Follow set of our symbol.
         if (followPart.length === 0) {
           let LHS = production.getLHS();
-          if (!LHS.isSymbol(symbol)) { // To avoid cases like: B -> aB
+          if (!LHS.isSymbol(symbol)) {
+            // To avoid cases like: B -> aB
             this._mergeSets(followSet, this.followOf(LHS));
           }
         }
@@ -239,7 +240,7 @@ export default class SetsGenerator {
       let setKey = `${production.getNumber()}. ${production.toString()}`;
 
       // Predict set for this production.
-      let predictSet = this._predictSets[setKey] = {};
+      let predictSet = (this._predictSets[setKey] = {});
 
       // Consists of the First set.
       let firstSet = this.firstOfRHS(RHS);
@@ -255,7 +256,6 @@ export default class SetsGenerator {
 
     return this._predictSets;
   }
-
 
   /**
    * Outputs a set with the label in readable format.
@@ -312,4 +312,4 @@ export default class SetsGenerator {
       }
     }
   }
-};
+}

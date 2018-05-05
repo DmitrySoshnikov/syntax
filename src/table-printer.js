@@ -9,14 +9,14 @@ import Table from 'cli-table2';
  * Wrapper class over `cli-table2` with default options preset.
  */
 export default class TablePrinter extends Table {
-
   constructor(options) {
-    super({
-      ...options,
-      style: {
-        head: ['blue'],
-        border: ['gray'],
-      },
-    });
+    super(
+      Object.assign({}, options, {
+        style: {
+          head: ['blue'],
+          border: ['gray'],
+        },
+      })
+    );
   }
-};
+}

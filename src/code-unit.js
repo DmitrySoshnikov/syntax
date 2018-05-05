@@ -110,9 +110,7 @@ const CodeUnit = {
       return [];
     }
 
-    const symbols = production
-      .getRHS()
-      .map(symbol => symbol.getSymbol());
+    const symbols = production.getRHS().map(symbol => symbol.getSymbol());
 
     // $1, $2, ...
     let semanticValues = [];
@@ -121,7 +119,6 @@ const CodeUnit = {
     let locations = captureLocations ? [] : null;
 
     for (var i = 0; i < symbols.length; i++) {
-      const symbol = symbols[i];
       const semanticValue = `_${i + 1}`;
 
       semanticValues.push(semanticValue);
@@ -180,10 +177,7 @@ const CodeUnit = {
 
     const action = production.getRawSemanticAction();
 
-    return this.createHandler(
-      params,
-      locationPrologue + action,
-    );
+    return this.createHandler(params, locationPrologue + action);
   },
 
   /**
@@ -209,8 +203,7 @@ const CodeUnit = {
    */
   getSandbox() {
     return SANDBOX;
-  }
+  },
 };
 
 export default CodeUnit;
-

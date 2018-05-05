@@ -21,7 +21,6 @@ import debug from '../debug';
  * Class encapsulates operations with a grammar.
  */
 export default class Grammar {
-
   /**
    * A grammar may be passed as an object with `lex` and `bnf` properties.
    * The `lex` part is a set of rules for the lexer, and `bnf` is actual
@@ -180,7 +179,7 @@ export default class Grammar {
   static dataFromGrammarFile(grammarFile, grammarType = 'bnf') {
     return Grammar.dataFromString(
       fs.readFileSync(grammarFile, 'utf-8'),
-      grammarType,
+      grammarType
     );
   }
 
@@ -189,7 +188,7 @@ export default class Grammar {
    * a particular parsing options.
    */
   static fromData(grammarData, options = {}) {
-    return new Grammar({...grammarData, ...options});
+    return new Grammar(Object.assign({}, grammarData, options));
   }
 
   /**
@@ -229,7 +228,7 @@ export default class Grammar {
               BnfParser,
               grammarType,
               grammarString,
-              jsError,
+              jsError
             );
 
             // BNF grammar may define lexical grammar inline.
@@ -238,18 +237,17 @@ export default class Grammar {
                 LexParser,
                 'lex',
                 grammarData.lex,
-                jsError,
+                jsError
               );
             }
             break;
-
 
           case 'lex':
             grammarData = Grammar.parseFromType(
               LexParser,
               grammarType,
               grammarString,
-              jsError,
+              jsError
             );
             break;
 
@@ -274,10 +272,11 @@ export default class Grammar {
     } catch (ex) {
       console.error(
         colors.red('\nParsing grammar in JS-format failed:\n\n') +
-        jsError +'\n',
+          jsError +
+          '\n'
       );
       console.error(
-        colors.red('\nParsing grammar in Yacc/Bison format failed:\n\n'),
+        colors.red('\nParsing grammar in Yacc/Bison format failed:\n\n')
       );
       throw ex;
     }
@@ -338,8 +337,10 @@ export default class Grammar {
 
       this._bnf.forEach(production => {
         production.getRHS().forEach(symbol => {
-          if (symbol.isTerminal() &&
-              !this._terminalsMap.hasOwnProperty(symbol.getSymbol())) {
+          if (
+            symbol.isTerminal() &&
+            !this._terminalsMap.hasOwnProperty(symbol.getSymbol())
+          ) {
             this._terminalsMap[symbol.getSymbol()] = true;
             this._terminals.push(symbol);
           }
@@ -355,8 +356,9 @@ export default class Grammar {
    */
   getTerminalSymbols() {
     if (!this._terminalSymbols) {
-      this._terminalSymbols = this.getTerminals()
-        .map(symbol => symbol.getSymbol());
+      this._terminalSymbols = this.getTerminals().map(symbol =>
+        symbol.getSymbol()
+      );
     }
     return this._terminalSymbols;
   }
@@ -390,8 +392,9 @@ export default class Grammar {
    */
   getNonTerminalSymbols() {
     if (!this._nonTerminalSymbols) {
-      this._nonTerminalSymbols = this.getNonTerminals()
-        .map(symbol => symbol.getSymbol());
+      this._nonTerminalSymbols = this.getNonTerminals().map(symbol =>
+        symbol.getSymbol()
+      );
     }
     return this._nonTerminalSymbols;
   }
@@ -412,9 +415,11 @@ export default class Grammar {
         }
         production.getRHS().forEach(symbol => {
           let rawSymbol = symbol.getSymbol();
-          if (!symbol.isTerminal() &&
-              !this._nonTerminalsMap.hasOwnProperty(rawSymbol) &&
-              !this._tokensMap.hasOwnProperty(rawSymbol)) {
+          if (
+            !symbol.isTerminal() &&
+            !this._nonTerminalsMap.hasOwnProperty(rawSymbol) &&
+            !this._tokensMap.hasOwnProperty(rawSymbol)
+          ) {
             this._tokensMap[rawSymbol] = true;
             this._tokens.push(symbol);
           }
@@ -430,8 +435,7 @@ export default class Grammar {
    */
   getTokenSymbols() {
     if (!this._tokenSymbols) {
-      this._tokenSymbols = this.getTokens()
-        .map(symbol => symbol.getSymbol());
+      this._tokenSymbols = this.getTokens().map(symbol => symbol.getSymbol());
     }
     return this._tokenSymbols;
   }
@@ -482,9 +486,7 @@ export default class Grammar {
    */
   getAugmentedProduction() {
     if (!this._mode.isLR()) {
-      throw new TypeError(
-        `Augmented production is built only for LR grammars`
-      );
+      throw new TypeError(`Augmented production is built only for LR grammars`);
     }
     return this._bnf[0];
   }
@@ -498,8 +500,10 @@ export default class Grammar {
       symbol = symbol.getSymbol();
     }
 
-    return this._terminalsMap.hasOwnProperty(symbol) ||
-      this._tokensMap.hasOwnProperty(symbol);
+    return (
+      this._terminalsMap.hasOwnProperty(symbol) ||
+      this._tokensMap.hasOwnProperty(symbol)
+    );
   }
 
   /**
@@ -553,7 +557,7 @@ export default class Grammar {
             precedence: i + 1,
             assoc: opData[0],
           };
-        })
+        });
       });
     }
 
@@ -600,7 +604,7 @@ export default class Grammar {
     return Array.isArray(tokens)
       ? tokens.map(token => {
           this._tokensMap[token] = true;
-          return GrammarSymbol.get(token)
+          return GrammarSymbol.get(token);
         })
       : this.getTokens();
   }
@@ -627,7 +631,7 @@ export default class Grammar {
         /* number */ number++,
         /* semanticAction */ null,
         /* isShort */ false,
-        /* grammar */ this,
+        /* grammar */ this
       );
       processedBnf[0] = augmentedProduction;
     }
@@ -656,18 +660,20 @@ export default class Grammar {
           }
         }
 
-        processedBnf.push(new Production(
-          LHS,
-          RHS,
-          /* number */ number++,
-          semanticAction,
-          /* isShort */ k > 0,
-          /* grammar */ this,
-          precedence,
-        ));
+        processedBnf.push(
+          new Production(
+            LHS,
+            RHS,
+            /* number */ number++,
+            semanticAction,
+            /* isShort */ k > 0,
+            /* grammar */ this,
+            precedence
+          )
+        );
       });
     });
 
     return processedBnf;
   }
-};
+}

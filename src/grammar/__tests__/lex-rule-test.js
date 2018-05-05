@@ -7,7 +7,6 @@ import CodeUnit from '../../code-unit';
 import LexRule from '../lex-rule';
 
 describe('lex-rule', () => {
-
   it('matcher', () => {
     const rule = new LexRule({matcher: '\\d+'});
 
@@ -15,8 +14,8 @@ describe('lex-rule', () => {
     expect(rule.getOriginalMatcher()).toBe('\\d+');
 
     // The matcher is transformed to the beginning of a string ^.
-    expect(rule.getRawMatcher()).toBe("^\\d+");
-    expect(rule.getMatcher().source).toBe("^\\d+");
+    expect(rule.getRawMatcher()).toBe('^\\d+');
+    expect(rule.getMatcher().source).toBe('^\\d+');
   });
 
   it('lookbehind assertions', () => {
@@ -104,7 +103,7 @@ describe('lex-rule', () => {
     });
 
     expect(rule.getRawHandler()).toBe('return "NUMBER"');
-    expect(rule.getOriginalMatcher()).toBe("\\d+");
+    expect(rule.getOriginalMatcher()).toBe('\\d+');
 
     const handlerFn = rule.getHandler();
     const matched = '10';
@@ -154,5 +153,4 @@ describe('lex-rule', () => {
     expect(otherRule.hasStartConditions()).toBe(false);
     expect(otherRule.getStartConditions()).toBe(undefined);
   });
-
 });

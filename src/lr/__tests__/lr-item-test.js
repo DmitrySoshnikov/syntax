@@ -9,14 +9,12 @@ import Production from '../../grammar/production';
 import SetsGenerator from '../../sets-generator';
 import {MODES as GRAMMAR_MODE} from '../../grammar/grammar-mode';
 
-import fs from 'fs';
-
 import CanonicalCollection from '../canonical-collection';
 
 const grammar = Grammar.fromGrammarFile(
   __dirname + '/../../grammar/__tests__/calc.g',
   {
-    mode: GRAMMAR_MODE.LALR1,
+    mode: GRAMMAR_MODE.LALR1_BY_CLR1,
   }
 );
 
@@ -25,7 +23,7 @@ const setsGenerator = new SetsGenerator({grammar});
 
 function laSet(arraySet) {
   const set = {};
-  arraySet.forEach(symbol => set[symbol] = true);
+  arraySet.forEach(symbol => (set[symbol] = true));
   return set;
 }
 
@@ -36,7 +34,7 @@ const rootItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ laSet(['$']),
+  /* lookaheadSet */ laSet(['$'])
 );
 
 // E -> • E + E
@@ -46,14 +44,13 @@ const baseItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ laSet(['$', '/', '-', '*', '+']),
+  /* lookaheadSet */ laSet(['$', '/', '-', '*', '+'])
 );
 
 // E -> E • + E
 const advancedItem = baseItem.advance();
 
 describe('lr-item', () => {
-
   it('production', () => {
     expect(rootItem.getProduction()).toBe(grammar.getAugmentedProduction());
     expect(baseItem.getProduction()).toBe(grammar.getProduction(1));
@@ -73,14 +70,11 @@ describe('lr-item', () => {
   });
 
   it('key', () => {
-    expect(rootItem.getKey())
-      .toBe('0|0|$');
+    expect(rootItem.getKey()).toBe('0|0|$');
 
-    expect(baseItem.getKey())
-      .toBe('1|0|$|/|-|*|+');
+    expect(baseItem.getKey()).toBe('1|0|$|/|-|*|+');
 
-    expect(advancedItem.getKey())
-      .toBe('1|1|$|/|-|*|+');
+    expect(advancedItem.getKey()).toBe('1|1|$|/|-|*|+');
   });
 
   it('LR0 key', () => {
@@ -90,45 +84,34 @@ describe('lr-item', () => {
   });
 
   it('toString key', () => {
-    expect(rootItem.toString())
-      .toBe('$accept -> • E, #lookaheads= ["$"]');
+    expect(rootItem.toString()).toBe('$accept -> • E, #lookaheads= ["$"]');
 
-    expect(baseItem.toString())
-      .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
+    expect(baseItem.toString()).toBe(
+      'E -> • E + E, #lookaheads= ["$","/","-","*","+"]'
+    );
 
-    expect(advancedItem.toString())
-      .toBe('E -> E • + E, #lookaheads= ["$","/","-","*","+"]');
+    expect(advancedItem.toString()).toBe(
+      'E -> E • + E, #lookaheads= ["$","/","-","*","+"]'
+    );
   });
 
   it('key for item', () => {
     const baseKey = LRItem.keyForItem(
       baseItem.getProduction(),
       baseItem.getDotPosition(),
-      baseItem.getLookaheadSet(),
+      baseItem.getLookaheadSet()
     );
     expect(baseKey).toBe(baseItem.getKey());
   });
 
   it('key for items', () => {
-    const baseKey = LRItem.keyForItem(
-      baseItem.getProduction(),
-      baseItem.getDotPosition(),
-      baseItem.getLookaheadSet(),
-    );
-
-    const advancedKey = LRItem.keyForItem(
-      advancedItem.getProduction(),
-      advancedItem.getDotPosition(),
-      advancedItem.getLookaheadSet(),
-    );
-
-    const items = [
-      baseItem,
-      advancedItem,
-    ];
+    const items = [baseItem, advancedItem];
 
     const keyForItems = LRItem.keyForItems(items);
-    const expectedItemsKey = items.map(item => item.getKey()).sort().join('|');
+    const expectedItemsKey = items
+      .map(item => item.getKey())
+      .sort()
+      .join('|');
 
     expect(keyForItems).toBe(expectedItemsKey);
   });
@@ -141,21 +124,19 @@ describe('lr-item', () => {
       grammar,
       canonicalCollection,
       setsGenerator,
-      /* lookaheadSet */ laSet(['%']), // Other lookahead set.
+      /* lookaheadSet */ laSet(['%']) // Other lookahead set.
     );
 
-    const items = [
-      baseItem,
-      otherBaseItem,
-      advancedItem,
-    ];
+    const items = [baseItem, otherBaseItem, advancedItem];
 
     const keyForItems = LRItem.lr0KeyForItems(items);
 
     const expectedItemsKey = [
       baseItem.getLR0Key(), // otherBaseKey has the same LR0 key.
       advancedItem.getLR0Key(),
-    ].sort().join('|');
+    ]
+      .sort()
+      .join('|');
 
     expect(keyForItems).toBe(expectedItemsKey);
   });
@@ -184,7 +165,12 @@ describe('lr-item', () => {
     expect(advancedItem.isFinal()).toBe(false);
 
     // E -> E + E •
-    expect(advancedItem.advance().advance().isFinal()).toBe(true);
+    expect(
+      advancedItem
+        .advance()
+        .advance()
+        .isFinal()
+    ).toBe(true);
 
     // $accept -> E •
     expect(rootItem.advance().isFinal()).toBe(true);
@@ -196,7 +182,12 @@ describe('lr-item', () => {
     expect(advancedItem.isReduce()).toBe(false);
 
     // E -> E + E •
-    expect(advancedItem.advance().advance().isReduce()).toBe(true);
+    expect(
+      advancedItem
+        .advance()
+        .advance()
+        .isReduce()
+    ).toBe(true);
 
     // $accept -> E • (augmented is not reduce, even if final)
     expect(rootItem.advance().isReduce()).toBe(false);
@@ -212,12 +203,12 @@ describe('lr-item', () => {
         /* number */ 0,
         /* semanticAction */ null,
         /* isShort */ false,
-        grammar,
+        grammar
       ),
       /* dotPosition */ 0,
       grammar,
       canonicalCollection,
-      setsGenerator,
+      setsGenerator
     );
 
     expect(epsilonItem.isEpsilonTransition()).toBe(true);
@@ -254,8 +245,9 @@ describe('lr-item', () => {
     expect(advancedItem.getState()).toBe(baseItem.goto());
     expect(advancedItem.getState()).toBe(advancedState);
 
-    const calculatedAdvancedItem = advancedState
-      .getItemByKey(advancedItem.getKey());
+    const calculatedAdvancedItem = advancedState.getItemByKey(
+      advancedItem.getKey()
+    );
 
     advancedItem.connect(calculatedAdvancedItem.goto());
     expect(advancedItem.isConnected()).toBe(true);
@@ -266,24 +258,25 @@ describe('lr-item', () => {
 
     expect(baseLookaheadSet).toEqual(laSet(['$', '/', '-', '*', '+']));
 
-    expect(baseItem.toString())
-      .toBe('E -> • E + E, #lookaheads= ["$","/","-","*","+"]');
+    expect(baseItem.toString()).toBe(
+      'E -> • E + E, #lookaheads= ["$","/","-","*","+"]'
+    );
 
     const newLookaheadSet = laSet(['$', '+']);
 
     baseItem.setLookaheadSet(newLookaheadSet);
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
 
-    expect(baseItem.toString())
-      .toBe('E -> • E + E, #lookaheads= ["$","+"]');
+    expect(baseItem.toString()).toBe('E -> • E + E, #lookaheads= ["$","+"]');
 
     expect(baseItem.getLookaheadSet()).toEqual(newLookaheadSet);
 
     const mergeSet = laSet(['*']);
     baseItem.mergeLookaheadSet(mergeSet);
 
-    expect(baseItem.getLookaheadSet())
-      .toEqual(Object.assign(newLookaheadSet, mergeSet));
+    expect(baseItem.getLookaheadSet()).toEqual(
+      Object.assign(newLookaheadSet, mergeSet)
+    );
 
     baseItem.setLookaheadSet(baseLookaheadSet);
   });

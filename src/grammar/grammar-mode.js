@@ -8,6 +8,7 @@ export const MODES = {
   SLR1: 'SLR1',
   LALR1: 'LALR1',
   LALR1_BY_SLR1: 'LALR1_BY_SLR1',
+  LALR1_BY_CLR1: 'LALR1_BY_CLR1',
   LALR1_EXTENDED: 'LALR1_EXTENDED',
   CLR1: 'CLR1',
   LL1: 'LL1',
@@ -44,7 +45,7 @@ export default class GrammarMode {
   }
 
   usesLookaheadSet() {
-    return this.isLALR1() || this.isCLR1();
+    return this.isLALR1ByCLR1() || this.isCLR1();
   }
 
   isLR0() {
@@ -56,11 +57,16 @@ export default class GrammarMode {
   }
 
   isLALR1() {
-    return this._isMode(MODES.LALR1);
+    // Default algorithm for LALR(1) is "LALR(1) by SLR(1)".
+    return this.isLALR1BySLR1() || this._isMode(MODES.LALR1);
   }
 
   isLALR1BySLR1() {
     return this._isMode(MODES.LALR1_BY_SLR1);
+  }
+
+  isLALR1ByCLR1() {
+    return this._isMode(MODES.LALR1_BY_CLR1);
   }
 
   isLALR1Extended() {

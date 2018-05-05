@@ -12,7 +12,7 @@ const mockGrammar = {
   // Production class uses `getOperators` from grammar.
   getOperators() {
     return {
-      '+': {assoc: "left", precedence: 1},
+      '+': {assoc: 'left', precedence: 1},
     };
   },
 
@@ -40,7 +40,6 @@ const defaultLoc = {
 };
 
 describe('production', () => {
-
   it('LHS', () => {
     const production = new Production(...defaultProductionData);
 
@@ -130,11 +129,9 @@ describe('production', () => {
 
     expect(production.hasSemanticAction()).toBe(true);
 
-    expect(production.getOriginalSemanticAction())
-      .toBe(semanticAction);
+    expect(production.getOriginalSemanticAction()).toBe(semanticAction);
 
-    expect(production.getRawSemanticAction())
-      .toBe('$$ = $1 + $3');
+    expect(production.getRawSemanticAction()).toBe('$$ = $1 + $3');
   });
 
   it('semantic action', () => {
@@ -143,8 +140,9 @@ describe('production', () => {
 
     expect(production.hasSemanticAction()).toBe(true);
 
-    expect(production.getRawSemanticAction())
-      .toBe(defaultProductionData[/* semanticAction */ 3]);
+    expect(production.getRawSemanticAction()).toBe(
+      defaultProductionData[/* semanticAction */ 3]
+    );
 
     const semanticAction = production.getSemanticAction();
     expect(semanticAction instanceof Function).toBe(true);
@@ -168,20 +166,20 @@ describe('production', () => {
 
   it('action with locations', () => {
     const productionData = [...defaultProductionData];
-    productionData[/* grammar */ 5] = {
-      ...mockGrammar,
+    productionData[/* grammar */ 5] = Object.assign({}, mockGrammar, {
       shouldCaptureLocations() {
         return true;
       },
-    };
+    });
 
     // Has semantic action.
     let production = new Production(...productionData);
 
     expect(production.hasSemanticAction()).toBe(true);
 
-    expect(production.getRawSemanticAction())
-      .toBe(defaultProductionData[/* semanticAction */ 3]);
+    expect(production.getRawSemanticAction()).toBe(
+      defaultProductionData[/* semanticAction */ 3]
+    );
 
     const semanticAction = production.getSemanticAction();
     expect(semanticAction instanceof Function).toBe(true);
@@ -196,12 +194,11 @@ describe('production', () => {
 
   it('default location calculation', () => {
     const productionData = [...defaultProductionData];
-    productionData[/* grammar */ 5] = {
-      ...mockGrammar,
+    productionData[/* grammar */ 5] = Object.assign({}, mockGrammar, {
       shouldCaptureLocations() {
         return true;
       },
-    };
+    });
 
     const production = new Production(...productionData);
 
@@ -293,5 +290,4 @@ describe('production', () => {
     production = new Production(...productionData);
     expect(production.getPrecedence()).toBe(0);
   });
-
 });

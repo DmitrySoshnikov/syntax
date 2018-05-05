@@ -28,10 +28,7 @@ export default class GrammarSymbol {
     const first = this._symbol[0];
     const last = this._symbol[this._symbol.length - 1];
 
-    return (
-      (first === '"' && last === '"') ||
-      (first === "'" && last === "'")
-    );
+    return (first === '"' && last === '"') || (first === "'" && last === "'");
   }
 
   /**
@@ -152,4 +149,4 @@ export default class GrammarSymbol {
       throw new TypeError(`Symbol ${this._symbol} is not terminal.`);
     }
   }
-};
+}

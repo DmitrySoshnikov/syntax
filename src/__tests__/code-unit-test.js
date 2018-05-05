@@ -27,7 +27,7 @@ function MockProduction(RHS, handler = '$$ = $1 + $3', isEpsilon = false) {
 
     isEpsilon() {
       return isEpsilon;
-    }
+    },
   };
 }
 
@@ -41,7 +41,6 @@ const defaultLoc = {
 };
 
 describe('code-unit', () => {
-
   it('default bindings', () => {
     expect(environment.yytext).toBe('');
     expect(environment.yyleng).toBe(0);
@@ -75,14 +74,14 @@ describe('code-unit', () => {
   it('production action parameters', () => {
     let production = MockProduction(['additive', 'PLUS', 'multiplicative']);
 
-    expect(CodeUnit.createProductionParams({production}))
-      .toBe('_1, _2, _3');
+    expect(CodeUnit.createProductionParams({production})).toBe('_1, _2, _3');
 
-    expect(CodeUnit.createProductionParams({
-      production,
-      captureLocations: true,
-    }))
-      .toBe('_1, _2, _3, _1loc, _2loc, _3loc');
+    expect(
+      CodeUnit.createProductionParams({
+        production,
+        captureLocations: true,
+      })
+    ).toBe('_1, _2, _3, _1loc, _2loc, _3loc');
   });
 
   it('production handler', () => {
@@ -90,12 +89,10 @@ describe('code-unit', () => {
     let handler = CodeUnit.createProductionHandler({production});
 
     expect(handler.toString()).toBe(
-      'function (' +
-        '_1, _2, _3' +
-      ') { __ = _1 + _3 }'
+      'function (' + '_1, _2, _3' + ') { __ = _1 + _3 }'
     );
 
-    handler(1, '+', 2)
+    handler(1, '+', 2);
     expect(environment.__).toBe(3);
 
     handler = CodeUnit.createProductionHandler({
@@ -106,26 +103,22 @@ describe('code-unit', () => {
     expect(handler.toString()).toBe(
       'function (' +
         '_1, _2, _3, _1loc, _2loc, _3loc' +
-      ') { __loc = yyloc(_1loc, _3loc);__ = _1 + _3 }'
+        ') { __loc = yyloc(_1loc, _3loc);__ = _1 + _3 }'
     );
 
-    handler(1, '+', 2, defaultLoc, defaultLoc, defaultLoc)
+    handler(1, '+', 2, defaultLoc, defaultLoc, defaultLoc);
     expect(environment.__).toBe(3);
   });
 
   it('epsilon production loc', () => {
-    const production = MockProduction([], '', /* isEpsilon */true);
+    const production = MockProduction([], '', /* isEpsilon */ true);
 
     let handler = CodeUnit.createProductionHandler({
       production,
       captureLocations: true,
     });
 
-    expect(handler.toString()).toBe(
-      'function (' +
-        '' +
-      ') { __loc = null; }'
-    );
+    expect(handler.toString()).toBe('function (' + '' + ') { __loc = null; }');
   });
 
   it('yyloc', () => {
@@ -174,5 +167,4 @@ describe('code-unit', () => {
     expect(environment.yytext).toBe('Hi!');
     expect(environment.yyleng).toBe(3);
   });
-
 });

@@ -3,15 +3,8 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import GrammarMode from './grammar-mode';
-import GrammarSymbol from './grammar-symbol';
 import LexRule from './lex-rule';
-import Production from './production';
 import {EOF} from '../special-symbols';
-
-import colors from 'colors';
-import fs from 'fs';
-import vm from 'vm';
 
 /**
  * Standard macro symbols.
@@ -55,12 +48,7 @@ export default class LexGrammar {
    *   },
    * }
    */
-  constructor({
-    macros,
-    rules,
-    startConditions,
-    options,
-  }) {
+  constructor({macros, rules, startConditions, options}) {
     this._macros = macros;
     this._originalRules = rules;
     this._options = options;
@@ -162,17 +150,13 @@ export default class LexGrammar {
 
       // Default options of a particular LexRule are initialized to the
       // global options of the whole lexical grammar.
-      const defaultOptions = {...this.getOptions()};
+      const defaultOptions = Object.assign({}, this.getOptions());
 
       if (tokenData.length === 2) {
         [matcher, tokenHandler] = tokenData;
       } else if (tokenData.length === 3) {
-
         // Start conditions, no options.
-        if (
-          Array.isArray(tokenData[0]) &&
-          typeof tokenData[2] === 'string'
-        ) {
+        if (Array.isArray(tokenData[0]) && typeof tokenData[2] === 'string') {
           [startConditions, matcher, tokenHandler] = tokenData;
         }
 
@@ -212,10 +196,12 @@ export default class LexGrammar {
         // or if a condition is inclusive, and a rule doesn't have
         // any explicit start conditions. Also if the condition is `*`.
         // https://gist.github.com/DmitrySoshnikov/f5e2583b37e8f758c789cea9dcdf238a
-        return (inclusive && !lexRule.hasStartConditions()) ||
+        return (
+          (inclusive && !lexRule.hasStartConditions()) ||
           (lexRule.hasStartConditions() &&
-           (lexRule.getStartConditions().indexOf(condition) !== -1 ||
-            lexRule.getStartConditions().indexOf('*') !== -1));
+            (lexRule.getStartConditions().indexOf(condition) !== -1 ||
+              lexRule.getStartConditions().indexOf('*') !== -1))
+        );
       });
 
       rulesByConditions[condition] = rules;
@@ -238,7 +224,7 @@ export default class LexGrammar {
         if (lexData[index].indexOf(macro) !== -1) {
           lexData[index] = lexData[index].replace(
             new RegExp(macro, 'g'),
-            () => StandardMacros[macro],
+            () => StandardMacros[macro]
           );
         }
       }
@@ -252,10 +238,10 @@ export default class LexGrammar {
         if (lexData[index].indexOf(`{${macro}}`) !== -1) {
           lexData[index] = lexData[index].replace(
             new RegExp(`\\{${macro}\\}`, 'g'),
-            () => macros[macro],
+            () => macros[macro]
           );
         }
       }
     });
   }
-};
+}

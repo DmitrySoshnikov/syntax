@@ -7,7 +7,7 @@ import Grammar from '../grammar/grammar';
 import {MODES as GRAMMAR_MODES} from '../grammar/grammar-mode';
 import LRItem from './lr-item';
 import SetsGenerator from '../sets-generator';
-import {EOF, EPSILON} from '../special-symbols';
+import {EOF} from '../special-symbols';
 
 import debug from '../debug';
 
@@ -22,7 +22,6 @@ import debug from '../debug';
  * applies "closure" and "goto" operations.
  */
 export default class CanonicalCollection {
-
   constructor({grammar}) {
     this._grammar = grammar;
 
@@ -50,35 +49,29 @@ export default class CanonicalCollection {
       /* setsGenerator */ new SetsGenerator({grammar}),
       /*lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
         ? {[EOF]: true}
-        : null,
+        : null
     );
 
     // Build the entire graph.
-    this._rootItem
-      .closure()
-      .goto();
+    this._rootItem.closure().goto();
 
     this._remap();
 
     debug.timeEnd('Building canonical collection');
     debug.log(`Number of states in the collection: ${this._states.size}`);
 
-
-    // LALR(1) by converting to SLR(1): fast, but less precise,
-    // can merge epsilon rules.
-    if (this._grammar.getMode().isLALR1BySLR1()) {
+    // LALR(1) by converting to SLR(1), default fast LALR(1) mode.
+    if (this._grammar.getMode().isLALR1()) {
       this._buildLALRBySLR();
     }
 
-    // LALR(1) by compressing CLR(1): slow, but more precise,
-    // works well with epsilon-rules.
-    else if (this._grammar.getMode().isLALR1()) {
+    // LALR(1) by compressing CLR(1): mostly for educational purposes, slow.
+    else if (this._grammar.getMode().isLALR1ByCLR1()) {
       debug.time('Compressing CLR to LALR');
       this._compressCLRToLALR();
       debug.timeEnd('Compressing CLR to LALR');
       debug.log(`Number of states after compression: ${this._states.size}`);
     }
-
   }
 
   /**
@@ -110,7 +103,6 @@ export default class CanonicalCollection {
           item.connect(outerState);
         }
       });
-
     }
 
     // After compression reassign new numbers to states.
@@ -128,9 +120,9 @@ export default class CanonicalCollection {
     debug.time('Building LALR-by-SLR');
     this._buildExtendedLALR1Grammar();
 
-    this._extendedFollowSets =
-      (new SetsGenerator({grammar: this._extendedLALRGrammar}))
-        .getFollowSets();
+    this._extendedFollowSets = new SetsGenerator({
+      grammar: this._extendedLALRGrammar,
+    }).getFollowSets();
 
     // Mutate the set with extended symbols to reflect the
     // symbols from the original grammar.
@@ -193,7 +185,10 @@ export default class CanonicalCollection {
     const states = [...this._states];
     for (const state in this._groupedFinalSets) {
       states[state].getReduceItems().forEach(reduceItem => {
-        const LHS = reduceItem.getProduction().getLHS().getSymbol();
+        const LHS = reduceItem
+          .getProduction()
+          .getLHS()
+          .getSymbol();
         reduceItem.setReduceSet(this._groupedFinalSets[state][LHS]);
       });
     }
@@ -224,12 +219,13 @@ export default class CanonicalCollection {
         let current = item;
         const visited = new Set();
 
-        const LHS = item.getProduction().getLHS().getSymbol();
+        const LHS = item
+          .getProduction()
+          .getLHS()
+          .getSymbol();
 
         const lhsTransit = state.getTransitionOnSymbol(LHS);
-        const lhsToState = lhsTransit
-          ? lhsTransit.state.getNumber()
-          : '$';
+        const lhsToState = lhsTransit ? lhsTransit.state.getNumber() : EOF;
 
         const extendedLHSSymbol = `${state.getNumber()}|${LHS}|${lhsToState}`;
 
@@ -253,7 +249,10 @@ export default class CanonicalCollection {
             if (transitionSymbol.isEpsilon()) {
               toState = fromState;
             } else if (current.getNext()) {
-              toState = current.getNext().getState().getNumber();
+              toState = current
+                .getNext()
+                .getState()
+                .getNumber();
             }
 
             if (toState != null) {
@@ -356,12 +355,10 @@ export default class CanonicalCollection {
 
       console.info(
         `\nState ${state.getNumber()}:` +
-        (stateTags.length > 0 ? ` (${stateTags.join(', ')})` : '')
+          (stateTags.length > 0 ? ` (${stateTags.join(', ')})` : '')
       );
 
-      state
-        .getItems()
-        .forEach(item => this._printItem(item, state));
+      state.getItems().forEach(item => this._printItem(item, state));
     });
   }
 
@@ -377,9 +374,7 @@ export default class CanonicalCollection {
     }
 
     if (item.isReduce()) {
-      itemTags.push(
-        `reduce by production ${item.getProduction().getNumber()}`
-      );
+      itemTags.push(`reduce by production ${item.getProduction().getNumber()}`);
     }
 
     if (item.isFinal() && !item.isReduce()) {
@@ -392,7 +387,7 @@ export default class CanonicalCollection {
 
     console.info(
       `  - ${item.toString()}` +
-      (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
+        (itemTags.length > 0 ? ` (${itemTags.join(', ')})` : '')
     );
   }
 
@@ -410,4 +405,4 @@ export default class CanonicalCollection {
       state.setNumber(number++);
     }
   }
-};
+}

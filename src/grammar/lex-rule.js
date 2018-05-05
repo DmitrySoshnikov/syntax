@@ -29,12 +29,7 @@ export default class LexRule {
    *
    *   - case-insensitive: boolean
    */
-  constructor({
-    startConditions,
-    matcher,
-    tokenHandler,
-    options = {},
-  }) {
+  constructor({startConditions, matcher, tokenHandler, options = {}}) {
     this._startConditions = startConditions;
     this._options = options;
     this._originalMatcher = matcher;
@@ -119,10 +114,7 @@ export default class LexRule {
    * from the LexRule instance.
    */
   toData() {
-    const data = [
-      this.getOriginalMatcher(),
-      this.getRawHandler(),
-    ];
+    const data = [this.getOriginalMatcher(), this.getRawHandler()];
 
     if (this.hasStartConditions()) {
       data.unshift(this.getStartConditions());
@@ -182,7 +174,7 @@ export default class LexRule {
   _buildHandler(tokenHandler) {
     try {
       /* Generate the function handler only for JS language */
-      const handler = CodeUnit.createHandler(/* no params */'', tokenHandler);
+      const handler = CodeUnit.createHandler(/* no params */ '', tokenHandler);
       return (matched, tokenizer) => {
         CodeUnit.setBindings({
           yytext: matched,
@@ -212,4 +204,4 @@ export default class LexRule {
       .slice(1, -1)
       .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
   }
-};
+}

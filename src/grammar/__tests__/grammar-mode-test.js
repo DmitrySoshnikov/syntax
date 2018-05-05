@@ -59,8 +59,14 @@ describe('grammar-mode', () => {
     mode = new GrammarMode(MODES.SLR1);
     expect(mode.usesLookaheadSet()).toBe(false);
 
-    mode = new GrammarMode(MODES.LALR1);
+    mode = new GrammarMode(MODES.LALR1_BY_CLR1);
     expect(mode.usesLookaheadSet()).toBe(true);
+
+    mode = new GrammarMode(MODES.LALR1_BY_SLR1);
+    expect(mode.usesLookaheadSet()).toBe(false);
+
+    mode = new GrammarMode(MODES.LALR1);
+    expect(mode.usesLookaheadSet()).toBe(false);
 
     mode = new GrammarMode(MODES.CLR1);
     expect(mode.usesLookaheadSet()).toBe(true);

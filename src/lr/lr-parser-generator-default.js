@@ -6,7 +6,6 @@
 import BaseParserGenerator from '../base-parser-generator';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
-import {EOF} from '../special-symbols';
 
 import fs from 'fs';
 
@@ -23,15 +22,10 @@ const LR_PARSER_TEMPLATE = fs.readFileSync(
  * saves it to the `outputFile`.
  */
 export default class LRParserGeneratorDefault extends BaseParserGenerator {
-
   /**
    * Instance constructor.
    */
-  constructor({
-    grammar,
-    outputFile,
-    options = {},
-  }) {
+  constructor({grammar, outputFile, options = {}}) {
     if (!grammar.getMode().isLR()) {
       throw new Error(`LR parser generator: LR grammar is expected.`);
     }
@@ -51,8 +45,7 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
    * Default format in the [ ] array notation.
    */
   generateProductionsData() {
-    return this.generateRawProductionsData()
-      .map(data => `[${data}]`);
+    return this.generateRawProductionsData().map(data => `[${data}]`);
   }
 
   /**
@@ -60,22 +53,24 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
    * [Non-terminal index, RHS.length, semanticAction]
    */
   generateRawProductionsData() {
-    return this.getGrammar().getProductions().map(production => {
-      let LHS = production.getLHS().getSymbol().replace(/'/g, "\\'");
-      let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
-      let semanticAction = this.buildSemanticAction(production);
+    return this.getGrammar()
+      .getProductions()
+      .map(production => {
+        let LHS = production
+          .getLHS()
+          .getSymbol()
+          .replace(/'/g, "\\'");
+        let RHSLength = production.isEpsilon() ? 0 : production.getRHS().length;
+        let semanticAction = this.buildSemanticAction(production);
 
-      let result = [
-        this.getEncodedNonTerminal(LHS),
-        RHSLength,
-      ];
+        let result = [this.getEncodedNonTerminal(LHS), RHSLength];
 
-      if (semanticAction) {
-        result.push(semanticAction);
-      }
+        if (semanticAction) {
+          result.push(semanticAction);
+        }
 
-      return result;
-    });
+        return result;
+      });
   }
 
   /**
@@ -99,4 +94,4 @@ export default class LRParserGeneratorDefault extends BaseParserGenerator {
 
     return table;
   }
-};
+}

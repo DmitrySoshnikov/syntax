@@ -18,15 +18,7 @@ export default class Production {
    * LHS -> RHS or a short alternative
    *      | RHS if the LHS is the same.
    */
-  constructor(
-    LHS,
-    RHS,
-    number,
-    semanticAction,
-    isShort,
-    grammar,
-    precedence,
-  ) {
+  constructor(LHS, RHS, number, semanticAction, isShort, grammar, precedence) {
     this._rawLHS = LHS;
     this._rawRHS = RHS;
     this._number = number;
@@ -36,7 +28,7 @@ export default class Production {
     this._normalize();
 
     if (semanticAction == null) {
-      semanticAction = this._createDefaultSemanticAction()
+      semanticAction = this._createDefaultSemanticAction();
     }
 
     this._orginialSemanticAction = semanticAction;
@@ -130,7 +122,7 @@ export default class Production {
     if (!this._rhsSymbolsMap) {
       this._rhsSymbolsMap = {};
       this._RHS.forEach(
-        symbol => this._rhsSymbolsMap[symbol.getSymbol()] = true
+        symbol => (this._rhsSymbolsMap[symbol.getSymbol()] = true)
       );
     }
     return this._rhsSymbolsMap;
@@ -206,15 +198,11 @@ export default class Production {
   _toKey(isShort = false) {
     let LHS = this._LHS.getSymbol();
 
-    let RHS = this._RHS
-      .map(symbol => symbol.getSymbol())
-      .join(' ');
+    let RHS = this._RHS.map(symbol => symbol.getSymbol()).join(' ');
 
     let pad = Array(LHS.length + '->'.length).join(' ');
 
-    return isShort
-      ? `${pad} | ${RHS}`
-      : `${LHS} -> ${RHS}`
+    return isShort ? `${pad} | ${RHS}` : `${LHS} -> ${RHS}`;
   }
 
   /**
@@ -241,8 +229,10 @@ export default class Production {
         } catch (e) {
           console.error(
             colors.red(`\nError in handler for production `) +
-            colors.bold(this.toFullString()) + `:\n\n` +
-            this.getOriginalSemanticAction() + '\n',
+              colors.bold(this.toFullString()) +
+              `:\n\n` +
+              this.getOriginalSemanticAction() +
+              '\n'
           );
           throw e;
         }
@@ -291,4 +281,4 @@ export default class Production {
 
     return 0;
   }
-};
+}
