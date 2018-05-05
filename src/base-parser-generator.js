@@ -4,7 +4,6 @@
  */
 
 import CodeUnit from './code-unit';
-import Grammar from './grammar/grammar';
 import {EOF} from './special-symbols';
 import debug from './debug';
 
@@ -14,16 +13,10 @@ import fs from 'fs';
  * Base parser generator for LL and LR.
  */
 export default class BaseParserGenerator {
-
   /**
    * Instance constructor.
    */
-  constructor({
-    grammar,
-    outputFile,
-    customTokenizer,
-    options = {},
-  }) {
+  constructor({grammar, outputFile, customTokenizer, options = {}}) {
     debug.time('Generating parser module');
 
     this._grammar = grammar;
@@ -95,9 +88,9 @@ export default class BaseParserGenerator {
       return null;
     }
 
-    const semanticActionArgs = this
-      .getSemanticActionParams(production)
-      .join(',');
+    const semanticActionArgs = this.getSemanticActionParams(production).join(
+      ','
+    );
 
     return `(${semanticActionArgs}) => { ${semanticActionCode} }`;
   }
@@ -150,11 +143,7 @@ export default class BaseParserGenerator {
    */
   generate() {
     this.generateParserData();
-    fs.writeFileSync(
-      this._outputFile,
-      this._resultData,
-      'utf-8'
-    );
+    fs.writeFileSync(this._outputFile, this._resultData, 'utf-8');
     debug.timeEnd('Generating parser module');
     try {
       return require(this._outputFile);
@@ -193,7 +182,7 @@ export default class BaseParserGenerator {
   writeData(templateVariable, data) {
     this._resultData = this._resultData.replace(
       this._openTag + templateVariable + this._closeTag,
-      () => data,
+      () => data
     );
     return this;
   }
@@ -237,7 +226,7 @@ export default class BaseParserGenerator {
   generateCaptureLocations() {
     this.writeData(
       'CAPTURE_LOCATIONS',
-      JSON.stringify(this._grammar.shouldCaptureLocations()),
+      JSON.stringify(this._grammar.shouldCaptureLocations())
     );
   }
 
@@ -251,13 +240,15 @@ export default class BaseParserGenerator {
     this._nonTerminals = {};
     this._grammar
       .getNonTerminals()
-      .forEach(symbol => this._nonTerminals[symbol.getSymbol()] = '' + index++);
+      .forEach(
+        symbol => (this._nonTerminals[symbol.getSymbol()] = '' + index++)
+      );
 
     this._tokens = {};
     this._grammar
       .getTokens()
       .concat(this._grammar.getTerminals())
-      .forEach(symbol => this._tokens[symbol.getSymbol()] = '' + index++);
+      .forEach(symbol => (this._tokens[symbol.getSymbol()] = '' + index++));
 
     this._tokens[EOF] = '' + index;
   }
@@ -275,7 +266,7 @@ export default class BaseParserGenerator {
       // Require custom tokenizer if was provided.
       this.writeData(
         'TOKENIZER',
-        `tokenizer = require('${this._customTokenizer}');`,
+        `tokenizer = require('${this._customTokenizer}');`
       );
     }
   }
@@ -302,12 +293,15 @@ export default class BaseParserGenerator {
    * Generates rules for tokenizer.
    */
   generateLexRules() {
-    let lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
-      return (
-        `[${lexRule.getMatcher()}, ` +
-        `function() { ${lexRule.getRawHandler()} }]`
-      );
-    });
+    let lexRules = this._grammar
+      .getLexGrammar()
+      .getRules()
+      .map(lexRule => {
+        return (
+          `[${lexRule.getMatcher()}, ` +
+          `function() { ${lexRule.getRawHandler()} }]`
+        );
+      });
 
     this.writeData('LEX_RULES', `[${lexRules.join(',\n')}]`);
   }
@@ -329,7 +323,7 @@ export default class BaseParserGenerator {
 
     this.writeData(
       'LEX_RULES_BY_START_CONDITIONS',
-      `${JSON.stringify(result)}`,
+      `${JSON.stringify(result)}`
     );
   }
 
@@ -357,10 +351,7 @@ export default class BaseParserGenerator {
    * Actual parsing table.
    */
   generateParseTable() {
-    this.writeData(
-      'TABLE',
-      JSON.stringify(this.generateParseTableData()),
-    );
+    this.writeData('TABLE', JSON.stringify(this.generateParseTableData()));
   }
 
   /**
@@ -371,4 +362,4 @@ export default class BaseParserGenerator {
       'Parser generator: `generateParseTableData` is not implemented.'
     );
   }
-};
+}

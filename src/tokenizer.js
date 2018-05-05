@@ -3,7 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import GrammarSymbol from './grammar/grammar-symbol';
 import {EOF} from './special-symbols';
 
 import colors from 'colors';
@@ -19,13 +18,11 @@ const EOF_TOKEN = {
  * regexp implementation.
  */
 export default class Tokenizer {
-
   /**
    * Creates a tokenizer instance for a string
    * that belongs to the given grammar.
    */
   constructor({string, lexGrammar}) {
-
     /**
      * Corresponding lexical grammar.
      */
@@ -173,7 +170,7 @@ export default class Tokenizer {
 
     // Get all rules which should be considered for this state.
     const lexRulesForState = this._lexGrammar.getRulesForState(
-      this.getCurrentState(),
+      this.getCurrentState()
     );
 
     for (let lexRule of lexRulesForState) {
@@ -193,7 +190,8 @@ export default class Tokenizer {
         } catch (e) {
           console.error(
             colors.red('\nError in handler:\n\n') +
-            lexRule.getRawHandler() + '\n',
+              lexRule.getRawHandler() +
+              '\n'
           );
           throw e;
         }
@@ -226,7 +224,7 @@ export default class Tokenizer {
     this.throwUnexpectedToken(
       string[0],
       this._currentLine,
-      this._currentColumn,
+      this._currentColumn
     );
   }
 
@@ -245,8 +243,7 @@ export default class Tokenizer {
     }
 
     throw new SyntaxError(
-      `${lineData}Unexpected token: "${symbol}" ` +
-      `at ${line}:${column}.`
+      `${lineData}Unexpected token: "${symbol}" ` + `at ${line}:${column}.`
     );
   }
 
@@ -273,7 +270,7 @@ export default class Tokenizer {
     // Line-based locations, end.
     this._tokenEndLine = this._currentLine;
     this._tokenEndColumn = this._currentColumn =
-      (this._tokenEndOffset - this._currentLineBeginOffset);
+      this._tokenEndOffset - this._currentLineBeginOffset;
   }
 
   _toToken(tokenType, yytext = '') {
@@ -313,4 +310,4 @@ export default class Tokenizer {
     }
     return null;
   }
-};
+}

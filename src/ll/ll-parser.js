@@ -3,7 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import Grammar from '../grammar/grammar';
 import GrammarSymbol from '../grammar/grammar-symbol';
 import LLParsingTable from './ll-parsing-table';
 import LLParserGeneratorDefault from './ll-parser-generator-default';
@@ -104,7 +103,6 @@ export default class LLParser {
       // Else, it's a non-terminal, do derivation (replace it
       // in the stack with corresponding production).
       this._doDerivation(top, token);
-
     } while (this._tokenizer.hasMoreTokens() || this._stack.length > 1);
 
     // If the string reached EOF, and we still have non-terminal symbols
@@ -118,7 +116,8 @@ export default class LLParser {
     if (!this._stack[0].isEOF() || token.type !== EOF) {
       this._parseError(
         'stack is not empty: ' +
-        this._stack.map(s => s.getSymbol()) + `, ${token.value}`
+          this._stack.map(s => s.getSymbol()) +
+          `, ${token.value}`
       );
     }
 
@@ -150,7 +149,7 @@ export default class LLParser {
     if (this._table.entryHasConflict(nextProductionNumber)) {
       this._parseError(
         `Found conflict in state ${top.getSymbol()}:${token.type}. ` +
-        `Predicted productions: ${nextProductionNumber}`
+          `Predicted productions: ${nextProductionNumber}`
       );
     }
 
@@ -201,11 +200,11 @@ export default class LLParser {
     this._tokenizer.throwUnexpectedToken(
       token.value,
       token.startLine,
-      token.startColumn,
+      token.startColumn
     );
   }
 
   _parseError(message) {
     throw new SyntaxError(message);
   }
-};
+}

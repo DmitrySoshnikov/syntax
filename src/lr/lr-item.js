@@ -26,7 +26,7 @@ export default class LRItem {
     grammar,
     canonicalCollection,
     setsGenerator,
-    lookaheadSet = null,
+    lookaheadSet = null
   ) {
     this._key = LRItem.keyForItem(production, dotPosition, lookaheadSet);
 
@@ -47,6 +47,9 @@ export default class LRItem {
     this._outerState = null;
 
     this._reduceSet = null;
+
+    // Next (advanced) item for this production.
+    this._next = null;
 
     // LR(1) items maintain lookahead.
     this._lookaheadSet = lookaheadSet;
@@ -70,16 +73,20 @@ export default class LRItem {
    * Whether this item should be closured.
    */
   shouldClosure() {
-    return !this._closured && !this.isFinal() &&
-      this._grammar.isNonTerminal(this.getCurrentSymbol());
+    return (
+      !this._closured &&
+      !this.isFinal() &&
+      this._grammar.isNonTerminal(this.getCurrentSymbol())
+    );
   }
 
   /**
    * Whether transition from this item does "shift" action.
    */
   isShift() {
-    return !this.isFinal() &&
-      this._grammar.isTokenSymbol(this.getCurrentSymbol());
+    return (
+      !this.isFinal() && this._grammar.isTokenSymbol(this.getCurrentSymbol())
+    );
   }
 
   /**
@@ -97,10 +104,35 @@ export default class LRItem {
   }
 
   /**
+   * Whether this item is a beginning item, i.e. has the dot
+   * cursor at the very begin.
+   */
+  isBeginning() {
+    return this._dotPosition === 0;
+  }
+
+  /**
+   * Returns next item of this item.
+   */
+  getNext() {
+    return this._next;
+  }
+
+  /**
    * Connects this item to the outer closure state.
    */
   connect(state) {
     this._outerState = state;
+
+    // Update next item.
+    const nextKey = LRItem.keyForItem(
+      this._production,
+      this._dotPosition + 1,
+      this._lookaheadSet
+    );
+
+    const next = state.getItemByKey(nextKey);
+    this._next = next;
   }
 
   /**
@@ -114,7 +146,7 @@ export default class LRItem {
    * Sets the state to which this item belongs to.
    */
   setState(state) {
-    return this._state = state;
+    return (this._state = state);
   }
 
   /**
@@ -131,12 +163,13 @@ export default class LRItem {
         /* kernelItems */ [this],
         /* grammar */ this._grammar,
         /* canonicalCollection */ this._canonicalCollection,
-        /* setsGenerator */ this._setsGenerator,
+        /* setsGenerator */ this._setsGenerator
       );
     }
 
-    const productionsForSymbol = this._grammar
-      .getProductionsForSymbol(this.getCurrentSymbol().getSymbol());
+    const productionsForSymbol = this._grammar.getProductionsForSymbol(
+      this.getCurrentSymbol().getSymbol()
+    );
 
     const addedItems = productionsForSymbol.map(production => {
       return new LRItem(
@@ -145,7 +178,7 @@ export default class LRItem {
         this._grammar,
         this._canonicalCollection,
         this._setsGenerator,
-        /* lookaheadSet */ this._calculateLookaheadSet(),
+        /* lookaheadSet */ this._calculateLookaheadSet()
       );
     });
 
@@ -242,7 +275,7 @@ export default class LRItem {
 
     let thisReduceSet = Object.keys(this.calculateReduceSet());
 
-    if (reduceSet === true) {
+    if (thisReduceSet === true) {
       return true;
     }
 
@@ -287,9 +320,16 @@ export default class LRItem {
    */
   getReduceSet() {
     if (!this._reduceSet) {
-      this._reduceSet = this.calculateReduceSet();
+      this.setReduceSet(this.calculateReduceSet());
     }
     return this._reduceSet;
+  }
+
+  /**
+   * Sets explicit reduce set (usually in building LALR by SLR).
+   */
+  setReduceSet(reduceSet) {
+    this._reduceSet = reduceSet;
   }
 
   calculateReduceSet() {
@@ -298,20 +338,25 @@ export default class LRItem {
         // LR0 reduces for all terminals, special `true` value.
         return true;
 
-      case GRAMMAR_MODE.SLR1:
+      case GRAMMAR_MODE.LALR1:
+      case GRAMMAR_MODE.LALR1_BY_SLR1:
+        // In "LALR(1) by SLR(1)" the reduce set is already calculated
+        // in post-processing of the LR(0) automation.
+        return this._reduceSet;
+
+      case GRAMMAR_MODE.SLR1: {
         // SLR(1) reduces in Follow(LHS).
         let LHS = this.getProduction().getLHS();
         return this._setsGenerator.followOf(LHS);
+      }
 
-      case GRAMMAR_MODE.LALR1:
       case GRAMMAR_MODE.CLR1:
-        // LALR(1) and CLR(1) consider lookahead of the LR(1) item.
+      case GRAMMAR_MODE.LALR1_BY_CLR1:
+        // CLR(1) consider lookahead of the LR(1) item.
         return Object.assign({}, this._lookaheadSet);
 
       default:
-        throw new Error(
-          `Unexpected grammar mode ${this._grammar.getMode()}.`
-        );
+        throw new Error(`Unexpected grammar mode ${this._grammar.getMode()}.`);
     }
   }
 
@@ -337,7 +382,7 @@ export default class LRItem {
     this._key = LRItem.keyForItem(
       this._production,
       this._dotPosition,
-      this._lookaheadSet,
+      this._lookaheadSet
     );
   }
 
@@ -372,14 +417,18 @@ export default class LRItem {
 
   toString() {
     if (!this._toStringKey) {
-      this._toStringKey = this._getToStringKey()
+      this._toStringKey = this._getToStringKey();
     }
     return this._toStringKey;
   }
 
   static keyForItem(production, dotPosition, lookaheadSet = null) {
-    return production.getNumber() + '|' + dotPosition +
-      (lookaheadSet ? ('|' + Object.keys(lookaheadSet).join('|')) : '');
+    return (
+      production.getNumber() +
+      '|' +
+      dotPosition +
+      (lookaheadSet ? '|' + Object.keys(lookaheadSet).join('|') : '')
+    );
   }
 
   /**
@@ -391,12 +440,14 @@ export default class LRItem {
 
     let lookaheads = '';
     if (this._lookaheadSet) {
-      lookaheads = ', #lookaheads= ' +
-        JSON.stringify(Object.keys(this._lookaheadSet));
+      lookaheads =
+        ', #lookaheads= ' + JSON.stringify(Object.keys(this._lookaheadSet));
     }
 
-    return `${this._production.getLHS().getSymbol()} -> ` +
-      `${RHS.join(' ')}${lookaheads}`;
+    return (
+      `${this._production.getLHS().getSymbol()} -> ` +
+      `${RHS.join(' ')}${lookaheads}`
+    );
   }
 
   /**
@@ -404,7 +455,10 @@ export default class LRItem {
    */
   static keyForItems(items) {
     if (!items.key) {
-      items.key = items.map(item => item.getKey()).sort().join('|');
+      items.key = items
+        .map(item => item.getKey())
+        .sort()
+        .join('|');
     }
     return items.key;
   }
@@ -415,8 +469,10 @@ export default class LRItem {
   static lr0KeyForItems(items) {
     if (!items.lr0Key) {
       let keysMap = {};
-      items.forEach(item => keysMap[item.getLR0Key()] = true);
-      items.lr0Key = Object.keys(keysMap).sort().join('|');
+      items.forEach(item => (keysMap[item.getLR0Key()] = true));
+      items.lr0Key = Object.keys(keysMap)
+        .sort()
+        .join('|');
     }
     return items.lr0Key;
   }
@@ -425,7 +481,7 @@ export default class LRItem {
    * Returns an a new item with an advanced dot position.
    */
   advance() {
-    return new LRItem(
+    const next = new LRItem(
       this._production,
       /* dotPosition */ this._dotPosition + 1,
       this._grammar,
@@ -434,7 +490,9 @@ export default class LRItem {
       // On goto transition lookaheads set doesn't change.
       /* lookaheadSet */ this._grammar.getMode().usesLookaheadSet()
         ? Object.assign({}, this.getLookaheadSet())
-        : null,
+        : null
     );
+    this._next = next;
+    return next;
   }
-};
+}

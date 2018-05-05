@@ -12,7 +12,7 @@
  * cases when kernel may contain several items. E.g. being in the state:
  *
  * S' -> • S
- * S  -> • S "a"
+ * S  -> • S "a"
  *     | • "b"
  *
  * and having a transition on S, we get both first two items in the
@@ -25,17 +25,12 @@
 import LRItem from './lr-item';
 
 export default class State {
-
   /**
    * A closure state may have several kernel items. An initial kernel
    * item can be passed in the constructor, other kernel items can
    * be added later via `add` method.
    */
-  constructor(
-    kernelItems,
-    grammar,
-    canonicalCollection,
-  ) {
+  constructor(kernelItems, grammar, canonicalCollection) {
     this._kernelItems = kernelItems;
     this._items = [];
     this._grammar = grammar;
@@ -106,7 +101,10 @@ export default class State {
    * Returns all reduce items in this set.
    */
   getReduceItems() {
-    return this._items.filter(item => item.isReduce());
+    if (!this._reduceItems) {
+      this._reduceItems = this._items.filter(item => item.isReduce());
+    }
+    return this._reduceItems;
   }
 
   /**
@@ -125,8 +123,10 @@ export default class State {
     if (reduceItems.length > 1) {
       reduceSet: for (let reduceItem of reduceItems) {
         for (let reduceItemToCheck of reduceItems) {
-          if (reduceItem !== reduceItemToCheck &&
-              reduceItem.conflictsWithReduceItem(reduceItemToCheck)) {
+          if (
+            reduceItem !== reduceItemToCheck &&
+            reduceItem.conflictsWithReduceItem(reduceItemToCheck)
+          ) {
             this._conflicts.rr = reduceItems;
             break reduceSet;
           }
@@ -177,8 +177,9 @@ export default class State {
    * Whether the state is inadequate, i.e. has conflicts.
    */
   isInadequate() {
-    return this.getConflicts().sr.length > 0 ||
-      this.getConflicts().rr.length > 0;
+    return (
+      this.getConflicts().sr.length > 0 || this.getConflicts().rr.length > 0
+    );
   }
 
   hasTransitionOnSymbol(symbol) {
@@ -255,10 +256,7 @@ export default class State {
         if (item.isFinal()) {
           continue;
         }
-        this.setSymbolTransition(
-          item,
-          /* state */ null,
-        )
+        this.setSymbolTransition(item, /* state */ null);
       }
     }
 
@@ -274,28 +272,22 @@ export default class State {
       const items = transitionsForSymbol.items;
 
       // See if we already calculated transition for this kernel set.
-      let outerState = this._canonicalCollection
-        .getTranstionForItems(items);
+      let outerState = this._canonicalCollection.getTranstionForItems(items);
 
       // If not, create a new outer state with advanced kernel items.
       if (!outerState) {
-
         outerState = new State(
           /* kernelItems */ items.map(item => item.advance()),
           /* grammar */ this._grammar,
-          /* canonicalCollection */ this._canonicalCollection,
+          /* canonicalCollection */ this._canonicalCollection
         );
 
-        this._canonicalCollection
-          .registerTranstionForItems(items, outerState);
+        this._canonicalCollection.registerTranstionForItems(items, outerState);
       }
 
       // And connect our items to it.
       for (let i = 0; i < items.length; i++) {
-        this.setSymbolTransition(
-          items[i],
-          /* state */ outerState
-        );
+        this.setSymbolTransition(items[i], /* state */ outerState);
       }
     }
 
@@ -357,13 +349,12 @@ export default class State {
     if (lr0ItemsCount !== 1) {
       throw new Error(
         `Number of LR0 items for ${lr0Key} is not 1 in ${this.getNumber()}. ` +
-        `Call mergeLR0Items before accessing this method.`
+          `Call mergeLR0Items before accessing this method.`
       );
     }
 
     return this._lr0ItemsMap[lr0Key][lr0ItemsCount - 1];
   }
-
 
   /**
    * Merges items with the same LR(0) parts for LALR(1).
@@ -433,20 +424,21 @@ export default class State {
     if (this._items.length !== this._items.length) {
       throw new Error(
         `LALR(1): State ${state.getNumber()} is not compatible ` +
-        `with state ${this.getNumber()}.`
+          `with state ${this.getNumber()}.`
       );
     }
 
-    if (LRItem.keyForItems(this.getKernelItems()) !==
-        LRItem.keyForItems(state.getKernelItems())) {
-
+    if (
+      LRItem.keyForItems(this.getKernelItems()) !==
+      LRItem.keyForItems(state.getKernelItems())
+    ) {
       this._items.forEach(item => {
         let thatItem = state.getItemByLR0Key(item.getLR0Key());
 
         if (!thatItem) {
           throw new Error(
             `Item ${item.toString()} presents in state ${this.getNumber()}, ` +
-            `but is absent in the ${state.getNumber()}.`
+              `but is absent in the ${state.getNumber()}.`
           );
         }
 
@@ -460,4 +452,4 @@ export default class State {
 
     return this;
   }
-};
+}

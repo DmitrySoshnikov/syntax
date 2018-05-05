@@ -4,7 +4,6 @@
  */
 
 import CodeUnit from '../code-unit';
-import Grammar from '../grammar/grammar';
 import CanonicalCollection from './canonical-collection';
 import LRParsingTable from './lr-parsing-table';
 import LRParserGeneratorDefault from './lr-parser-generator-default';
@@ -19,11 +18,7 @@ import path from 'path';
 const EntryType = LRParsingTable.EntryType;
 
 export default class LRParser {
-  constructor({
-    grammar,
-    parserModule,
-    resolveConflicts,
-  }) {
+  constructor({grammar, parserModule, resolveConflicts}) {
     this._grammar = grammar;
     this._parserModule = parserModule;
 
@@ -55,7 +50,7 @@ export default class LRParser {
     this._yy = CodeUnit.getSandbox().yy;
 
     // Parse options.
-    this._yy.options = {}
+    this._yy.options = {};
 
     // Parser may access tokenizer, and affect its state.
     this._yy.tokenizer = this._tokenizer;
@@ -155,14 +150,17 @@ export default class LRParser {
           break;
         case EntryType.RR_CONFLICT:
           this._conflictError('reduce-reduce', state, column);
+          break;
         case EntryType.ACCEPT: {
           // Pop starting production and its state number.
           this._stack.pop();
           let parsed = this._stack.pop();
 
-          if (this._stack.length !== 1 ||
-              this._stack[0] !== startingState ||
-              this._tokenizer.hasMoreTokens()) {
+          if (
+            this._stack.length !== 1 ||
+            this._stack[0] !== startingState ||
+            this._tokenizer.hasMoreTokens()
+          ) {
             this._unexpectedToken(token);
           }
 
@@ -181,7 +179,6 @@ export default class LRParser {
           return result;
         }
       }
-
     } while (this._tokenizer.hasMoreTokens() || this._stack.length > 1);
   }
 
@@ -197,7 +194,7 @@ export default class LRParser {
     this._tokenizer.throwUnexpectedToken(
       token.value,
       token.startLine,
-      token.startColumn,
+      token.startColumn
     );
   }
 
@@ -208,7 +205,7 @@ export default class LRParser {
   _conflictError(conflictType, state, column) {
     this._parseError(
       `Found "${conflictType}" conflict ` +
-      `at state ${state}, terminal ${column}.`
+        `at state ${state}, terminal ${column}.`
     );
   }
 
@@ -246,11 +243,8 @@ export default class LRParser {
     const hasSemanticAction = production.hasSemanticAction();
     const semanticValueArgs = hasSemanticAction ? [] : null;
 
-    const locationArgs = (
-      hasSemanticAction && this._grammar.shouldCaptureLocations()
-        ? []
-        : null
-    );
+    const locationArgs =
+      hasSemanticAction && this._grammar.shouldCaptureLocations() ? [] : null;
 
     // Pop 2x symbols from the stack (RHS + state number for each),
     // unless it's an ε-production for which nothing to pop.
@@ -283,11 +277,10 @@ export default class LRParser {
         yyleng: token ? token.value.length : 0,
       });
 
-      const semanticActionArgs = (
+      const semanticActionArgs =
         locationArgs !== null
           ? semanticValueArgs.concat(locationArgs)
-          : semanticValueArgs
-      );
+          : semanticValueArgs;
 
       // Run corresponding semantic action, result is in $$ (__).
       production.runSemanticAction(semanticActionArgs);
@@ -307,4 +300,4 @@ export default class LRParser {
     // And push the next state (goto)
     this._stack.push(nextState);
   }
-};
+}

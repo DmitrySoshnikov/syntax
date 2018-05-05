@@ -20,7 +20,7 @@ const Debug = {
   },
 
   log(message) {
-    console.log(Debug.string(message));
+    console.info(Debug.string(message));
   },
 
   time(label) {

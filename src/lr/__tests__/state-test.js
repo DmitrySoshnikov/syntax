@@ -5,13 +5,9 @@
 
 import Grammar from '../../grammar/grammar';
 import LRItem from '../lr-item';
-import Production from '../../grammar/production';
 import SetsGenerator from '../../sets-generator';
 import State from '../state';
 import {MODES as GRAMMAR_MODE} from '../../grammar/grammar-mode';
-
-import fs from 'fs';
-
 import CanonicalCollection from '../canonical-collection';
 
 const grammar = Grammar.fromGrammarFile(
@@ -23,22 +19,12 @@ const grammar = Grammar.fromGrammarFile(
 
 function laSet(arraySet) {
   const set = {};
-  arraySet.forEach(symbol => set[symbol] = true);
+  arraySet.forEach(symbol => (set[symbol] = true));
   return set;
 }
 
 const canonicalCollection = new CanonicalCollection({grammar});
 const setsGenerator = new SetsGenerator({grammar});
-
-// $accept -> • E
-const rootItem = new LRItem(
-  /* production */ grammar.getAugmentedProduction(),
-  /* dotPosition */ 0,
-  grammar,
-  canonicalCollection,
-  setsGenerator,
-  /* lookaheadSet */ laSet(['$']),
-);
 
 const defaultLookaheadSet = laSet(['$', '/', '-', '*', '+']);
 
@@ -49,7 +35,7 @@ const kernelItem1 = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ defaultLookaheadSet,
+  /* lookaheadSet */ defaultLookaheadSet
 );
 
 // E -> E • * E
@@ -59,19 +45,12 @@ const kernelItem2 = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ defaultLookaheadSet,
+  /* lookaheadSet */ defaultLookaheadSet
 );
 
-const kernelItems = [
-  kernelItem1,
-  kernelItem2,
-];
+const kernelItems = [kernelItem1, kernelItem2];
 
-const state = new State(
-  kernelItems,
-  grammar,
-  canonicalCollection,
-);
+const state = new State(kernelItems, grammar, canonicalCollection);
 
 const otherItem = new LRItem(
   /* production */ grammar.getProduction(3),
@@ -79,7 +58,7 @@ const otherItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ defaultLookaheadSet,
+  /* lookaheadSet */ defaultLookaheadSet
 );
 
 state.addItem(otherItem);
@@ -93,17 +72,15 @@ const acceptItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ laSet(['$']),
+  /* lookaheadSet */ laSet(['$'])
 );
 
-const acceptItems = [
-  acceptItem,
-];
+const acceptItems = [acceptItem];
 
 const acceptState = new State(
   /* kernelItems */ acceptItems,
   grammar,
-  canonicalCollection,
+  canonicalCollection
 );
 
 // E -> E + E •
@@ -113,13 +90,13 @@ const finalItem = new LRItem(
   grammar,
   canonicalCollection,
   setsGenerator,
-  /* lookaheadSet */ defaultLookaheadSet,
+  /* lookaheadSet */ defaultLookaheadSet
 );
 
 const finalState = new State(
   /* kernelItems */ [finalItem],
   grammar,
-  canonicalCollection,
+  canonicalCollection
 );
 
 function toKeys(items) {
@@ -127,7 +104,6 @@ function toKeys(items) {
 }
 
 describe('state', () => {
-
   it('kernal items', () => {
     expect(state.getKernelItems()).toBe(kernelItems);
     expect(acceptState.getKernelItems()).toBe(acceptItems);
@@ -148,7 +124,7 @@ describe('state', () => {
       grammar,
       canonicalCollection,
       setsGenerator,
-      /* lookaheadSet */ defaultLookaheadSet,
+      /* lookaheadSet */ defaultLookaheadSet
     );
 
     expect(state.isKernelItem(otherItem)).toBe(false);
@@ -185,5 +161,4 @@ describe('state', () => {
     expect(state.getReduceItems().length).toBe(0);
     expect(acceptState.getReduceItems().length).toBe(0);
   });
-
 });

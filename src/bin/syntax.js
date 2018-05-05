@@ -5,13 +5,14 @@
 
 'use strict';
 
+/*global ROOT:true*/
+
 // To require local modules from root.
 global.ROOT = __dirname + '/../';
 
 const colors = require('colors');
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
 const options = require('nomnom')
   .script('syntax')
@@ -28,13 +29,13 @@ const options = require('nomnom')
     grammar: {
       abbr: 'g',
       help: 'File containing LL or LR grammar',
-      metavar: 'FILE'
+      metavar: 'FILE',
     },
     lex: {
       abbr: 'l',
       help: 'File containing lexical grammar',
       required: false,
-      metavar: 'FILE'
+      metavar: 'FILE',
     },
     table: {
       abbr: 't',
@@ -59,19 +60,19 @@ const options = require('nomnom')
       abbr: 'f',
       help: 'File to be parsed',
       type: 'string',
-      metavar: 'FILE'
+      metavar: 'FILE',
     },
     output: {
       abbr: 'o',
       help: 'Output file for a generated parser module',
       type: 'string',
-      metavar: 'FILE'
+      metavar: 'FILE',
     },
     'custom-tokenizer': {
       abbr: 'k',
       help: 'Path to a file with custom tokenizer class',
       type: 'string',
-      metavar: 'FILE'
+      metavar: 'FILE',
     },
     'tokenizer-only': {
       help: 'Whether to generate only standalone tokenizer output file',
@@ -162,8 +163,7 @@ function getLRParsingTable(grammar) {
  * Returns a canonical collection for a grammar.
  */
 function getCanonicalCollection(grammar) {
-  const CanonicalCollection =
-    require(ROOT + 'lr/canonical-collection').default;
+  const CanonicalCollection = require(ROOT + 'lr/canonical-collection').default;
 
   return new CanonicalCollection({grammar});
 }
@@ -178,8 +178,6 @@ function validateLRGrammar(grammar) {
   const table = getLRParsingTable(grammar);
 
   const conflictsData = table.getConflictsData();
-  const conflictStates = Object.keys(conflictsData);
-
   let hasConflicts = false;
 
   const srConflicts = new Map();
@@ -198,20 +196,19 @@ function validateLRGrammar(grammar) {
         const conflict = symbolConflict.conflict;
 
         switch (LRParsingTable.getEntryType(conflict)) {
-
           // Shift-reduce conflict.
-          case EntryType.SR_CONFLICT:
+          case EntryType.SR_CONFLICT: {
             const srParts = table.splitSRParts(conflict);
             const reducePart = srParts[0];
-            const shiftPart = srParts[1];
             const production = grammar.getProduction(reducePart.slice(1));
             const data = srConflicts.get(production) || [];
             data.push(symbol);
             srConflicts.set(production, data);
             break;
+          }
 
           // Reduce-reduce conflict.
-          case EntryType.RR_CONFLICT:
+          case EntryType.RR_CONFLICT: {
             const rrParts = conflict.split('/');
             const reduce1 = rrParts[0];
             const reduce2 = rrParts[1];
@@ -220,6 +217,7 @@ function validateLRGrammar(grammar) {
               production2: grammar.getProduction(reduce2.slice(1)),
             });
             break;
+          }
 
           default:
             throw new Error(
@@ -233,7 +231,7 @@ function validateLRGrammar(grammar) {
   // Had conflicts, but all were resolved.
   if (!hasConflicts) {
     console.info(
-      colors.green('\n\u2713 Grammar doesn\'t have any conflicts!\n')
+      colors.green("\n\u2713 Grammar doesn't have any conflicts!\n")
     );
     return;
   }
@@ -254,8 +252,8 @@ function validateLRGrammar(grammar) {
       data = data.map(symbol => colors.bold(symbol));
       console.info(
         `  ${pad}${i++}. ` +
-        `Production: ${colors.bold(production.toFullString())}, ` +
-        `conflicts with symbols ${data.join(', ')}.`
+          `Production: ${colors.bold(production.toFullString())}, ` +
+          `conflicts with symbols ${data.join(', ')}.`
       );
     }
 
@@ -273,8 +271,10 @@ function validateLRGrammar(grammar) {
       const pad = i >= 10 ? '' : ' ';
       console.info(
         `  ${pad}${i++}. ` +
-        `Production: ${colors.bold(production1.toFullString())}, ` +
-        `conflicts with production ${colors.bold(production2.toFullString())}.`
+          `Production: ${colors.bold(production1.toFullString())}, ` +
+          `conflicts with production ${colors.bold(
+            production2.toFullString()
+          )}.`
       );
     }
 
@@ -284,21 +284,17 @@ function validateLRGrammar(grammar) {
   // Hint message how the conflicts can be fixed.
   console.info(
     `${colors.bold('Possible solutions:')}\n\n` +
-    `  1. Conflicts possibly can be resolved by using ` +
-    `${colors.bold('"operators"')} section,\n     where you can specify ` +
-    `${colors.bold('precedence')} and ${colors.bold('associativity')}.\n\n` +
-
-    `  2. By using different parsing mode` +
-
-    (options.mode !== GRAMMAR_MODE.LALR1
-      ? `, e.g. ${colors.bold('LALR1')} instead of ` +
-        colors.bold(options.mode)
-      : ''
-    ) + '.\n\n' +
-
-    `  3. Restructuring grammar.\n\n` +
-
-    `See docs and details in: ${colors.bold('http://bit.ly/2l0zslL')}.\n`
+      `  1. Conflicts possibly can be resolved by using ` +
+      `${colors.bold('"operators"')} section,\n     where you can specify ` +
+      `${colors.bold('precedence')} and ${colors.bold('associativity')}.\n\n` +
+      `  2. By using different parsing mode` +
+      (options.mode !== GRAMMAR_MODE.LALR1
+        ? `, e.g. ${colors.bold('LALR1')} instead of ` +
+          colors.bold(options.mode)
+        : '') +
+      '.\n\n' +
+      `  3. Restructuring grammar.\n\n` +
+      `See docs and details in: ${colors.bold('http://bit.ly/2l0zslL')}.\n`
   );
 }
 
@@ -319,7 +315,16 @@ const parsers = {
   },
 
   LALR1(options) {
-    return this._genericLR(GRAMMAR_MODE.LALR1, options);
+    // Default algorithm for LALR(1) is "LALR(1) by SLR(1)".
+    return this.LALR1_BY_SLR1(options);
+  },
+
+  LALR1_BY_SLR1() {
+    return this._genericLR(GRAMMAR_MODE.LALR1_BY_SLR1, options);
+  },
+
+  LALR1_BY_CLR1() {
+    return this._genericLR(GRAMMAR_MODE.LALR1_BY_CLR1, options);
   },
 
   _genericLR(mode, options) {
@@ -365,16 +370,22 @@ const parsers = {
       // Generator is language agnostic.
       const GENERATORS = {
         // Default.
-        'js' : require(ROOT + 'lr/lr-parser-generator-default.js').default,
+        js: require(ROOT + 'lr/lr-parser-generator-default.js').default,
 
         // Plugins.
-        'example' : require(ROOT + 'plugins/example/lr/lr-parser-generator-example.js').default,
+        example: require(ROOT +
+          'plugins/example/lr/lr-parser-generator-example.js').default,
 
-        'py' : require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js').default,
-        'php': require(ROOT + 'plugins/php/lr/lr-parser-generator-php.js').default,
-        'rb' : require(ROOT + 'plugins/ruby/lr/lr-parser-generator-ruby.js').default,
-        'cs' : require(ROOT + 'plugins/csharp/lr/lr-parser-generator-csharp.js').default,
-        'rs' : require(ROOT + 'plugins/rust/lr/lr-parser-generator-rust.js').default,
+        py: require(ROOT + 'plugins/python/lr/lr-parser-generator-py.js')
+          .default,
+        php: require(ROOT + 'plugins/php/lr/lr-parser-generator-php.js')
+          .default,
+        rb: require(ROOT + 'plugins/ruby/lr/lr-parser-generator-ruby.js')
+          .default,
+        cs: require(ROOT + 'plugins/csharp/lr/lr-parser-generator-csharp.js')
+          .default,
+        rs: require(ROOT + 'plugins/rust/lr/lr-parser-generator-rust.js')
+          .default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;
@@ -426,14 +437,18 @@ const parsers = {
       // Generator is language agnostic.
       const GENERATORS = {
         // Default.
-        'js': require(ROOT + 'll/ll-parser-generator-default.js').default,
+        js: require(ROOT + 'll/ll-parser-generator-default.js').default,
 
         // Plugins.
-        'example': require(ROOT + 'plugins/example/ll/ll-parser-generator-example.js').default,
+        example: require(ROOT +
+          'plugins/example/ll/ll-parser-generator-example.js').default,
 
-        'py': require(ROOT + 'plugins/python/ll/ll-parser-generator-py.js').default,
-        'php': require(ROOT + 'plugins/php/ll/ll-parser-generator-php.js').default,
-        'rb' : require(ROOT + 'plugins/ruby/ll/ll-parser-generator-ruby.js').default,
+        py: require(ROOT + 'plugins/python/ll/ll-parser-generator-py.js')
+          .default,
+        php: require(ROOT + 'plugins/php/ll/ll-parser-generator-php.js')
+          .default,
+        rb: require(ROOT + 'plugins/ruby/ll/ll-parser-generator-ruby.js')
+          .default,
       };
 
       const LLParserGenerator = GENERATORS[language];
@@ -452,7 +467,8 @@ const parsers = {
 function showGeneratedSuccessMessage(filePath) {
   console.info(
     `${colors.green('\n\u2713 Successfully generated:')}`,
-    filePath, '\n'
+    filePath,
+    '\n'
   );
 }
 
@@ -470,11 +486,11 @@ function parse(string, grammar) {
 
     if (parsed.hasOwnProperty('value')) {
       console.info(
-        colors.bold('Parsed value:'), '\n\n' +
-        formatParsedOutput(parsed.value), '\n'
+        colors.bold('Parsed value:'),
+        '\n\n' + formatParsedOutput(parsed.value),
+        '\n'
       );
     }
-
   } catch (e) {
     console.info(`${colors.red(e.stack)}\n`);
     process.exit(1);
@@ -557,9 +573,7 @@ function getLexGrammarData(options) {
 
   if (options['ignore-whitespaces'] && !data) {
     data = {
-      rules: [
-        ['\\s+', /* skip whitespace */''],
-      ],
+      rules: [['\\s+', /* skip whitespace */ '']],
     };
   }
 
@@ -603,8 +617,9 @@ function extractMode(options) {
   mode = normalizeMode(mode);
 
   if (!GRAMMAR_MODE.hasOwnProperty(mode)) {
-    error(`\nError: "${mode}" is not a valid parsing mode. ` +
-      `Valid modes are: ${getModesList()}.\n`
+    error(
+      `\nError: "${mode}" is not a valid parsing mode. ` +
+        `Valid modes are: ${getModesList()}.\n`
     );
     return null;
   }
@@ -616,7 +631,7 @@ function extractMode(options) {
 
     error(
       `\nError: "${mode}" is not implemented yet. ` +
-      `Available parsers are: ${availableModes}.\n`
+        `Available parsers are: ${availableModes}.\n`
     );
     return null;
   }
@@ -647,13 +662,12 @@ function handleSets() {
 
 function error(message) {
   console.error(colors.red(message));
-  console.log('Run --help for details.\n');
+  console.info('Run --help for details.\n');
   process.exit(1);
 }
 
 function isTokenizerOnly(options) {
-  return options['tokenizer-only'] ||
-    (options.lex && !options.grammar);
+  return options['tokenizer-only'] || (options.lex && !options.grammar);
 }
 
 function handleStandaloneTokenizer() {
@@ -703,14 +717,16 @@ function tokenize(string, lexGrammar) {
   // Inline tokenization supported only for JS.
   const Tokenizer = require(ROOT + 'tokenizer').default;
 
-  const tokens = (new Tokenizer({string, lexGrammar})).getTokens();
+  const tokens = new Tokenizer({string, lexGrammar}).getTokens();
 
   // Don't show last EOF token.
   tokens.pop();
 
   console.info(
-    colors.bold('\nList of tokens:'), '\n\n',
-    formatParsedOutput(tokens), '\n'
+    colors.bold('\nList of tokens:'),
+    '\n\n',
+    formatParsedOutput(tokens),
+    '\n'
   );
 }
 

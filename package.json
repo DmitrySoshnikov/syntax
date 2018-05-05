@@ -11,8 +11,9 @@
   "scripts": {
     "build": "node scripts/build.js",
     "watch": "node scripts/build.js --watch",
-    "prepublish": "npm test && npm run build",
-    "test": "node node_modules/jest-cli/bin/jest.js"
+    "test": "jest",
+    "prepublish": "npm run build && npm test",
+    "eslint": "eslint src/ && eslint bin/syntax"
   },
   "bin": {
     "syntax-cli": "./bin/syntax"
@@ -42,6 +43,8 @@
     "babel-preset-env": "^1.6.0",
     "babel-plugin-transform-object-rest-spread": "6.23.0",
     "shelljs": "^0.7.8",
-    "jest-cli": "^20.0.4"
+    "jest-cli": "^20.0.4",
+    "eslint": "^4.11.0",
+    "prettier": "^1.11.1"
   }
 }

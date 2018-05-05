@@ -28,10 +28,39 @@ export default class GrammarSymbol {
     const first = this._symbol[0];
     const last = this._symbol[this._symbol.length - 1];
 
-    return (
-      (first === '"' && last === '"') ||
-      (first === "'" && last === "'")
-    );
+    return (first === '"' && last === '"') || (first === "'" && last === "'");
+  }
+
+  /**
+   * Returns original symbol from an extended name. 1X3 => X
+   */
+  getOrignialSymbol() {
+    if (!this._originalSymbol) {
+      this._originalSymbol = this._symbol
+        .replace(/^\d+\|/, '')
+        .replace(/\|(?:\d+|\$)$/, '');
+    }
+    return this._originalSymbol;
+  }
+
+  /**
+   * Returns start context (in extended LALR 1X3 => 1)
+   */
+  getStartContext() {
+    if (!this._startContext) {
+      this._startContext = Number(this._symbol.match(/^(\d+)\|/)[1]);
+    }
+    return this._startContext;
+  }
+
+  /**
+   * Returns start context (in extended LALR 1X3 => 1)
+   */
+  getEndContext() {
+    if (!this._endContext) {
+      this._endContext = Number(this._symbol.match(/\|(\d+)$/)[1]);
+    }
+    return this._endContext;
   }
 
   /**
@@ -91,7 +120,7 @@ export default class GrammarSymbol {
    * Checks whether a symbol is Epsilon (static method).
    */
   static isEpsilon(symbol) {
-    return symbol === EPSILON;
+    return symbol.includes(EPSILON);
   }
 
   /**
@@ -120,4 +149,4 @@ export default class GrammarSymbol {
       throw new TypeError(`Symbol ${this._symbol} is not terminal.`);
     }
   }
-};
+}

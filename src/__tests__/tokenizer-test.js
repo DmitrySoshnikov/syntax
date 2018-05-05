@@ -9,9 +9,6 @@ import {EOF} from '../special-symbols';
 
 const lexGrammarData = require(__dirname + '/../grammar/__tests__/calc.lex');
 
-// [["*"], "<<EOF>>", "return 'EOF'"],
-const manualEOFRule = lexGrammarData.rules[1];
-
 // Same grammar but without explicit EOF rule.
 const lexGrammarDataNoEOF = JSON.parse(JSON.stringify(lexGrammarData));
 lexGrammarDataNoEOF.rules.splice(1, 1);
@@ -20,7 +17,6 @@ const lexGrammar = new LexGrammar(lexGrammarData);
 const lexGrammarNoEOF = new LexGrammar(lexGrammarDataNoEOF);
 
 describe('tokenizer', () => {
-
   it('all tokens', () => {
     const tokenizer = new Tokenizer({
       string: '(2 + 134) * R',
@@ -105,7 +101,7 @@ describe('tokenizer', () => {
         endColumn: 13,
       },
 
-      {"type": EOF, "value": EOF}
+      {type: EOF, value: EOF},
     ]);
   });
 
@@ -192,11 +188,11 @@ describe('tokenizer', () => {
       endColumn: 13,
     });
 
-    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
+    expect(tokenizer.getNextToken()).toEqual({type: EOF, value: EOF});
 
     // Once tokens exceeded, always EOF is returned.
-    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
-    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
+    expect(tokenizer.getNextToken()).toEqual({type: EOF, value: EOF});
+    expect(tokenizer.getNextToken()).toEqual({type: EOF, value: EOF});
   });
 
   it('get next token (with EOF)', () => {
@@ -295,8 +291,8 @@ describe('tokenizer', () => {
     });
 
     // Once tokens exceeded, always default EOF is returned.
-    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
-    expect(tokenizer.getNextToken()).toEqual({"type": EOF, "value": EOF});
+    expect(tokenizer.getNextToken()).toEqual({type: EOF, value: EOF});
+    expect(tokenizer.getNextToken()).toEqual({type: EOF, value: EOF});
   });
 
   it('EOF', () => {
@@ -510,16 +506,16 @@ describe('tokenizer', () => {
         endColumn: 5,
       },
 
-      {"type": EOF, "value": EOF},
+      {type: EOF, value: EOF},
     ]);
   });
 
   it('multiline locations', () => {
     const lexGrammar = new LexGrammar({
       rules: [
-        [`\\d+`,                  `return 'NUMBER'`],
-        [`\\s+`,                  `/*skip whitespace*/`],
-        [`\/\\*(.|\\s)*?\\*\/`,   `/* skip comments */`],
+        [`\\d+`, `return 'NUMBER'`],
+        [`\\s+`, `/*skip whitespace*/`],
+        [`\/\\*(.|\\s)*?\\*\/`, `/* skip comments */`],
       ],
     });
 
@@ -579,7 +575,7 @@ describe('tokenizer', () => {
         endColumn: 11,
       },
 
-      {"type": EOF, "value": EOF},
+      {type: EOF, value: EOF},
     ]);
   });
 
@@ -604,5 +600,4 @@ describe('tokenizer', () => {
       tokenizer.getNextToken();
     }).toThrow(new SyntaxError('\n\n1 &\n  ^\nUnexpected token: "&" at 1:2.'));
   });
-
-})
+});

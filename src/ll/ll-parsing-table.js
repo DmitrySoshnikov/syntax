@@ -58,7 +58,6 @@ import debug from '../debug';
  *     "first", and "follow" sets).
  */
 export default class LLParsingTable {
-
   /**
    * Builds an LL parsing table for a given grammar.
    */
@@ -68,7 +67,8 @@ export default class LLParsingTable {
 
     debug.time('Building LL parsing table');
 
-    this._tableTokens = grammar.getTerminals()
+    this._tableTokens = grammar
+      .getTerminals()
       .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
 
     this._table = this._build();
@@ -123,7 +123,7 @@ export default class LLParsingTable {
   getConflicts() {
     if (!this._conflicts) {
       this._conflicts = this._analyzeConfilcts();
-      this._hasConflicts = (Object.keys(this._conflicts).length !== 0);
+      this._hasConflicts = Object.keys(this._conflicts).length !== 0;
     }
     return this._conflicts;
   }
@@ -187,7 +187,7 @@ export default class LLParsingTable {
         this._putProductionNumber(
           table[lhsSymbol],
           terminal,
-          production.getNumber(),
+          production.getNumber()
         );
       }
     }
@@ -222,4 +222,4 @@ export default class LLParsingTable {
 
     row[column] = entry.toString();
   }
-};
+}

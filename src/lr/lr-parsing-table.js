@@ -3,7 +3,6 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import {MODES as GRAMMAR_MODE} from '../grammar/grammar-mode';
 import GrammarSymbol from '../grammar/grammar-symbol';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
@@ -84,20 +83,19 @@ import debug from '../debug';
  * Type of an entry in the parsing table.
  */
 const EntryType = {
-  ERROR       : 0,
-  GOTO        : 1,
-  SHIFT       : 2,
-  REDUCE      : 3,
-  ACCEPT      : 4,
-  SR_CONFLICT : 5,
-  RR_CONFLICT : 6,
+  ERROR: 0,
+  GOTO: 1,
+  SHIFT: 2,
+  REDUCE: 3,
+  ACCEPT: 4,
+  SR_CONFLICT: 5,
+  RR_CONFLICT: 6,
 };
 
 /**
  * LR parsing table class.
  */
 export default class LRParsingTable {
-
   /**
    * The table is built from the canonical collection,
    * which was built for the specific grammar.
@@ -112,7 +110,8 @@ export default class LRParsingTable {
 
     debug.time('Building LR parsing table');
 
-    this._action = grammar.getTerminals()
+    this._action = grammar
+      .getTerminals()
       .concat(grammar.getTokens(), GrammarSymbol.get(EOF));
 
     this._goto = grammar.getNonTerminals();
@@ -137,8 +136,9 @@ export default class LRParsingTable {
 
     console.info(`\n${this._grammar.getMode().toString()} parsing table:\n`);
 
-    let actionSymbols = this._action
-      .map(actionSymbol => actionSymbol.getSymbol());
+    let actionSymbols = this._action.map(actionSymbol =>
+      actionSymbol.getSymbol()
+    );
 
     let nonTerminals = this._grammar
       .getNonTerminals()
@@ -202,20 +202,17 @@ export default class LRParsingTable {
 
   _hasConflict(entry) {
     const entryType = LRParsingTable.getEntryType(entry);
-    return entryType === EntryType.RR_CONFLICT ||
-      entryType === EntryType.SR_CONFLICT;
+    return (
+      entryType === EntryType.RR_CONFLICT || entryType === EntryType.SR_CONFLICT
+    );
   }
 
   _build() {
     this._canonicalCollection.getStates().forEach(state => {
       // Fill actions and goto for this state (row).
-      const row = this._table[state.getNumber()] = {};
-
-      // Whether conflicts are found in this state.
-      let stateHasConflicts = false;
+      const row = (this._table[state.getNumber()] = {});
 
       state.getItems().forEach(item => {
-
         // For final item we should "reduce". In LR(0) type we
         // reduce unconditionally for every terminal, in other types
         // e.g. SLR(1) consider lookahead (follow) sets.
@@ -238,10 +235,8 @@ export default class LRParsingTable {
               }
             });
           }
-
         } else {
           let transitionSymbol = item.getCurrentSymbol();
-          let rawSymbol = transitionSymbol.getSymbol();
           let nextState = item.goto().getNumber();
 
           // Other terminals do "shift" action and go to the next state,
@@ -317,10 +312,9 @@ export default class LRParsingTable {
 
     // Else, working with operators precedence.
 
-    const {
-      precedence: symbolPrecedence,
-      assoc: symbolAssoc,
-    } = operators[symbol];
+    const {precedence: symbolPrecedence, assoc: symbolAssoc} = operators[
+      symbol
+    ];
 
     const productionPrecedence = this._grammar
       .getProduction(reducePart.slice(1))
@@ -335,8 +329,7 @@ export default class LRParsingTable {
     //
     if (productionPrecedence > symbolPrecedence) {
       row[symbol] = reducePart;
-      symbolConflictData.resolved =
-        'reduce (higher production precedence)';
+      symbolConflictData.resolved = 'reduce (higher production precedence)';
     }
 
     // 2. If the symbol's precedence is higher, the choice is to shift:
@@ -346,8 +339,7 @@ export default class LRParsingTable {
     //
     else if (symbolPrecedence > productionPrecedence) {
       row[symbol] = shiftPart;
-      symbolConflictData.resolved =
-        'shift (higher symbol precedence)';
+      symbolConflictData.resolved = 'shift (higher symbol precedence)';
     }
 
     // 3. If they have equal precedence, the choice is made based on the
@@ -360,10 +352,11 @@ export default class LRParsingTable {
     // `(id * id) * id`, but not right-associative, that would be
     // `id * (id * id)`.
     //
-    else if (productionPrecedence === symbolPrecedence &&
-             productionPrecedence !== 0 &&
-             symbolPrecedence !== 0) {
-
+    else if (
+      productionPrecedence === symbolPrecedence &&
+      productionPrecedence !== 0 &&
+      symbolPrecedence !== 0
+    ) {
       // Left-assoc.
       if (symbolAssoc === 'left') {
         row[symbol] = reducePart;
@@ -391,9 +384,7 @@ export default class LRParsingTable {
 
     // R/R conflicts are resolved by choosing a production that
     // goes first in the grammar (i.e. its number is smaller).
-    row[symbol] = Number(r1.slice(1)) < Number(r2.slice(1))
-      ? r1
-      : r2;
+    row[symbol] = Number(r1.slice(1)) < Number(r2.slice(1)) ? r1 : r2;
 
     symbolConflictData.resolved =
       'first in order production is chosen ' + row[symbol].slice(1);
@@ -443,4 +434,4 @@ export default class LRParsingTable {
 
     row[column] = entry;
   }
-};
+}
