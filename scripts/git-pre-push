@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Pre-commit validaitons:
+
+npm test
+
+npm run eslint
