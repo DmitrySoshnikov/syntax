@@ -102,4 +102,48 @@ describe('lr-parsing-table', () => {
       expectedTable
     );
   });
+
+  it('lalr1-grammar-3', () => {
+    const grammarString = `
+      %%
+
+      Stmt
+        : Type ID ';'
+        | Expr ';'
+        ;
+
+      Type
+        : ID
+        ;
+
+      Expr
+        : ID
+        ;
+    `;
+
+    const expectedTable = {
+      '0': {Stmt: 1, Type: 2, Expr: 3, ID: 's4'},
+      '1': {$: 'acc'},
+      '2': {ID: 's5'},
+      '3': {"';'": 's7'},
+      '4': {ID: 'r3', "';'": 'r4'},
+      '5': {"';'": 's6'},
+      '6': {$: 'r1'},
+      '7': {$: 'r2'},
+    };
+
+    const grammarBySLR = Grammar.fromString(grammarString, {
+      mode: GRAMMAR_MODE.LALR1_BY_SLR1,
+    });
+    expect(new LRParsingTable({grammar: grammarBySLR}).get()).toEqual(
+      expectedTable
+    );
+
+    const grammarByCLR = Grammar.fromString(grammarString, {
+      mode: GRAMMAR_MODE.LALR1_BY_CLR1,
+    });
+    expect(new LRParsingTable({grammar: grammarByCLR}).get()).toEqual(
+      expectedTable
+    );
+  });
 });
