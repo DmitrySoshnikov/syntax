@@ -1,6 +1,8 @@
-# syntax [![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli) [![npm downloads](https://img.shields.io/npm/dt/syntax-cli.svg)](https://www.npmjs.com/package/syntax-cli)
+# syntax
 
-Syntactic analysis toolkit, language agnostic parsers generator.
+[![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli) [![npm downloads](https://img.shields.io/npm/dt/syntax-cli.svg)](https://www.npmjs.com/package/syntax-cli)
+
+Syntactic analysis toolkit, language-agnostic parser generator.
 
 Implements [LR](https://en.wikipedia.org/wiki/LR_parser) and [LL](https://en.wikipedia.org/wiki/LL_parser) parsing algorithms.
 
@@ -751,7 +753,7 @@ In this case function `Loc` can create custom location format. Here is [another 
 
 _Syntax_ supports several _LR_ parsing modes: _LR(0)_, _SLR(1)_, _LALR(1)_, _CLR(1)_ as well _LL(1)_ mode. The same grammar can be analyzed in different modes, from the CLI it's controlled via the `--mode` option, e.g. `--mode slr1`.
 
-> Note: de facto standard for automatically generated parsers is usually the _LALR(1)_ parser. The _CLR(1)_ parser, being the most powerful, and able to parse wider grammar sets, can have much more states than LALR(1), and usually is suitable for educational purposes. As well as its less powerful counterparts, _LR(0)_ and _SLR(1)_ which are less used on practice (although, some production-ready grammars can also normally be parsed by _SLR(1)_, e.g. [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.ast.js)).
+> Note: de facto standard for automatically generated parsers is usually the _LALR(1)_ parser. The _CLR(1)_ parser, being the most powerful, and able to parse wider grammar sets, can have much more states than LALR(1), and usually is suitable only for educational purposes. As well as its less powerful counterparts, _LR(0)_ and _SLR(1)_ which are less used on practice (although, some production-ready grammars can also normally be parsed by _SLR(1)_, e.g. [JSON grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/json.ast.js)).
 
 Some grammars can be handled by one mode, but not by another. In this case a _conflict_ will be shown in the table.
 
@@ -770,6 +772,10 @@ At the moment, LL parser only implements syntax validation, not providing semant
 LR parsing, and its the most practical version, the LALR(1), is widely used in automatically generated parsers. LR grammars usually look more readable, than corresponding LL grammars, since in contrast with the later, LR parser generators by default allow _left-recursion_, and do automatic conflict resolutions. The precedence and assoc operators allow building more elegant grammars with smaller parsing tables.
 
 Take a look at the [example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-eval.g) with a typical _syntax-directed translation (SDT)_, using semantic actions for AST construction, direct evaluation, and any other transformation.
+
+Default algorithm used for the practical _LALR(1)_ mode, is the _"LALR(1) by SLR(1)"_. It is enabled by the default `--mode lalr1`, or explicit `--mode lalr1_by_slr1`. In addition, Syntax implements "LALR(1) by compressing CLR(1)" algorithm, which is slower in parser generation, and is suitable only for educational purposes.
+
+> **NOTE:** prefer usage of the `--mode lalr1` as the most practical.
 
 #### LR conflicts
 
