@@ -773,9 +773,9 @@ LR parsing, and its the most practical version, the LALR(1), is widely used in a
 
 Take a look at the [example grammar](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-eval.g) with a typical _syntax-directed translation (SDT)_, using semantic actions for AST construction, direct evaluation, and any other transformation.
 
-Default algorithm used for the practical _LALR(1)_ mode, is the _"LALR(1) by SLR(1)"_. It is enabled by the default `--mode lalr1`, or explicit `--mode lalr1_by_slr1`. In addition, Syntax implements "LALR(1) by compressing CLR(1)" algorithm, which is slower in parser generation, and is suitable only for educational purposes.
+Default algorithm used for the practical _LALR(1)_ mode, is the _"LALR(1) by SLR(1)"_. It is enabled by the default `--mode lalr1`, or explicit `--mode lalr1_by_slr1`. In addition, Syntax implements _"LALR(1) by compressing CLR(1)"_ algorithm (available via the `--mode lalr1_by_clr1`), which is slower in parser generation, and is suitable only for educational purposes.
 
-> **NOTE:** prefer usage of the `--mode lalr1` as the most practical.
+> **NOTE:** prefer usage of the `--mode lalr1` as _the most practical_.
 
 #### LR conflicts
 
