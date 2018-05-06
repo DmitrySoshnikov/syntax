@@ -3,6 +3,7 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
+import CanonicalCollection from './canonical-collection';
 import GrammarSymbol from '../grammar/grammar-symbol';
 import TablePrinter from '../table-printer';
 import {EOF} from '../special-symbols';
@@ -100,10 +101,16 @@ export default class LRParsingTable {
    * The table is built from the canonical collection,
    * which was built for the specific grammar.
    */
-  constructor({canonicalCollection, grammar, resolveConflicts = false}) {
-    this._canonicalCollection = canonicalCollection;
+  constructor({canonicalCollection = null, grammar, resolveConflicts = false}) {
     this._grammar = grammar;
+    this._canonicalCollection = canonicalCollection;
     this._shouldResolveConflicts = resolveConflicts;
+
+    if (!this._canonicalCollection) {
+      this._canonicalCollection = new CanonicalCollection({
+        grammar: this._grammar,
+      });
+    }
 
     // Stores conflicts data.
     this._conflictsData = {};
