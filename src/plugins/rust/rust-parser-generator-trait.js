@@ -121,8 +121,8 @@ const RustParserGeneratorTrait = {
   _generateArgsPrologue(action, types, totalArgsCount) {
     const argsPrologue = [];
 
-    for (let i = 0; i < totalArgsCount; i++) {
-      const arg = '_' + (i + 1);
+    for (let i = totalArgsCount; i > 0; i--) {
+      const arg = '_' + i;
 
       if (!types.hasOwnProperty(arg)) {
         // Just pop if arg is not used in the handler.
