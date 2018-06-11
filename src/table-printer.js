@@ -3,10 +3,10 @@
  * Copyright (c) 2015-present Dmitry Soshnikov <dmitry.soshnikov@gmail.com>
  */
 
-import Table from 'cli-table2';
+import Table from 'cli-table3';
 
 /**
- * Wrapper class over `cli-table2` with default options preset.
+ * Wrapper class over `cli-table3` with default options preset.
  */
 export default class TablePrinter extends Table {
   constructor(options) {
