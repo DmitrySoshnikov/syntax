@@ -8,9 +8,9 @@ import Table from 'cli-table3';
 /**
  * Wrapper class over `cli-table3` with default options preset.
  */
-export default class TablePrinter extends Table {
+export default class TablePrinter {
   constructor(options) {
-    super(
+    return new Table(
       Object.assign({}, options, {
         style: {
           head: ['blue'],
