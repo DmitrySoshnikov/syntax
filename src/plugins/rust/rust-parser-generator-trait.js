@@ -90,7 +90,7 @@ const RustParserGeneratorTrait = {
       action,
       types,
       // Total number of args.
-      production.getRHS().length
+      production.isEpsilon() ? 0 : production.getRHS().length
     );
 
     // Append return value.
