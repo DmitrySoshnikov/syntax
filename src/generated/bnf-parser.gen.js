@@ -238,11 +238,11 @@ tokenizer = {
   getNextToken() {
     // Something was queued, return it.
     if (this._tokensQueue.length > 0) {
-      return this._toToken(this._tokensQueue.shift());
+      return this.onToken(this._toToken(this._tokensQueue.shift()));
     }
 
     if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
+      return this.onToken(EOF_TOKEN);
     }
 
     let string = this._string.slice(this._cursor);
@@ -280,7 +280,7 @@ tokenizer = {
           }
         }
 
-        return this._toToken(token, yytext);
+        return this.onToken(this._toToken(token, yytext));
       }
     }
 
@@ -388,6 +388,14 @@ tokenizer = {
     }
     return null;
   },
+
+  /**
+   * Allows analyzing, and transforming token. Default implementation
+   * just passes the token through.
+   */
+  onToken(token) {
+    return token;
+  },
 };
 
 /**
@@ -489,11 +497,13 @@ const yyparse = {
           };
         }
 
+        shiftedToken = this.onShift(token);
+
         stack.push(
-          {symbol: tokens[token.type], semanticValue: token.value, loc},
+          {symbol: tokens[shiftedToken.type], semanticValue: shiftedToken.value, loc},
           Number(entry.slice(1))
         );
-        shiftedToken = token;
+
         token = tokenizer.getNextToken();
       }
 
@@ -596,6 +606,14 @@ const yyparse = {
 
   onParseBegin(string, tokenizer, options) {},
   onParseEnd(parsed) {},
+
+  /**
+   * Allows analyzing, and transforming shifted token. Default implementation
+   * just passes the token through.
+   */
+  onShift(token) {
+    return token;
+  },
 };
 
 

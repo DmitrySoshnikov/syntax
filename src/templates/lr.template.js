@@ -189,11 +189,13 @@ const yyparse = {
           };
         }
 
+        shiftedToken = this.onShift(token);
+
         stack.push(
-          {symbol: tokens[token.type], semanticValue: token.value, loc},
+          {symbol: tokens[shiftedToken.type], semanticValue: shiftedToken.value, loc},
           Number(entry.slice(1))
         );
-        shiftedToken = token;
+
         token = tokenizer.getNextToken();
       }
 
@@ -296,6 +298,14 @@ const yyparse = {
 
   onParseBegin(string, tokenizer, options) {},
   onParseEnd(parsed) {},
+
+  /**
+   * Allows analyzing, and transforming shifted token. Default implementation
+   * just passes the token through.
+   */
+  onShift(token) {
+    return token;
+  },
 };
 
 {{{MODULE_INCLUDE}}}

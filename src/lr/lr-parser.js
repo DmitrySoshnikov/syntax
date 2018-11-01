@@ -39,10 +39,6 @@ export default class LRParser {
     // Parsing stack.
     this._stack = [];
 
-    // Execute module include code which may attach
-    // handlers for some events, and define needed data.
-    CodeUnit.eval(this._grammar.getModuleInclude(), /*shouldRewrite*/ false);
-
     // Parse object which may define handlers for parse events.
     this._yyparse = CodeUnit.getSandbox().yyparse;
 
@@ -60,6 +56,10 @@ export default class LRParser {
 
     // Whether locations should be captured.
     this._yy.options.captureLocations = grammar.shouldCaptureLocations();
+
+    // Execute module include code which may attach
+    // handlers for some events, and define needed data.
+    CodeUnit.eval(this._grammar.getModuleInclude(), /*shouldRewrite*/ false);
   }
 
   getGrammar() {
@@ -137,6 +137,9 @@ export default class LRParser {
 
       switch (LRParsingTable.getEntryType(entry)) {
         case EntryType.SHIFT:
+          if (this._yyparse.onShift) {
+            token = this._yyparse.onShift(token);
+          }
           this._shift(token, entry);
           shiftedToken = token;
           token = this._tokenizer.getNextToken();

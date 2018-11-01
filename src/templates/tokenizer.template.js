@@ -68,11 +68,11 @@ tokenizer = {
   getNextToken() {
     // Something was queued, return it.
     if (this._tokensQueue.length > 0) {
-      return this._toToken(this._tokensQueue.shift());
+      return this.onToken(this._toToken(this._tokensQueue.shift()));
     }
 
     if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
+      return this.onToken(EOF_TOKEN);
     }
 
     let string = this._string.slice(this._cursor);
@@ -110,7 +110,7 @@ tokenizer = {
           }
         }
 
-        return this._toToken(token, yytext);
+        return this.onToken(this._toToken(token, yytext));
       }
     }
 
@@ -217,5 +217,13 @@ tokenizer = {
       return matched[0];
     }
     return null;
+  },
+
+  /**
+   * Allows analyzing, and transforming token. Default implementation
+   * just passes the token through.
+   */
+  onToken(token) {
+    return token;
   },
 };

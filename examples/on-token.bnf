@@ -1,0 +1,114 @@
+/**
+ * Calculates parens in RegExp style.
+ *
+ *   /(((a)b)c)(d)(e)/
+ *
+ * Here "a" is 3, "b" - 2, "c" - 3, "d" - 4, and "e" is 5.
+ *
+ * Test:
+ *
+ *   ./bin/syntax -g examples/on-token.bnf -m lalr1 -p '(((a)b)c)(d)(e)'
+ */
+
+%lex
+
+%%
+
+\w+       return 'NAME'
+'('       return 'L_PAREN'
+')'       return 'R_PAREN'
+
+/lex
+
+%{
+
+/**
+ * Lower group boundary:
+ *
+ *   /(((a)b)c)(d)(e)/
+ *
+ * The first paren in (((a)b)c) has lower bound 0, but when
+ * we reach the (d), it already 4.
+ */
+let currentLower = 0;
+
+/**
+ * Group number to assign to a group.
+ */
+let currentGroup = 0;
+
+/**
+ * Total number of groups.
+ */
+let totalGroups = 0;
+
+yyparse.onParseBegin = (_string) => {
+  currentGroup = 0;
+  totalGroups = 0;
+};
+
+yyparse.onShift = token => {
+  if (token.type === 'L_PAREN') {
+    currentGroup++;
+    totalGroups++;
+  }
+  return token;
+};
+
+%}
+
+%%
+
+Program
+  : Items
+    {
+      $$ = {
+        type: 'Program',
+        items: $1,
+      }
+    }
+  ;
+
+Items
+  : Item
+    { $$ = [$1] }
+
+  | Items Item
+    { $$ = $1; $1.push($2) }
+  ;
+
+Item
+  : Group
+  | Name
+  ;
+
+Name
+  : NAME
+    {
+      $$ = {
+        type: 'Name',
+        value: $1,
+      }
+    }
+  ;
+
+Group
+  : L_PAREN Items R_PAREN
+    {
+      $$ = {
+        type: 'Group',
+        number: currentGroup,
+        items: $2,
+      };
+
+      // Go up.
+      currentGroup--;
+
+      // We reached the top level, reset the current group:
+      if (currentGroup === currentLower) {
+        currentGroup = totalGroups;
+        currentLower = totalGroups;
+      }
+    }
+  ;
+

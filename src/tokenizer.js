@@ -157,11 +157,11 @@ export default class Tokenizer {
   getNextToken() {
     // Something was queued, return it.
     if (this._tokensQueue.length > 0) {
-      return this._toToken(this._tokensQueue.shift());
+      return this.onToken(this._toToken(this._tokensQueue.shift()));
     }
 
     if (!this.hasMoreTokens()) {
-      return EOF_TOKEN;
+      return this.onToken(EOF_TOKEN);
     }
 
     // Analyze untokenized yet part of the string starting from
@@ -212,7 +212,7 @@ export default class Tokenizer {
           }
         }
 
-        return this._toToken(rawToken, yytext);
+        return this.onToken(this._toToken(rawToken, yytext));
       }
     }
 
@@ -309,5 +309,13 @@ export default class Tokenizer {
       return matched[0];
     }
     return null;
+  }
+
+  /**
+   * Allows analyzing, and transforming token. Default implementation
+   * just passes the token through.
+   */
+  onToken(token) {
+    return token;
   }
 }
