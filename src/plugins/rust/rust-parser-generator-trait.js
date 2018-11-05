@@ -82,7 +82,7 @@ const RustParserGeneratorTrait = {
   buildSemanticAction(production) {
     let originalAction = this.getSemanticActionCode(production);
 
-    let {action, types} = this._extractDataTypes(originalAction);
+    let { action, types } = this._extractDataTypes(originalAction);
 
     action = this._actionFromHandler(action, '.tokenizer');
 
@@ -101,7 +101,7 @@ const RustParserGeneratorTrait = {
     action = action + `\n${returnValue}`;
 
     // Save the action, they are injected later.
-    this._productionHandlers.push({args: '&mut self', action});
+    this._productionHandlers.push({ args: '&mut self', action });
     return null;
   },
 
@@ -160,7 +160,7 @@ const RustParserGeneratorTrait = {
     const types = {};
 
     if (!action) {
-      return {action: '', types};
+      return { action: '', types };
     }
 
     const typesRe = /\s*\|([^|]*)\|\s*->\s*(\w+);/g;
@@ -208,7 +208,7 @@ const RustParserGeneratorTrait = {
       });
     }
 
-    return {types, action};
+    return { types, action };
   },
 
   /**
@@ -258,7 +258,7 @@ const RustParserGeneratorTrait = {
     const lexRules = this._grammar.getLexGrammar().getRules().map((rule, i) => {
       let action = this._actionFromHandler(rule.getRawHandler());
 
-      this._lexHandlers.push({args: '&mut self', action});
+      this._lexHandlers.push({ args: '&mut self', action });
 
       let flags = [];
 
@@ -274,8 +274,13 @@ const RustParserGeneratorTrait = {
 
       lexRulesArray.push(`Tokenizer::_lex_rule${i}`);
 
-      // Example: r"\d+",
-      return `r"${flags}${rule.getRawMatcher()}"`;
+      let matcher = rule.getRawMatcher();
+      
+      // why there is f**king escape for / ?
+      matcher = matcher.replace("\\/", "/");
+
+      // well, maybe so many # is enough
+      return `r##########"${flags}${matcher}"##########`;
     });
 
     this.writeData('LEX_RULE_HANDLERS_COUNT', lexRules.length);
@@ -446,13 +451,18 @@ const RustParserGeneratorTrait = {
       ? 'on_parse_begin(self, string);'
       : '';
 
-    const hasOnParseEnd = moduleInclude.indexOf('fn on_parse_end') !== -1
+    const onParseEnd = moduleInclude.indexOf('fn on_parse_end') !== -1
       ? 'on_parse_end(self, &result);'
       : '';
+    
+    const onParseError = moduleInclude.indexOf('fn on_parse_error') !== -1
+      ? 'on_parse_error(self, &token);'
+      : 'self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);';
 
     this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
-    this.writeData('ON_PARSE_END_CALL', hasOnParseEnd);
-
+    this.writeData('ON_PARSE_END_CALL', onParseEnd);
+    this.writeData('ON_PARSE_ERROR_CALL', onParseError);
+    
     this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 
@@ -460,7 +470,7 @@ const RustParserGeneratorTrait = {
    * Generates Rust function declarations for handlers.
    */
   _generateHandlers(handlers, name, returnType) {
-    return handlers.map(({args, action}, index) => {
+    return handlers.map(({ args, action }, index) => {
       return `fn ${name}${index}` +
         `(${args}) -> ${returnType} {\n${action}\n}`
     });
