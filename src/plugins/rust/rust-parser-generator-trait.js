@@ -460,7 +460,11 @@ const RustParserGeneratorTrait = {
     
     const onParseError = moduleInclude.indexOf('fn on_parse_error') !== -1
       ? 'on_parse_error(self, &token);'
-      : 'self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);';
+      :　
+'if token.value == EOF && !self.tokenizer.has_more_tokens() {\n\
+    panic!("\\n\\nUnexpected end of input.\\n\\n");\n\
+}\n\
+self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);';
 
     this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
     this.writeData('ON_PARSE_END_CALL', onParseEnd);
