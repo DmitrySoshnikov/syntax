@@ -82,7 +82,7 @@ const RustParserGeneratorTrait = {
   buildSemanticAction(production) {
     let originalAction = this.getSemanticActionCode(production);
 
-    let { action, types } = this._extractDataTypes(originalAction);
+    let {action, types} = this._extractDataTypes(originalAction);
 
     action = this._actionFromHandler(action, '.tokenizer');
 
@@ -101,7 +101,7 @@ const RustParserGeneratorTrait = {
     action = action + `\n${returnValue}`;
 
     // Save the action, they are injected later.
-    this._productionHandlers.push({ args: '&mut self', action });
+    this._productionHandlers.push({args: '&mut self', action});
     return null;
   },
 
@@ -160,7 +160,7 @@ const RustParserGeneratorTrait = {
     const types = {};
 
     if (!action) {
-      return { action: '', types };
+      return {action: '', types};
     }
 
     const typesRe = /\s*\|([^|]*)\|\s*->\s*(\w+);/g;
@@ -208,7 +208,7 @@ const RustParserGeneratorTrait = {
       });
     }
 
-    return { types, action };
+    return {types, action};
   },
 
   /**
@@ -258,7 +258,7 @@ const RustParserGeneratorTrait = {
     const lexRules = this._grammar.getLexGrammar().getRules().map((rule, i) => {
       let action = this._actionFromHandler(rule.getRawHandler());
 
-      this._lexHandlers.push({ args: '&mut self', action });
+      this._lexHandlers.push({args: '&mut self', action});
 
       let flags = [];
 
@@ -276,10 +276,12 @@ const RustParserGeneratorTrait = {
 
       let matcher = rule.getRawMatcher();
       
-      // why there is f**king escape for / ?
+      // there is no need 
       matcher = matcher.replace("\\/", "/");
 
       // well, maybe so many # is enough
+      // this is for handling character '"' correctly
+      // reference: rust's raw string literals https://rahul-thakoor.github.io/rust-raw-string-literals
       return `r##########"${flags}${matcher}"##########`;
     });
 
@@ -470,7 +472,8 @@ const RustParserGeneratorTrait = {
    * Generates Rust function declarations for handlers.
    */
   _generateHandlers(handlers, name, returnType) {
-    return handlers.map(({ args, action }, index) => {
+    return handlers.map(({args, action
+                         }, index) => {
       return `fn ${name}${index}` +
         `(${args}) -> ${returnType} {\n${action}\n}`
     });
