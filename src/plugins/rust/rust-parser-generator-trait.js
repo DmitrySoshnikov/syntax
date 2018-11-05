@@ -276,7 +276,8 @@ const RustParserGeneratorTrait = {
 
       let matcher = rule.getRawMatcher();
       
-      // there is no need 
+      // there is no need for escape sequence for character '/'
+      // (actually you cannot have such escape sequence as '\/', whihc causes rust's regex parser to panic!)
       matcher = matcher.replace("\\/", "/");
 
       // well, maybe so many # is enough
@@ -472,8 +473,7 @@ const RustParserGeneratorTrait = {
    * Generates Rust function declarations for handlers.
    */
   _generateHandlers(handlers, name, returnType) {
-    return handlers.map(({args, action
-                         }, index) => {
+    return handlers.map(({args, action}, index) => {
       return `fn ${name}${index}` +
         `(${args}) -> ${returnType} {\n${action}\n}`
     });
