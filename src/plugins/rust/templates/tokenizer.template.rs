@@ -150,9 +150,6 @@ impl Tokenizer {
             .get(self.get_current_state())
             .unwrap();
 
-        let mut max_match_len = 0;
-        let mut max_match_token: Option<&'static str> = None;
-
         for i in lex_rules_for_state {
             let i = *i as usize;
             
