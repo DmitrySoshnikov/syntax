@@ -29,7 +29,6 @@ struct Token {
 lazy_static! {
     /** 
      * Pre-parse the regex instead of parsing it every time when calling `get_next_token`.
-     * This is really(and most) time consuming accodring to my test.
      */
     static ref REGEX_RULES: Vec<Regex> = LEX_RULES.iter().map(|rule| Regex::new(rule).unwrap()).collect();
 }
@@ -156,11 +155,6 @@ impl Tokenizer {
 
         for i in lex_rules_for_state {
             let i = *i as usize;
-
-            // the previous author use this to generate a new regex expression
-            // every time when `get_next_token` is called
-            // now this variable is of no use, I leave it here for debug use
-            let _lex_rule = LEX_RULES[i];
             
             if let Some(matched) = self._match(str_slice, &REGEX_RULES[i]) {
 
@@ -169,24 +163,19 @@ impl Tokenizer {
                 if matched.len() == 0 {
                     self.cursor = self.cursor + 1;
                 }
+                
+                self.yytext = matched;
+                self.yyleng = matched.len();
 
-                // find longest match
-                if matched.len() > max_match_len {
-                    self.yytext = matched;
-                    self.yyleng = matched.len();
-                    max_match_len = matched.len();
-                    max_match_token = Some(self.handlers[i](self));
+                let token_type = self.handlers[i](self);
+
+                // "" - no token (skip)
+                if token_type.len() == 0 {
+                    return self.get_next_token();
                 }
-            }
-        }
 
-        if let Some(token) = max_match_token {
-            self.cursor = self.cursor + (self.yyleng as i32);
-            // "" - no token (skip)
-            if token.len() == 0 {
-                return self.get_next_token();
+                return self.to_token(token_type)
             }
-            return self.to_token(token);
         }
 
         if self.is_eof() {
@@ -260,6 +249,7 @@ impl Tokenizer {
             Some(caps) => {
                 let matched = caps.get(0).unwrap().as_str();
                 self.capture_location(matched);
+                self.cursor = self.cursor + (matched.len() as i32);
                 Some(matched)
             },
             None => None
