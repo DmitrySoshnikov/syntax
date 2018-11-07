@@ -16,6 +16,16 @@ const RUST_TOKENIZER_TEMPLATE = fs.readFileSync(
 );
 
 /**
+ * Default error handler for rust parser when encountered an error. 
+ */
+const DEFAULT_ERROR_HANDLER = `
+  if token.value == EOF && !self.tokenizer.has_more_tokens() {
+    panic!("Unexpected end of input.");
+  }
+  self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);
+`;
+
+/**
  * The trait is used by parser generators (LL/LR) for Rust.
  */
 const RustParserGeneratorTrait = {
@@ -460,11 +470,7 @@ const RustParserGeneratorTrait = {
     
     const onParseError = moduleInclude.indexOf('fn on_parse_error') !== -1
       ? 'on_parse_error(self, &token);'
-      :　
-'if token.value == EOF && !self.tokenizer.has_more_tokens() {\n\
-    panic!("\\n\\nUnexpected end of input.\\n\\n");\n\
-}\n\
-self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);';
+      : DEFAULT_ERROR_HANDLER;
 
     this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
     this.writeData('ON_PARSE_END_CALL', onParseEnd);
