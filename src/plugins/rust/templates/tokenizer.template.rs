@@ -26,6 +26,13 @@ struct Token {
 // ------------------------------------------------------------------
 // Tokenizer.
 
+lazy_static! {
+    /** 
+     * Pre-parse the regex instead of parsing it every time when calling `get_next_token`.
+     */
+    static ref REGEX_RULES: Vec<Regex> = LEX_RULES.iter().map(|rule| Regex::new(rule).unwrap()).collect();
+}
+
 struct Tokenizer {
     /**
      * Tokenizing string.
@@ -143,17 +150,17 @@ impl Tokenizer {
             .get(self.get_current_state())
             .unwrap();
 
-        for i in 0..lex_rules_for_state.len() {
-            let lex_rule = LEX_RULES[i];
-
-            if let Some(matched) = self._match(str_slice, &Regex::new(lex_rule).unwrap()) {
+        for i in lex_rules_for_state {
+            let i = *i as usize;
+            
+            if let Some(matched) = self._match(str_slice, &REGEX_RULES[i]) {
 
                 // Manual handling of EOF token (the end of string). Return it
                 // as `EOF` symbol.
                 if matched.len() == 0 {
                     self.cursor = self.cursor + 1;
                 }
-
+                
                 self.yytext = matched;
                 self.yyleng = matched.len();
 
@@ -246,9 +253,9 @@ impl Tokenizer {
         }
     }
 
-    fn to_token(&self, token_type: &'static str) -> Token {
+    fn to_token(&self, token: &'static str) -> Token {
         Token {
-            kind: *TOKENS_MAP.get(token_type).unwrap(),
+            kind: *TOKENS_MAP.get(token).unwrap(),
             value: self.yytext,
             start_offset: self.token_start_offset,
             end_offset: self.token_end_offset,

@@ -16,6 +16,16 @@ const RUST_TOKENIZER_TEMPLATE = fs.readFileSync(
 );
 
 /**
+ * Default error handler for rust parser when encountered an error. 
+ */
+const DEFAULT_ERROR_HANDLER = `
+  if token.value == EOF && !self.tokenizer.has_more_tokens() {
+    panic!("Unexpected end of input.");
+  }
+  self.tokenizer.panic_unexpected_token(token.value, token.start_line, token.start_column);
+`;
+
+/**
  * The trait is used by parser generators (LL/LR) for Rust.
  */
 const RustParserGeneratorTrait = {
@@ -274,8 +284,16 @@ const RustParserGeneratorTrait = {
 
       lexRulesArray.push(`Tokenizer::_lex_rule${i}`);
 
-      // Example: r"\d+",
-      return `r"${flags}${rule.getRawMatcher()}"`;
+      let matcher = rule.getRawMatcher();
+      
+      // there is no need for escape sequence for character '/'
+      // (actually you cannot have such escape sequence as '\/', whihc causes rust's regex parser to panic!)
+      matcher = matcher.replace("\\/", "/");
+
+      // well, maybe so many # is enough
+      // this is for handling character '"' correctly
+      // reference: rust's raw string literals https://rahul-thakoor.github.io/rust-raw-string-literals
+      return `r##########"${flags}${matcher}"##########`;
     });
 
     this.writeData('LEX_RULE_HANDLERS_COUNT', lexRules.length);
@@ -446,13 +464,18 @@ const RustParserGeneratorTrait = {
       ? 'on_parse_begin(self, string);'
       : '';
 
-    const hasOnParseEnd = moduleInclude.indexOf('fn on_parse_end') !== -1
+    const onParseEnd = moduleInclude.indexOf('fn on_parse_end') !== -1
       ? 'on_parse_end(self, &result);'
       : '';
+    
+    const onParseError = moduleInclude.indexOf('fn on_parse_error') !== -1
+      ? 'on_parse_error(self, &token);'
+      : DEFAULT_ERROR_HANDLER;
 
     this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
-    this.writeData('ON_PARSE_END_CALL', hasOnParseEnd);
-
+    this.writeData('ON_PARSE_END_CALL', onParseEnd);
+    this.writeData('ON_PARSE_ERROR_CALL', onParseError);
+    
     this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 

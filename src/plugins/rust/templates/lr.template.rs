@@ -271,19 +271,7 @@ impl Parser {
     }
 
     fn unexpected_token(&mut self, token: &Token) {
-        if token.value == EOF && !self.tokenizer.has_more_tokens() {
-            self.unexpected_end_of_input();
-        }
-
-        self.tokenizer.panic_unexpected_token(
-            token.value,
-            token.start_line,
-            token.start_column
-        );
-    }
-
-    fn unexpected_end_of_input(&mut self) {
-        panic!("\n\nUnexpected end of input.\n\n");
+        {{{ON_PARSE_ERROR_CALL}}}
     }
 
     {{{PRODUCTION_HANDLERS}}}
