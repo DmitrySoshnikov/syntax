@@ -143,6 +143,9 @@ export default class BaseParserGenerator {
    */
   generate() {
     this.generateParserData();
+    if(!this._outputFile){
+      return this._resultData;
+    }
     fs.writeFileSync(this._outputFile, this._resultData, 'utf-8');
     debug.timeEnd('Generating parser module');
     try {
