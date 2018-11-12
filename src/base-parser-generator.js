@@ -143,7 +143,7 @@ export default class BaseParserGenerator {
    */
   generate() {
     this.generateParserData();
-    if(!this._outputFile){
+    if (!this._outputFile) {
       return this._resultData;
     }
     fs.writeFileSync(this._outputFile, this._resultData, 'utf-8');

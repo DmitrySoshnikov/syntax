@@ -23,6 +23,7 @@ export {default as CanonicalCollection} from './lr/canonical-collection';
 export {default as State} from './lr/state';
 export {default as LRItem} from './lr/lr-item';
 export {default as LRParser} from './lr/lr-parser';
+export {default as LRParserGenerator} from './lr/lr-parser-generator-default';
 export {default as LRParsingTable} from './lr/lr-parsing-table';
 
 // LL parsing.
