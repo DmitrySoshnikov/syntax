@@ -158,7 +158,7 @@ public class Tokenizer {
    *   ...
    */
   private static final String[] mLexHandlers = {
-    {{{LEX_RULES}}}
+    {{{LEX_RULE_HANDLER_NAMES}}}
   };
 
   private static final Pattern NL_RE = Pattern.compile("\\n");
