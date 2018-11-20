@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_mut)]
+#![allow(unreachable_code)]
 
 extern crate regex;
 
