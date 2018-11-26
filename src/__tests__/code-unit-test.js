@@ -89,7 +89,7 @@ describe('code-unit', () => {
     let handler = CodeUnit.createProductionHandler({production});
 
     expect(handler.toString()).toBe(
-      'function (' + '_1, _2, _3' + ') { __ = _1 + _3 }'
+      'function(' + '_1, _2, _3' + ') { __ = _1 + _3 }'
     );
 
     handler(1, '+', 2);
@@ -101,7 +101,7 @@ describe('code-unit', () => {
     });
 
     expect(handler.toString()).toBe(
-      'function (' +
+      'function(' +
         '_1, _2, _3, _1loc, _2loc, _3loc' +
         ') { __loc = yyloc(_1loc, _3loc);__ = _1 + _3 }'
     );
@@ -118,7 +118,7 @@ describe('code-unit', () => {
       captureLocations: true,
     });
 
-    expect(handler.toString()).toBe('function (' + '' + ') { __loc = null; }');
+    expect(handler.toString()).toBe('function(' + '' + ') { __loc = null; }');
   });
 
   it('yyloc', () => {

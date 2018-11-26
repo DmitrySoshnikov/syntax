@@ -4,25 +4,93 @@
  * https://www.npmjs.com/package/syntax-cli
  */
 
-/* These should be inserted by Yyparse already:
+/* These should be inserted by the parser class already:
 
 package com.syntax;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Stack;
-import java.text.ParseException;
 
 */
 
 // --------------------------------------------
 // Tokenizer.
+
+/**
+ * Location object.
+ */
+class YyLoc {
+  public YyLoc() {}
+
+  public int startOffset;
+  public int endOffset;
+  public int startLine;
+  public int endLine;
+  public int startColumn;
+  public int endColumn;
+
+  public YyLoc(int startOffset, int endOffset, int startLine,
+               int endLine, int startColumn, int endColumn) {
+    this.startOffset = startOffset;
+    this.endOffset = endOffset;
+    this.startLine = startLine;
+    this.endLine = endLine;
+    this.startColumn = startColumn;
+    this.endColumn = endColumn;
+  }
+
+  public static YyLoc yyloc(YyLoc start, YyLoc end) {
+    // Epsilon doesn't produce location.
+    if (start == null || end == null) {
+      return start == null ? end : start;
+    }
+
+    return new YyLoc(
+      start.startOffset,
+      end.endOffset,
+      start.startLine,
+      end.endLine,
+      start.startColumn,
+      end.endColumn
+    );
+  }
+}
+
+/**
+ * Token class: encapsulates token type, and the matched value.
+ */
+class Token {
+  // Basic data.
+  public int type;
+  public String value;
+
+  // Location data.
+  YyLoc loc;
+
+  public Token(int type, String value) {
+    // Special token with no location data (e.g. EOF).
+    this(type, value, null);
+  }
+
+  public Token(int type, String value, YyLoc loc) {
+    this.type = type;
+    this.value = value;
+    this.loc = loc;
+  }
+
+  public String toString() {
+    return "{type: " + type + ", value: " + value + "}";
+  }
+}
 
 /**
  * Regexp-based tokenizer. Applies lexical rules in order, until gets
@@ -41,48 +109,7 @@ import java.text.ParseException;
  * - popState(): void
  * - begin(String stateName): void - alias for pushState
  */
-public class Tokenizer {
-
-  /**
-   * Token class: encapsulates token type, and the matched value.
-   */
-  public static class Token {
-    // Basic data.
-    public int type;
-    public String value;
-
-    // Location data.
-    public int startOffset;
-    public int endOffset;
-    public int startLine;
-    public int endLine;
-    public int startColumn;
-    public int endColumn;
-
-    public Token(int type, String value) {
-      // Special token with no location data (e.g. EOF).
-      this(type, value, 0, 0, 0, 0, 0, 0);
-    }
-
-    public Token(int type, String value, int startOffset,
-           int endOffset, int startLine, int endLine,
-           int startColumn, int endColumn)
-    {
-      this.type = type;
-      this.value = value;
-
-      this.startOffset = startOffset;
-      this.endOffset = endOffset;
-      this.startLine = startLine;
-      this.endLine = endLine;
-      this.startColumn = startColumn;
-      this.endColumn = endColumn;
-    }
-
-    public String toString() {
-      return "{type: " + type + ", value: " + value + "}";
-    }
-  }
+class Tokenizer {
 
   /**
    * Tokenizing String.
@@ -92,12 +119,12 @@ public class Tokenizer {
   /**
    * Matched text.
    */
-  public static String yytext = null;
+  public String yytext = null;
 
   /**
    * Matched text length.
    */
-  public static int yyleng = 0;
+  public int yyleng = 0;
 
   /**
    * EOF.
@@ -110,17 +137,12 @@ public class Tokenizer {
    *
    * Example:
    *
-   *   {{
-   *     put("+", 1);
-   *     put("*", 2);
-   *     put("NUMBER", 3);
-   *     put("(", 4);
-   *     put(")", 5);
-   *     put("$", 6);
-   *  }};
+   *   put("+", 1);
+   *   put("*", 2);
+   *   put("NUMBER", 3);
+   *   ...
    */
-  private static final Map<String, Integer> mTokensMap = new HashMap<String, Integer>()
-  {{
+  private static final Map<String, Integer> mTokensMap = new HashMap<String, Integer>() {{
     {{{TOKENS}}}
   }};
 
@@ -133,32 +155,33 @@ public class Tokenizer {
   );
 
   /**
-   * Lex patterns:
+   * Lex patterns, and their handler names.
    *
    * Example:
    *
    *   Pattern.compile("^\\s+"),
    *   Pattern.compile("^\\d+"),
-   *   Pattern.compile("^\\*"),
-   *   Pattern.compile("^\\+"),
-   *   Pattern.compile("^\\("),
-   *   Pattern.compile("^\\)"),
+   *   ...
    */
   private static final Pattern[] mLexPatterns = {
     {{{LEX_RULES}}}
   };
 
   /**
-   * Handler methods for patterns.
+   * Cache for the lex rule methods.
    *
    * Example:
    *
-   *   "_lexRule1",
-   *   "_lexRule2",
+   *   mLexHandlerMethods[0] = Tokenizer.class.getDeclaredMethod("_lexRule0");
    *   ...
    */
-  private static final String[] mLexHandlers = {
-    {{{LEX_RULE_HANDLER_NAMES}}}
+  private static final Method[] mLexHandlerMethods = new Method[{{{LEX_RULE_METHODS_COUNT}}}];
+  static {
+    try {
+      {{{LEX_RULE_HANDLER_METHODS}}}
+    } catch (Exception ignore) {
+      // Ignore since the methods are exact.
+    }
   };
 
   private static final Pattern NL_RE = Pattern.compile("\\n");
@@ -168,11 +191,11 @@ public class Tokenizer {
    *
    * Example:
    *
-   *   put("INITIAL", new Integer[] {0, 1, 2, 3, 4, 5});
+   *   { "INITIAL", new Integer[] { 0, 1, 2, 3 } },
+   *   ...
    */
-  private static Map<String, Integer[]> mLexRulesByConditions = new HashMap<String, Integer[]>()
-  {{
-    {{{LEX_RULES_BY_START_CONDITIONS}}};
+  private static Map<String, Integer[]> mLexRulesByConditions = new HashMap<String, Integer[]>() {{
+    {{{LEX_RULES_BY_START_CONDITIONS}}}
   }};
 
   /**
@@ -216,11 +239,6 @@ public class Tokenizer {
    * Example:
    *
    *   public String _lexRule1() {
-   *     // Skip whitespace.
-   *     return null;
-   *   }
-   *
-   *   public String _lexRule2() {
    *     return "NUMBER";
    *   }
    */
@@ -309,20 +327,16 @@ public class Tokenizer {
       }
 
       if (matched != null) {
-        Tokenizer.yytext = matched;
-        Tokenizer.yyleng = matched.length();
+        this.yytext = matched;
+        this.yyleng = matched.length();
 
         Object tokenType = null;
 
         try {
-          Method tokenHandler = Tokenizer.class.getDeclaredMethod(mLexHandlers[i]);
-          try {
-            tokenType = tokenHandler.invoke(this);
-          } catch (Throwable e) {
-            // Ignore.
-          }
-        } catch (Throwable e) {
-          // Ignore.
+          tokenType = mLexHandlerMethods[i].invoke(this);
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw new ParseException(e.getMessage(), 0);
         }
 
         if (tokenType == null) {
@@ -397,17 +411,18 @@ public class Tokenizer {
       (mTokenEndOffset - mCurrentLineBeginOffset);
   }
 
-  private Token toToken(String tokenType, String yytext)
-  {
+  private Token toToken(String tokenType, String yytext) {
     return new Token(
       mTokensMap.get(tokenType),
       yytext,
-      mTokenStartOffset,
-      mTokenEndOffset,
-      mTokenStartLine,
-      mTokenEndLine,
-      mTokenStartColumn,
-      mTokenEndColumn
+      new YyLoc(
+        mTokenStartOffset,
+        mTokenEndOffset,
+        mTokenStartLine,
+        mTokenEndLine,
+        mTokenStartColumn,
+        mTokenEndColumn
+      )
     );
   }
 
