@@ -76,10 +76,10 @@ const JavaParserGeneratorTrait = {
   _buildTable(table) {
     const entries = Object.keys(table).map(state => {
       return 'mTable.add(new HashMap<>() {{ ' +
-        this._toJavaHashMap(table[state], 'Integer', 'String') + '}})';
+        this._toJavaHashMap(table[state], 'Integer', 'String') + ' }});';
     });
 
-    return entries.join(';\n    ');
+    return entries.join('\n    ');
   },
 
   /**
@@ -163,8 +163,8 @@ const JavaParserGeneratorTrait = {
       return '__.semanticValue = null;';
     }
 
-    // From parser hooks, append ; at the end.
-    if (context === '.tokenizer' && !/;\s*$/.test(action)) {
+    // Append ; at the end if there is no one.
+    if (!/;\s*$/.test(action)) {
       action += ';';
     }
 
@@ -231,8 +231,8 @@ const JavaParserGeneratorTrait = {
    */
   _scopeVars(code, context = '') {
     return code
-      .replace(/yytext/g, `self${context}.yytext`)
-      .replace(/yyleng/g, `self${context}.yyleng`)
+      .replace(/yytext/g, `this${context}.yytext`)
+      .replace(/yyleng/g, `this${context}.yyleng`)
       .replace(/__\s*=/g, `__.semanticValue =`);
   },
 
@@ -274,10 +274,10 @@ const JavaParserGeneratorTrait = {
       let key = k.replace(/"/g, '\\"');
       result.push(
         `put(${this._hashKey(key, keyType)}, ` +
-        `${this._hashValue(value, valueType)})`
+        `${this._hashValue(value, valueType)});`
       );
     }
-    return result.join('; ');
+    return result.join(' ');
   },
 
   /**

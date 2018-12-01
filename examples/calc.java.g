@@ -14,7 +14,7 @@
 {
   "lex": {
     "rules": [
-      ["\\s+",  '/* skip whitespace */ ""'],
+      ["\\s+",  '/* skip whitespace */ return null'],
       ["\\d+",  'return "NUMBER"'],
       ["\\*",   'return "*"'],
       ["\\+",   'return "+"'],
@@ -44,7 +44,7 @@
       }
 
       public static void onParseEnd(Object _result) {
-        System.out.println("Parsing is completed: " + (String)_result);
+        System.out.println("Parsing is completed: " + _result);
       }
     }
 

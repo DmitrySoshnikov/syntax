@@ -386,6 +386,8 @@ const parsers = {
           .default,
         rs: require(ROOT + 'plugins/rust/lr/lr-parser-generator-rust.js')
           .default,
+        java: require(ROOT + 'plugins/java/lr/lr-parser-generator-java.js')
+          .default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;
