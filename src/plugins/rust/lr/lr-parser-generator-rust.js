@@ -17,7 +17,7 @@ const RUST_LR_PARSER_TEMPLATE = fs.readFileSync(
 );
 
 /**
- * LR parser generator for PHP.
+ * LR parser generator for Rust.
  */
 export default class LRParserGeneratorRust extends LRParserGeneratorDefault {
 

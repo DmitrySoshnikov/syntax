@@ -31,8 +31,6 @@ import java.util.Stack;
 
 {{{MODULE_INCLUDE}}}
 
-{{{TOKENIZER}}}
-
 /*
 
 The `ParserEvents` class allows defining hooks for certain parse events,
@@ -57,6 +55,8 @@ Default implementation:
 */
 
 {{{PARSER_EVENTS_CLASS}}}
+
+{{{TOKENIZER}}}
 
 // --------------------------------------------
 // Parser.
@@ -129,16 +129,15 @@ public class {{{PARSER_NAME}}} {
    * transition number, or "Accept/acc".
    *
    * Example:
-   * {
-   *   // 0
-   *   new HashMap<Integer, String>()
-   *   {{
-   *     put(0, "1");
-   *     put(3, "s8");
-   *     put(4, "s2");
-   *   }},
+   *
+   *   mTable.add(
+   *     new HashMap<Integer, String>() {{
+   *       put(0, "1");
+   *       put(3, "s2");
+   *       put(4, "s3");
+   *     }}
+   *   );
    *   ...
-   * }
    */
   private static List<Map<Integer, String>> mTable = new ArrayList<Map<Integer, String>>();
   static {
@@ -160,11 +159,6 @@ public class {{{PARSER_NAME}}} {
    * handler. In the grammar usually used as $$.
    */
   StackEntry __ = null;
-
-  /**
-   * Whether locations should be captured and propagated.
-   */
-  private boolean mShouldCaptureLocations = {{{CAPTURE_LOCATIONS}}};
 
   /**
    * Constructor.
@@ -191,10 +185,10 @@ public class {{{PARSER_NAME}}} {
    *
    * public void _handler0() {
    *   // Prologue
-   *   StackEntry _1 = mValueStack.pop();
-   *   mValueStack.pop();
    *   StackEntry _3 = mValueStack.pop();
-
+   *   mValueStack.pop();
+   *   StackEntry _1 = mValueStack.pop();
+   *
    *   __.semanticValue = (Integer)(_1.semanticValue) + (Integer)(_3.semanticValue);
    * }
    */
