@@ -88,8 +88,8 @@ describe('code-unit', () => {
     const production = MockProduction(['additive', 'PLUS', 'multiplicative']);
     let handler = CodeUnit.createProductionHandler({production});
 
-    expect(handler.toString()).toBe(
-      'function(' + '_1, _2, _3' + ') { __ = _1 + _3 }'
+    expect(handler.toString()).toContain(
+      '(' + '_1, _2, _3' + ') { __ = _1 + _3 }'
     );
 
     handler(1, '+', 2);
@@ -100,8 +100,8 @@ describe('code-unit', () => {
       captureLocations: true,
     });
 
-    expect(handler.toString()).toBe(
-      'function(' +
+    expect(handler.toString()).toContain(
+      '(' +
         '_1, _2, _3, _1loc, _2loc, _3loc' +
         ') { __loc = yyloc(_1loc, _3loc);__ = _1 + _3 }'
     );
