@@ -118,7 +118,7 @@ describe('code-unit', () => {
       captureLocations: true,
     });
 
-    expect(handler.toString()).toBe('function(' + '' + ') { __loc = null; }');
+    expect(handler.toString()).toContain('(' + '' + ') { __loc = null; }');
   });
 
   it('yyloc', () => {
