@@ -75,7 +75,7 @@ const JavaParserGeneratorTrait = {
    */
   _buildTable(table) {
     const entries = Object.keys(table).map(state => {
-      return 'mTable.add(new HashMap<>() {{ ' +
+      return 'mTable.add(new HashMap<Integer, String>() {{ ' +
         this._toJavaHashMap(table[state], 'Integer', 'String') + ' }});';
     });
 
