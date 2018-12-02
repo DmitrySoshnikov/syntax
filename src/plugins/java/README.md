@@ -29,7 +29,7 @@ mkdir -p com/syntax
 
 ### 4. Create grammar file
 
-We use simple calculator grammar for the example. Create the `com/syntax/grammar.g`, and add the following:
+We use simple calculator grammar for the example. Create the `com/syntax/CalcParser.bnf`, and add the following:
 
 ```
 /**
@@ -46,17 +46,6 @@ We use simple calculator grammar for the example. Create the `com/syntax/grammar
 \s+     /* skip whitespace */ return null;
 \d+     return "NUMBER";
 
-/**
- * Simple tokens like '*', '(', etc can be omitted here, and used inline
- * however, define them here as well:
- */
-
-"+"     return "+";
-"*"     return "*";
-
-"("     return "(";
-")"     return ")";
-
 /lex
 
 // -----------------------------------------------
@@ -69,8 +58,8 @@ We use simple calculator grammar for the example. Create the `com/syntax/grammar
 // `2 + 2 + 2` is `(2 + 2) + 2`, which is important
 // when we build AST nodes.
 
-%left +
-%left *
+%left '+'
+%left '*'
 
 // -----------------------------------------------
 // Module include.
@@ -114,7 +103,7 @@ Expr
     // ---------------------------------------
     // Addition
 
-    : Expr + Expr {
+    : Expr '+' Expr {
 
         $$ = (Integer)$1 + (Integer)$3
     }
@@ -122,7 +111,7 @@ Expr
     // ---------------------------------------
     // Multiplication
 
-    | Expr * Expr {
+    | Expr '*' Expr {
 
         $$ = (Integer)$1 * (Integer)$3
     }
@@ -138,7 +127,7 @@ Expr
     // ---------------------------------------
     // Grouping in parens
 
-    | ( Expr ) {
+    | '(' Expr ')' {
 
         $$ = $2
 
@@ -158,7 +147,7 @@ $$ = (Integer)$1 + (Integer)$3
 Now using _Syntax_ tool, generate the parser from the grammar:
 
 ```
-syntax-cli -g syntax/grammar.g -m LALR1 -o com/syntax/CalcParser.java
+syntax-cli -g com/syntax/CalcParser.bnf -m LALR1 -o com/syntax/CalcParser.java
 
     ✓ Successfully generated: com/syntax/CalcParser.java
 ```
