@@ -1,5 +1,5 @@
 /**
- * Generated parser in Rust.
+ * Generated parser in Java.
  *
  * ./bin/syntax -g examples/calc.java.g -m lalr1 -o CalcParser.rs
  *
@@ -43,8 +43,8 @@
         System.out.println("Parsing is started: " + str);
       }
 
-      public static void onParseEnd(Object _result) {
-        System.out.println("Parsing is completed: " + _result);
+      public static void onParseEnd(Object result) {
+        System.out.println("Parsing is completed: " + result);
       }
     }
 

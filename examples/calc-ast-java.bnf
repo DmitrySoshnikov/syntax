@@ -1,0 +1,132 @@
+/**
+ * Generated parser in Java.
+ *
+ * ./bin/syntax -g examples/calc.java.g -m lalr1 -o CalcParser.rs
+ *
+ * import com.syntax.*;
+ *
+ * CalcParser parser = new CalcParser();
+ *
+ * System.out.println(parser.parse("2 + 2 * 2");
+ * System.out.println(parser.parse("(2 + 2) * 2");
+ */
+
+// -----------------------------------------------------------------------------
+// Lexical grammar
+
+/**
+ * RegExp-based lexical grammar. Simple symbols like '*', '(', etc, can be
+ * defined inline.
+ */
+
+%lex
+
+%%
+
+\s+               /* skip whitespace */ return null
+\d+               return "NUMBER"
+
+/lex
+
+// -----------------------------------------------------------------------------
+// Operator precedence
+
+/**
+ * Both, '+' and '*' are left-associative. I.e. 5 + 3 + 2 is parsed as
+ * (5 + 3) + 2, and not as 5 + (3 + 2).
+ *
+ * The '*' goes after '+' in the list below, so it has higher precedence,
+ * and 2 + 2 * 2 is parsed as correctly as 2 + (2 * 2).
+ */
+
+%left '+'
+%left '*'
+
+
+// -----------------------------------------------------------------------------
+// Module include
+
+/**
+ * The code in the module include section is included "as is".
+ * If can contain the `ParserEvents` class, which defines parse even handlers.
+ */
+
+%{
+
+/**
+ * The ParserEvents class allows subscribing to
+ * different parsing events.
+ */
+class ParserEvents {
+  public static void init() {
+    System.out.println("Parser is created.");
+  }
+
+  public static void onParseBegin(String str) {
+    System.out.println("Parsing is started: " + str);
+  }
+
+  public static void onParseEnd(Object result) {
+    System.out.println("Parsing is completed: " + result);
+  }
+}
+
+// Define the class nodes inline here, however on practice they can be
+// located anywhere, and just imported here.
+
+class Node {
+  public String type;
+}
+
+class BinaryNode extends Node {
+  public Node left;
+  public Node right;
+  public String operator;
+
+  public BinaryNode(Object left, Object op, Object right) {
+    this.type = "BinaryNode";
+    this.left = (Node)left;
+    this.right = (Node)right;
+    this.operator = (String)op;
+  }
+}
+
+class LiteralNode extends Node {
+  public Integer value;
+
+  public LiteralNode(Integer value) {
+    this.type = "LiteralNode";
+    this.value = value;
+  }
+}
+
+
+%}
+
+// -----------------------------------------------------------------------------
+// Syntactic grammar (BNF)
+
+%%
+
+Expression
+
+  : Expression '+' Expression
+    {
+      $$ = new BinaryNode($1, $2, $3)
+    }
+
+  | Expression '*' Expression
+    {
+      $$ = new BinaryNode($1, $2, $3)
+    }
+
+  | NUMBER
+    {
+      $$ = new LiteralNode(Integer.valueOf(yytext))
+    }
+
+  | '(' Expression ')'
+    {
+      $$ = $2
+    }
+  ;

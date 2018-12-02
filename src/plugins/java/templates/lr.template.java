@@ -237,7 +237,7 @@ public class {{{PARSER_NAME}}} {
         mValueStack.push(new StackEntry(token.type, token.value, token.loc));
 
         // Push next state number: "s5" -> 5
-        mStatesStack.push(Integer.parseInt(entry.substring(1), 10));
+        mStatesStack.push(Integer.valueOf(entry.substring(1)));
 
         shiftedToken = token;
         token = tokenizer.getNextToken();
@@ -252,7 +252,7 @@ public class {{{PARSER_NAME}}} {
       // total RHS * 2 symbols.
       else if (entry.charAt(0) == 'r') {
         // "r3" -> 3
-        int productionNumber = Integer.parseInt(entry.substring(1), 10);
+        int productionNumber = Integer.valueOf(entry.substring(1));
         int[] production = mProductions[productionNumber];
 
         // The length of RHS is stored in the production[1].
