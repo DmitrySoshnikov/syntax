@@ -21,6 +21,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Ruby plugin](#ruby-plugin)
   - [C# plugin](#c-plugin)
   - [Rust plugin](#rust-plugin)
+  - [Java plugin](#java-plugin)
 - [Grammar format](#grammar-format)
   - [JSON-like notation](#json-like-notation)
   - [Yacc/Bison notation](#yaccbison-notation)
@@ -37,7 +38,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
 - [Handler arguments notation](#handler-arguments-notation)
   - [Positioned notation](#positioned-notation)
   - [Named notation](#named-notation)
-- [Capture location objects](#capture-location-objects)
+- [Capturing location objects](#capturing-location-objects)
 - [Parsing modes](#parsing-modes)
   - [LL parsing](#ll-parsing)
   - [LR parsing](#lr-parsing)
@@ -118,7 +119,7 @@ See [this instruction](https://github.com/DmitrySoshnikov/syntax/blob/master/src
 
 #### JavaScript default
 
-Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, _PHP_, _Ruby_, _C#_, and _Rust_. The target language is determined by the output file extension.
+Syntax is language agnostic when it comes to parser generation. The same grammar can be used for parser generation in different languages. Currently Syntax supports _JavaScript_, _Python_, _PHP_, _Ruby_, _C#_, _Rust_, and _Java_. The target language is determined by the output file extension.
 
 #### Python plugin
 
@@ -221,6 +222,37 @@ fn main() {
 ```
 
 Check out [README](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/rust/README.md) file from rust directory for more information.
+
+#### Java plugin
+
+Syntax has support for generating LR parsers in Java. See the [simple example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.java.g), and an example of [generating an AST](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-ast-java.bnf) with recursive structures.
+
+```
+./bin/syntax -g examples/calc.java.g -m lalr1 -o com/syntax/CalcParser.java
+```
+
+By default Syntax generates parsers in the `com/syntax` package.
+
+```java
+import com.syntax.*;
+import java.text.ParseException;
+
+public class SyntaxTest {
+  public static void main(String[] args) {
+
+    CalcParser calcParser = new CalcParser();
+
+    try {
+      System.out.println(calcParser.parse("2 + 2 * 2")); // 6
+      System.out.println(calcParser.parse("(2 + 2) * 2")); // 8
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+Check out [README](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/java/README.md) from the Java plugin for more information.
 
 ### Grammar format
 
