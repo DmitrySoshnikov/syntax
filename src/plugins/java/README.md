@@ -36,15 +36,12 @@ We use simple calculator grammar for the example. Create the `com/syntax/grammar
  * Calculator grammar to generate parser in Java.
  */
 
+// -----------------------------------------------
+// Lexical grammar.
+
 %lex
 
 %%
-
-// -----------------------------------------------
-// Lexical grammar.
-//
-// Uses regexp to produce list of tokens.
-// Return values is a token type.
 
 \s+     /* skip whitespace */ return null;
 \d+     return "NUMBER";
@@ -149,8 +146,6 @@ Expr
 ```
 
 > NOTE: here we used example in Bison/Yacc format. You can also check [the example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.java.g) in JSON format.
-
-Since Rust is a strongly and (mostly) statically typed language, we need to define _types_ of all the _used_ arguments in production handlers. They are defined in the Rust’s closure notation.
 
 The production handler arguments, such as `$1`, `$2`, etc after of the generic `Object` type. That's why we need to manually cast them to needed types in certain operations. For example:
 
