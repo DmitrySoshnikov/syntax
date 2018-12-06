@@ -178,7 +178,10 @@ const JavaParserGeneratorTrait = {
     const lexRulesArray = [];
 
     const lexRules = this._grammar.getLexGrammar().getRules().map((rule, i) => {
-      let action = this._actionFromHandler(rule.getRawHandler());
+      const rawHandler = rule.getRawHandler();
+      const action = !rawHandler
+        ? 'return null;'
+        : this._actionFromHandler(rule.getRawHandler());
 
       this._lexHandlers.push(action);
 
