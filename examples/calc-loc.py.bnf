@@ -21,9 +21,18 @@
  * first and last symbol on a RHS handle, and it also can be overridden
  * manually.
  *
- * ./bin/syntax -g examples/calc-loc.py.bnf -m slr1 -o ~/Parser.py -w --loc
+ * ./bin/syntax -g examples/calc-loc.py.bnf -m slr1 -o ~/Parser.py --loc
  *
  */
+
+%lex
+
+%%
+
+\s+       return "" # skip whitespace
+\d+       return "NUMBER"
+
+/lex
 
 %{
 
@@ -76,15 +85,6 @@ exp
     { $$ = NumericLiteral($number, @number) }
   ;
 
-literal
-  : number
-  ;
-
 number
-  : number digit
-    { $$ = int($number + $digit); }
-
-  | digit
+  : NUMBER { $$ = int(yytext) }
   ;
-
-digit : '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
