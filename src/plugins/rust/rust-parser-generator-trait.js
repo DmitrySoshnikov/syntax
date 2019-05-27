@@ -26,6 +26,20 @@ const DEFAULT_ERROR_HANDLER = `
 `;
 
 /**
+ * Make replacer for String#replace method which replace match with replaceText only if first capture group is not '.'
+ * RegExp Lookbehind is not supported in node version less than 10.x
+ * @param {string} replaceText
+ */
+function ifNotStartsWithDotReplacer(replaceText) {
+  return (m, maybeDot) => {
+    if (maybeDot === '.') {
+      return m;
+    }
+    return maybeDot + replaceText;
+  }
+}
+
+/**
  * The trait is used by parser generators (LL/LR) for Rust.
  */
 const RustParserGeneratorTrait = {
@@ -173,7 +187,7 @@ const RustParserGeneratorTrait = {
       return {action: '', types};
     }
 
-    const typesRe = /\s*\|([^|]*)\|\s*->\s*(\w+);/g;
+    const typesRe = /\s*\|([^|]*)\|\s*->\s*([\w&][\w<>, '&]*);/g;
     const typesData = typesRe.exec(action);
 
     if (typesData) {
@@ -332,10 +346,10 @@ const RustParserGeneratorTrait = {
    */
   _scopeVars(code, context = '') {
     return code
-      .replace(/yytext/g, `self${context}.yytext`)
-      .replace(/yyleng/g, `self${context}.yyleng`)
+      .replace(/(.?)yytext/g, ifNotStartsWithDotReplacer(`self${context}.yytext`))
+      .replace(/(.?)yyleng/g, ifNotStartsWithDotReplacer(`self${context}.yyleng`))
       .replace(/__\s*=/g, `let __ =`)
-      .replace(/yyloc/g, 'Loc::from_tokens_range');
+      .replace(/(.?)yyloc/g, ifNotStartsWithDotReplacer('Loc::from_tokens_range'));
   },
 
   /**
@@ -461,13 +475,13 @@ const RustParserGeneratorTrait = {
 
     // Parser hooks.
     const onParseBegin = moduleInclude.indexOf('fn on_parse_begin') !== -1
-      ? 'on_parse_begin(self, string);'
+      ? 'on_parse_begin(self, &string);'
       : '';
 
     const onParseEnd = moduleInclude.indexOf('fn on_parse_end') !== -1
       ? 'on_parse_end(self, &result);'
       : '';
-    
+
     const onParseError = moduleInclude.indexOf('fn on_parse_error') !== -1
       ? 'on_parse_error(self, &token);'
       : DEFAULT_ERROR_HANDLER;
@@ -475,7 +489,7 @@ const RustParserGeneratorTrait = {
     this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
     this.writeData('ON_PARSE_END_CALL', onParseEnd);
     this.writeData('ON_PARSE_ERROR_CALL', onParseError);
-    
+
     this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 

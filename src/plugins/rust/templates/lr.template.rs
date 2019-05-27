@@ -2,12 +2,12 @@
 #![allow(unused_mut)]
 #![allow(unreachable_code)]
 
-extern crate regex;
+extern crate onig;
 
 #[macro_use]
 extern crate lazy_static;
 
-use regex::Regex;
+use onig::Regex;
 use std::collections::HashMap;
 
 /**
@@ -112,11 +112,11 @@ lazy_static! {
 //
 // Can also include parsing hooks:
 //
-//   fn on_parse_begin(parser: &mut Parser, string: &'static str) {
+//   fn on_parse_begin(parser: &mut Parser, string: &str) {
 //     ...
 //   }
 //
-//   fn on_parse_begin(parser: &mut Parser, string: &'static str) {
+//   fn on_parse_end(parser: &mut Parser, result: &TResult) {
 //     ...
 //   }
 //
@@ -133,7 +133,7 @@ lazy_static! {
 /**
  * Parser.
  */
-pub struct Parser {
+pub struct Parser<'t> {
     /**
      * Parsing stack: semantic values.
      */
@@ -147,19 +147,19 @@ pub struct Parser {
     /**
      * Tokenizer instance.
      */
-    tokenizer: Tokenizer,
+    tokenizer: Tokenizer<'t>,
 
     /**
      * Semantic action handlers.
      */
-    handlers: [fn(&mut Parser) -> SV; {{{PRODUCTION_HANDLERS_COUNT}}}],
+    handlers: [fn(&mut Parser<'t>) -> SV; {{{PRODUCTION_HANDLERS_COUNT}}}],
 }
 
-impl Parser {
+impl<'t> Parser<'t> {
     /**
      * Creates a new Parser instance.
      */
-    pub fn new() -> Parser {
+    pub fn new() -> Parser<'t> {
         Parser {
             // Stacks.
             values_stack: Vec::new(),
@@ -174,7 +174,7 @@ impl Parser {
     /**
      * Parses a string.
      */
-    pub fn parse(&mut self, string: &'static str) -> TResult {
+    pub fn parse(&mut self, string: &'t str) -> TResult {
         {{{ON_PARSE_BEGIN_CALL}}}
 
         // Initialize the tokenizer and the string.
@@ -271,7 +271,7 @@ impl Parser {
         unreachable!();
     }
 
-    fn unexpected_token(&mut self, token: &Token) {
+    fn unexpected_token(&self, token: &Token) {
         {{{ON_PARSE_ERROR_CALL}}}
     }
 

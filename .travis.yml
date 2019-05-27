@@ -1,5 +1,12 @@
 sudo: false
 language: node_js
 node_js:
-  - "6"
-  - "6.1"
+  - "8.9.4"
+  - "10.15.3"
+before_install:
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - source $HOME/.cargo/env
+cache:
+  cargo: true
+  directories:
+    - node_modules

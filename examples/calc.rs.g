@@ -32,7 +32,7 @@
 
       type TResult = i32;
 
-      fn on_parse_begin(_parser: &mut Parser, string: &'static str) {
+      fn on_parse_begin(_parser: &mut Parser, string: &str) {
           println!("on_parse_begin: {:?}", string);
       }
 

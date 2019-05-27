@@ -1,0 +1,8 @@
+[package]
+name = "calc-bin"
+version = "0.1.0"
+authors = ["Andrey Rublev <box@anru.me>", "DmitrySoshnikov <dmitry.soshnikov@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+calc-syntax = { path = "../calc-syntax" }

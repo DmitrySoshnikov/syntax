@@ -1,0 +1,10 @@
+[package]
+name = "calc-syntax"
+version = "0.1.0"
+authors = ["Andrey Rublev <box@anru.me>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+onig = "4"
+lazy_static = "1"
