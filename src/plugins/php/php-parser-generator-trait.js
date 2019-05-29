@@ -102,7 +102,8 @@ const PHPParserGeneratorTrait = {
         flags.push('i');
       }
 
-      return `['/${lexRule.getRawMatcher()}/${flags.join('')}', ` +
+      const key = lexRule.getRawMatcher().replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `['/${key}/${flags.join('')}', ` +
         `'_lex_rule${this._lexHandlers.length}']`;
     });
 
