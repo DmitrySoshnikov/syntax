@@ -47,6 +47,9 @@ onig = "4"
 lazy_static = "1"
 ```
 
+[Onig](https://docs.rs/onig/4.3.2/onig/) dependency requires rust version at least `1.26.0`.
+Any time you can get latest rust toolchain by running command `rustup update`.
+
 ### 4. Create grammar file
 
 We use simple calculator grammar for the example. In the `syntax/grammar.g` add:
