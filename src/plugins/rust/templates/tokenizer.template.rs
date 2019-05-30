@@ -20,6 +20,12 @@ struct Token {
     end_column: i32,
 }
 
+fn str_as_static<'t>(s: &'t str) -> &'static str {
+    unsafe {
+        std::mem::transmute::<&'t str, &'static str>(s)
+    }
+}
+
 // NOTE: LEX_RULES_BY_START_CONDITIONS, and TOKENS_MAP
 // are defined in the lazy_static! block in lr.templates.rs
 
@@ -33,11 +39,11 @@ lazy_static! {
     static ref REGEX_RULES: Vec<Regex> = LEX_RULES.iter().map(|rule| Regex::new(rule).unwrap()).collect();
 }
 
-struct Tokenizer {
+struct Tokenizer<'t> {
     /**
      * Tokenizing string.
      */
-    string: &'static str,
+    string: &'t str,
 
     /**
      * Cursor for current symbol.
@@ -72,10 +78,18 @@ struct Tokenizer {
     yytext: &'static str,
     yyleng: usize,
 
-    handlers: [fn(&mut Tokenizer) -> &'static str; {{{LEX_RULE_HANDLERS_COUNT}}}],
+    /*
+     * Buffer for manually generated tokens in lex handlers.
+     * We do need this buffer because for regular unmodified tokens yytext just points to slice in "string",
+     * so no extra memory allocated here.
+     * But for generated tokens we need some place in memory to keep them up while Tokenizer is alive.
+     */
+    yybuffer: Vec<String>,
+
+    handlers: [fn(&mut Tokenizer<'t>) -> &'static str; {{{LEX_RULE_HANDLERS_COUNT}}}],
 }
 
-impl Tokenizer {
+impl<'t> Tokenizer<'t> {
 
     /**
      * Creates a new Tokenizer instance.
@@ -83,7 +97,7 @@ impl Tokenizer {
      * The same instance can be then reused in parser
      * by calling `init_string`.
      */
-    pub fn new() -> Tokenizer {
+    pub fn new() -> Tokenizer<'t> {
         let mut tokenizer = Tokenizer {
             string: "",
             cursor: 0,
@@ -104,6 +118,8 @@ impl Tokenizer {
             yytext: "",
             yyleng: 0,
 
+            yybuffer: Vec::new(),
+
             handlers: {{{LEX_RULE_HANDLERS_ARRAY}}}
         };
 
@@ -113,7 +129,7 @@ impl Tokenizer {
     /**
      * Initializes a parsing string.
      */
-    pub fn init_string(&mut self, string: &'static str) -> &mut Tokenizer {
+    pub fn init_string(&mut self, string: &'t str) -> &mut Tokenizer<'t> {
         self.string = string;
 
         // Initialize states.
@@ -133,6 +149,22 @@ impl Tokenizer {
         self.token_end_column = 0;
 
         self
+    }
+
+    /**
+     * Replace yytext with given string
+     */
+    pub fn set_yytext(&mut self, s: String) {
+        self.yytext = self.string_ref(s);
+    }
+
+    /**
+     * Move ownership of given string to tokenizer and returns reference to it as &str.
+     * Use this method for overriding yytext with new strings wich are not part of text being parsed.
+     */
+    pub fn string_ref(&mut self, s: String) -> &'static str {
+        self.yybuffer.push(s);
+        str_as_static(self.yybuffer.last().unwrap().as_str())
     }
 
     /**
@@ -161,7 +193,9 @@ impl Tokenizer {
                     self.cursor = self.cursor + 1;
                 }
                 
-                self.yytext = matched;
+                // lifetime of parsed string is greater than lifetime of tokens or tokenizer
+                // so it's safe to extend lifetime of matched text
+                self.yytext = str_as_static(matched);
                 self.yyleng = matched.len();
 
                 let token_type = self.handlers[i](self);
@@ -195,7 +229,7 @@ impl Tokenizer {
      * line from the source, pointing with the ^ marker to the bad token.
      * In addition, shows `line:column` location.
      */
-    fn panic_unexpected_token(&self, string: &'static str, line: i32, column: i32) {
+    fn panic_unexpected_token(&self, string: &str, line: i32, column: i32) {
         let line_source = self.string
             .split('\n')
             .collect::<Vec<&str>>()
@@ -216,7 +250,7 @@ impl Tokenizer {
         );
     }
 
-    fn capture_location(&mut self, matched: &'static str) {
+    fn capture_location<'s>(&mut self, matched: &'s str) {
         let nl_re = Regex::new(r"\n").unwrap();
 
         // Absolute offsets.
@@ -230,7 +264,7 @@ impl Tokenizer {
         for cap in nl_re.captures_iter(matched) {
             self.current_line = self.current_line + 1;
             self.current_line_begin_offset = self.token_start_offset +
-                cap.get(0).unwrap().start() as i32 + 1;
+                cap.pos(0).unwrap().0 as i32 + 1;
         }
 
         self.token_end_offset = self.cursor + matched.len() as i32;
@@ -241,10 +275,10 @@ impl Tokenizer {
         self.current_column = self.token_end_column;
     }
 
-    fn _match(&mut self, str_slice: &'static str, re: &Regex) -> Option<&'static str> {
+    fn _match<'s>(&mut self, str_slice: &'s str, re: &Regex) -> Option<&'s str> {
         match re.captures(str_slice) {
             Some(caps) => {
-                let matched = caps.get(0).unwrap().as_str();
+                let matched = caps.at(0).unwrap();
                 self.capture_location(matched);
                 self.cursor = self.cursor + (matched.len() as i32);
                 Some(matched)
@@ -253,9 +287,11 @@ impl Tokenizer {
         }
     }
 
-    fn to_token(&self, token: &'static str) -> Token {
+    fn to_token(&self, token: &str) -> Token {
         Token {
-            kind: *TOKENS_MAP.get(token).unwrap(),
+            kind: *TOKENS_MAP.get(token).expect(
+                format!("Token {} was reached, but there is no grammar rule for them", token).as_str()
+            ),
             value: self.yytext,
             start_offset: self.token_start_offset,
             end_offset: self.token_end_offset,
@@ -269,31 +305,28 @@ impl Tokenizer {
     /**
      * Whether there are still tokens in the stream.
      */
-    pub fn has_more_tokens(&mut self) -> bool {
+    pub fn has_more_tokens(&self) -> bool {
         self.cursor <= self.string.len() as i32
     }
 
     /**
      * Whether the cursor is at the EOF.
      */
-    pub fn is_eof(&mut self) -> bool {
+    pub fn is_eof(&self) -> bool {
         self.cursor == self.string.len() as i32
     }
 
     /**
      * Returns current tokenizing state.
      */
-    pub fn get_current_state(&mut self) -> &'static str {
-        match self.states.last() {
-            Some(last) => last,
-            None => "INITIAL"
-        }
+    pub fn get_current_state(&self) -> &'static str {
+        self.states.last().unwrap_or(&"INITIAL")
     }
 
     /**
      * Enters a new state pushing it on the states stack.
      */
-    pub fn push_state(&mut self, state: &'static str) -> &mut Tokenizer {
+    pub fn push_state(&mut self, state: &'static str) -> &mut Tokenizer<'t> {
         self.states.push(state);
         self
     }
@@ -301,7 +334,7 @@ impl Tokenizer {
     /**
      * Alias for `push_state`.
      */
-    pub fn begin(&mut self, state: &'static str) -> &mut Tokenizer {
+    pub fn begin(&mut self, state: &'static str) -> &mut Tokenizer<'t> {
         self.push_state(state);
         self
     }
@@ -310,10 +343,7 @@ impl Tokenizer {
      * Exits a current state popping it from the states stack.
      */
     pub fn pop_state(&mut self) -> &'static str {
-        match self.states.pop() {
-            Some(top) => top,
-            None => "INITIAL"
-        }
+        self.states.pop().unwrap_or(&"INITIAL")
     }
 
     /**

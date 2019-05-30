@@ -37,14 +37,14 @@ syntax = { path = "syntax" }
 
 ### 3. Configure dependencies of the `syntax` crate
 
-_Syntax_ tool generates a parser which depends on two external crates: [regex](https://doc.rust-lang.org/regex/regex/index.html), and [lazy_static](https://crates.io/crates/lazy_static). Let's add them to our `syntax` library dependencies list.
+_Syntax_ tool generates a parser which depends on two external crates: [onig](https://docs.rs/onig/4.3.2/onig/), and [lazy_static](https://crates.io/crates/lazy_static). Let's add them to our `syntax` library dependencies list.
 
 In the `syntax/Cargo.toml` add:
 
 ```
 [dependencies]
-regex = "0.2"
-lazy_static = "0.2.8"
+onig = "4"
+lazy_static = "1"
 ```
 
 ### 4. Create grammar file
@@ -216,3 +216,43 @@ cargo run
 ```
 
 Above we used a direct evaluation of the expression, however, you can easily build an AST for the code. Check out [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc-ast.rs.g) which builds a tree of nodes for math expressions.
+
+### 7. Appendix. Replace token text in lex handlers
+
+You can easily assign `yytext` to slice of matched text, for example you have rule for hex-number starting with `0x` sequence, and you don't need that part in token. You can do that like this:
+
+```
+0x[0-9a-f]+
+	%{
+		yytext = &yytext[2..];
+		return "HEX_NUMBER";
+	%}
+```
+
+yytext has `&'static str` type, so you can easily assign new static string if you want:
+
+```
+0x[0-9a-f]+
+	%{
+		yytext = "new static string";
+		return "HEX_NUMBER";
+	%}
+```
+
+But in case if you want replace something in `yytext`, or assign new `String` instance to `yytext` you should use method `self.string_ref` which accepts `String` and returns compatible type for `yytext`:
+
+```
+{quoted_string}
+  %{
+      yytext = self.string_ref(yytext.repalce(quotes, ""))
+  *}
+```
+
+Or you can use `self.set_yytext` method, which accepts `String` and assign it to `yytext` underhood:
+
+```
+{quoted_string}
+  %{
+      self.set_yytext(yytext.repalce(quotes, ""))
+  *}
+```
