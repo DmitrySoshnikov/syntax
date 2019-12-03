@@ -7,7 +7,7 @@ extern crate onig;
 #[macro_use]
 extern crate lazy_static;
 
-use onig::Regex;
+use onig::{Regex, Syntax, RegexOptions};
 use std::collections::HashMap;
 
 /**
