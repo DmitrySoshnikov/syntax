@@ -36,7 +36,7 @@ lazy_static! {
     /** 
      * Pre-parse the regex instead of parsing it every time when calling `get_next_token`.
      */
-    static ref REGEX_RULES: Vec<Regex> = LEX_RULES.iter().map(|rule| Regex::new(rule).unwrap()).collect();
+    static ref REGEX_RULES: Vec<Regex> = LEX_RULES.iter().map(|rule| Regex::with_options(rule, RegexOptions::REGEX_OPTION_SINGLELINE, Syntax::default()).unwrap()).collect();
 }
 
 struct Tokenizer<'t> {
