@@ -288,6 +288,10 @@ export default class SetsGenerator {
     });
 
     for (let symbol in set) {
+      // Skip terminals.
+      if (this._grammar.isTokenSymbol(symbol)) {
+        continue;
+      }
       printer.push([symbol, Object.keys(set[symbol]).join(', ')]);
     }
 
