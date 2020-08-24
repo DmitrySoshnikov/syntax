@@ -183,6 +183,14 @@ export default class LLParsingTable {
         ? this._setsGenerator.firstOfRHS(rhs)
         : this._setsGenerator.followOf(lhs);
 
+      const keys = Object.keys(set);
+
+      // Got derived epsilon through indirect production, fallback to
+      // Follow(LHS). Example: A: B; B: ε
+      if (keys.length === 1 && GrammarSymbol.isEpsilon(keys[0])) {
+        set = this._setsGenerator.followOf(lhs);
+      }
+
       for (let terminal in set) {
         this._putProductionNumber(
           table[lhsSymbol],
