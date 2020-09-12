@@ -88,12 +88,12 @@ describe('lex-rule', () => {
   });
 
   it('matcher from terminal', () => {
-    expect(LexRule.matcherFromTerminal(`'a'`)).toBe('\\ba\\b');
-    expect(LexRule.matcherFromTerminal(`"a"`)).toBe('\\ba\\b');
-    expect(LexRule.matcherFromTerminal(`"d"`)).toBe('\\bd\\b');
-    expect(LexRule.matcherFromTerminal(`"/"`)).toBe('\\b\\/\\b');
-    expect(LexRule.matcherFromTerminal(`"//"`)).toBe('\\b\\/\\/\\b');
-    expect(LexRule.matcherFromTerminal(`"^abc*$"`)).toBe('\\b\\^abc\\*\\$\\b');
+    expect(LexRule.matcherFromTerminal(`'a'`)).toBe('a');
+    expect(LexRule.matcherFromTerminal(`"a"`)).toBe('a');
+    expect(LexRule.matcherFromTerminal(`"d"`)).toBe('d');
+    expect(LexRule.matcherFromTerminal(`"/"`)).toBe('\\/');
+    expect(LexRule.matcherFromTerminal(`"//"`)).toBe('\\/\\/');
+    expect(LexRule.matcherFromTerminal(`"^abc*$"`)).toBe('\\^abc\\*\\$');
   });
 
   it('handler', () => {
