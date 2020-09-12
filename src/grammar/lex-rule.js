@@ -200,8 +200,12 @@ export default class LexRule {
   }
 
   static matcherFromTerminal(terminal) {
-    return terminal
+    const directMatcher = terminal
       .slice(1, -1)
       .replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+
+    // Tokens created with a boundary.
+    // 'while' -> /^\bwhile\b/
+    return `\\b${directMatcher}\\b`;
   }
 }
