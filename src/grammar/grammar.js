@@ -586,7 +586,7 @@ export default class Grammar {
 
     // Infer automatic lex-rules from raw terminals
     // (symbols in quotes) in BNF productions RHS.
-    lex.rules.push(...this._generateLexRulesDataForTerminals());
+    lex.rules.unshift(...this._generateLexRulesDataForTerminals());
 
     return new LexGrammar(lex);
   }
