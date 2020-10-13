@@ -222,6 +222,33 @@ Statement
   | ReturnStatement
   | BreakStatement
   | ContinueStatement
+  | ClassDeclaration
+  ;
+
+/**
+ * Class declaration.
+ */
+ClassDeclaration
+  : CLASS Identifier OptClassExtends BlockStatement
+    {
+      $$ = {
+        type: 'ClassDeclaration',
+        id: $2,
+        superClass: $3,
+        body: $4,
+      }
+    }
+  ;
+
+OptClassExtends
+  : ClassExtends
+  | /* empty */
+    { $$ = null }
+  ;
+
+ClassExtends
+  : EXTENDS Identifier
+    { $$ = $2 }
   ;
 
 /**
@@ -569,6 +596,7 @@ NumericLiteral
  */
 PrimaryExpression
   : LeftHandSideExpression
+  | NewExpression
   | Literal
   | ArrayLiteral
   | ObjectLiteral
@@ -581,6 +609,32 @@ PrimaryExpression
 
       // Else, it's just a grouping operator.
       $$ = $1;
+    }
+  ;
+
+/**
+ * New expression;
+ */
+NewExpression
+  : NEW MemberExpression Arguments
+    {
+      $$ = {
+        type: 'NewExpression',
+        callee: $2,
+        arguments: $3,
+      }
+    }
+  ;
+
+/**
+ * This expression.
+ */
+ThisExpression
+  : THIS
+    {
+      $$ = {
+        type: 'ThisExpression',
+      }
     }
   ;
 
@@ -742,6 +796,7 @@ MemberExpression
     { $$ = MemberExpression($1, $3)}
 
   | Identifier
+  | ThisExpression
   ;
 
 /**
@@ -876,6 +931,23 @@ CallExpression
         callee: $1,
         arguments: $2,
       };
+    }
+  | Super Arguments
+    {
+      $$ = {
+        type: 'CallExpression',
+        callee: $1,
+        arguments: $2,
+      };
+    }
+  ;
+
+Super
+  : SUPER
+    {
+      $$ = {
+        type: 'Super',
+      }
     }
   ;
 

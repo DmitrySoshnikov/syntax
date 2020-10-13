@@ -39,6 +39,11 @@
     [`\\bfor\\b`,                  `return 'FOR'`],
     [`\\bbreak\\b`,                `return 'BREAK'`],
     [`\\bcontinue\\b`,             `return 'CONTINUE'`],
+    [`\\bclass\\b`,                `return 'CLASS'`],
+    [`\\bextends\\b`,              `return 'EXTENDS'`],
+    [`\\bnew\\b`,                  `return 'NEW'`],
+    [`\\bsuper\\b`,                `return 'SUPER'`],
+    [`\\bthis\\b`,                 `return 'THIS'`],
 
     // ------------------------------------------------
     // Symbols.
