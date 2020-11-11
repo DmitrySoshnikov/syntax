@@ -19,7 +19,7 @@
 
   rules: [
     ["\\/\\/.*",                `/* skip comments */`],
-    ["\/\\*(.|\\s)*?\\*\/",     `/* skip comments */`],
+    ["\/\\*[\\s\\S]*?\\*\/",    `/* skip comments */`],
 
     [`\\s+`,                    `/* skip whitespace */`],
 
