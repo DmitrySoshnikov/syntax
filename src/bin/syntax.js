@@ -10,6 +10,13 @@
 // To require local modules from root.
 global.ROOT = __dirname + '/../';
 
+/**
+ * Global options used from command line
+ */
+global.globalOptions = {
+  output: null,
+};
+
 const colors = require('colors');
 const fs = require('fs');
 const path = require('path');
@@ -328,6 +335,8 @@ const parsers = {
   },
 
   _genericLR(mode, options) {
+    global.globalOptions.output = options.output;
+
     const grammar = getGrammar(options.grammar, mode);
 
     console.info(`\nParsing mode: ${grammar.getMode()}.`);

@@ -227,20 +227,28 @@ export default class Production {
         try {
           handler(...args);
         } catch (e) {
-          console.error(
-            colors.red(`\nError in handler for production `) +
-              colors.bold(this.toFullString()) +
-              `:\n\n` +
-              this.getOriginalSemanticAction() +
-              '\n'
-          );
+          this._logProductionError();
           throw e;
         }
         return CodeUnit.getSandbox().__;
       };
     } catch (e) {
+      if (global.globalOptions.output == null) {
+        this._logProductionError();
+        throw e;
+      }
       /* And skip for other languages, which use raw handler in generator */
     }
+  }
+
+  _logProductionError() {
+    console.error(
+      colors.red(`\nError in handler for production `) +
+        colors.bold(this.toFullString()) +
+        `:\n\n` +
+        this.getOriginalSemanticAction() +
+        '\n'
+    );
   }
 
   _normalize() {
