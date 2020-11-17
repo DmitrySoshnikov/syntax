@@ -183,6 +183,8 @@ class Point3D extends Point {
   }
 }
 
+new Point.Other();
+
 let p = new Point3D(10, 20, 30);
 
 
