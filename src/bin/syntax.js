@@ -397,6 +397,9 @@ const parsers = {
           .default,
         java: require(ROOT + 'plugins/java/lr/lr-parser-generator-java.js')
           .default,
+        h: require(ROOT + 'plugins/cpp/lr/lr-parser-generator-cpp.js').default,
+        cpp: require(ROOT + 'plugins/cpp/lr/lr-parser-generator-cpp.js')
+          .default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;

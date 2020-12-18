@@ -14,7 +14,7 @@ const CPP_TOKENIZER_TEMPLATE = fs.readFileSync(
 );
 
 /**
- * The trait is used by parser generators (LL/LR) for C#.
+ * The trait is used by parser generators (LL/LR) for C++.
  */
 const CppParserGeneratorTrait = {
 
@@ -26,7 +26,7 @@ const CppParserGeneratorTrait = {
   },
 
   /**
-   * Generates parsing table in C# Dictionary format.
+   * Generates parsing table in C++ map format.
    */
   generateParseTable() {
     this.writeData(
@@ -81,7 +81,7 @@ const CppParserGeneratorTrait = {
   },
 
   /**
-   * Generates tokens table in C# Dictionary format.
+   * Generates tokens table in C++ map format.
    */
   generateTokensTable() {
     this.writeData(
@@ -105,7 +105,7 @@ const CppParserGeneratorTrait = {
     const args = this
       .getSemanticActionParams(production)
       // Append type information for C++.
-      .map(arg => `dynamic ${arg}`)
+      .map(arg => `Value ${arg}`)
       .join(',');
 
     // Save the action, they are injected later.
@@ -151,6 +151,8 @@ const CppParserGeneratorTrait = {
   generateLexRules() {
     const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
       let action = this._actionFromHandler(lexRule.getRawHandler());
+
+      this._extractTokenNames(action);
 
       this._lexHandlers.push({args: '', action});
 
@@ -227,7 +229,7 @@ const CppParserGeneratorTrait = {
   /**
    * Converts JS object to C++ map type representation.
    */
-  _toCppMap(object, typeName, keyType, valueType) {
+  _toCppMap(object, typeName, keyType = 'string', valueType = 'string') {
     let result = [];
     for (let k in object) {
       let value = object[k];
@@ -251,6 +253,28 @@ const CppParserGeneratorTrait = {
       'object'
     );
     this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
+  },
+
+  /**
+   * Creates token names.
+   */
+  generateTokenNames() {
+    const tokenNames = this._tokenNames.map((tokenName, index) => {
+      return `constexpr static int ${tokenName} = ${index};`;
+    });
+    this.writeData('TOKEN_NAMES', tokenNames.join('\n  '));
+  },
+
+  /**
+   * Extracts Token.NUMBER, etc.
+   */
+  _extractTokenNames(action) {
+    const tokenRe = /Token::(\w+)/g;
+
+    let tokenMatch;
+    while ((tokenMatch = tokenRe.exec(action)) != null) {
+      this._tokenNames.push(tokenMatch[1]);
+    }
   },
 
   /**
