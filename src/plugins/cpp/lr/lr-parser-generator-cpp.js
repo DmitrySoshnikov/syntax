@@ -35,7 +35,9 @@ export default class LRParserGeneratorCpp extends LRParserGeneratorDefault {
 
     this._lexHandlers = [];
     this._productionHandlers = [];
-    this._tokenNames = [];
+    this._tokenTypes = [];
+    this._terminalsMap = {};
+    this._terminalsIndexMap = {};
 
     this._parserClassName = path.basename(
       outputFile,
@@ -50,9 +52,17 @@ export default class LRParserGeneratorCpp extends LRParserGeneratorDefault {
    * Generates parser code.
    */
   generateParserData() {
-    super.generateParserData();
+    this.generateNamespace();
+    this.generateModuleInclude();
+    this.generateCaptureLocations();
+    this.generateBuiltInTokenizer();
+    this.generateTokenTypes();
+    this.generateTokensTable();
+    this.generateLexRules();
+    this.generateLexRulesByStartConditions();
     this.generateLexHandlers();
-    this.generateTokenNames();
+    this.generateProductions();
+    this.generateParseTable();
     this.generateProductionHandlers();
     this.generateParserClassName(this._parserClassName);
   }

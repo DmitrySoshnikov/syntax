@@ -132,14 +132,14 @@ const CppParserGeneratorTrait = {
    * Creates an action from raw handler.
    */
   _actionFromHandler(handler) {
+    if (!/;\s*$/.test(handler)) {
+      handler += ';';
+    }
+
     let action = (this._scopeVars(handler) || '').trim();
 
     if (!action) {
       return 'return nullptr;';
-    }
-
-    if (!/;\s*$/.test(action)) {
-      action += ';';
     }
 
     return action;
@@ -150,9 +150,13 @@ const CppParserGeneratorTrait = {
    */
   generateLexRules() {
     const lexRules = this._grammar.getLexGrammar().getRules().map(lexRule => {
-      let action = this._actionFromHandler(lexRule.getRawHandler());
+      let handler = lexRule.getRawHandler();
 
-      this._extractTokenNames(action);
+      if (!handler.includes('return')) {
+        handler = `return ${handler}`;
+      }
+
+      let action = this._actionFromHandler(handler);
 
       this._lexHandlers.push({args: '', action});
 
@@ -181,6 +185,9 @@ const CppParserGeneratorTrait = {
     const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
     const result = [];
 
+    const tokenizerStates = Object.keys(lexRulesByConditions);
+    this.writeData('TOKENIZER_STATES', tokenizerStates.join(',\n  '));
+
     for (const condition in lexRulesByConditions) {
       result[condition] = lexRulesByConditions[condition].map(lexRule =>
         lexGrammar.getRuleIndex(lexRule)
@@ -198,10 +205,23 @@ const CppParserGeneratorTrait = {
    * referred from `yyparse`.
    */
   _scopeVars(code) {
-    return code
+    code = code
       .replace(/yytext/g, 'yyparse.yytext')
       .replace(/yyleng/g, 'yyparse.yyleng')
       .replace(/yyloc/g, 'YyLoc.yyloc');
+
+    const tokenRe = /return\s+([^;]+?);/g;
+
+    return code.replace(tokenRe, (_match, token) => {
+      token = token.replace(/^['"]|['"]$/g, '');
+      if (token === '%empty' || token === 'nullptr' || token === 'NULL') {
+        return `return TokenType::__UNKNOWN;`;
+      }
+      if (this._terminalsMap.hasOwnProperty(token)) {
+        return `return TokenType::TOKEN_TYPE_${this._terminalsMap[token]};`;
+      }
+      return `return TokenType::${token};`;
+    });
   },
 
   _mapKey(key, keyType) {
@@ -250,7 +270,7 @@ const CppParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._lexHandlers,
       '_lexRule',
-      'object'
+      'TokenType'
     );
     this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
@@ -258,23 +278,15 @@ const CppParserGeneratorTrait = {
   /**
    * Creates token names.
    */
-  generateTokenNames() {
-    const tokenNames = this._tokenNames.map((tokenName, index) => {
-      return `constexpr static int ${tokenName} = ${index};`;
+  generateTokenTypes() {
+    const tokenTypes = [...this._grammar.getTokenSymbols()];
+    let index = tokenTypes.length + 1; // + 1 for __UNKNOWN
+    this._grammar.getTerminalSymbols().forEach(terminal => {
+      tokenTypes.push(`TOKEN_TYPE_${index}`);
+      this._terminalsMap[terminal] = index;
+      this._terminalsIndexMap[index++] = terminal;
     });
-    this.writeData('TOKEN_NAMES', tokenNames.join('\n  '));
-  },
-
-  /**
-   * Extracts Token.NUMBER, etc.
-   */
-  _extractTokenNames(action) {
-    const tokenRe = /Token::(\w+)/g;
-
-    let tokenMatch;
-    while ((tokenMatch = tokenRe.exec(action)) != null) {
-      this._tokenNames.push(tokenMatch[1]);
-    }
+    this.writeData('TOKEN_TYPES', tokenTypes.join(',\n  '));
   },
 
   /**
@@ -301,7 +313,7 @@ const CppParserGeneratorTrait = {
 
   _generateHandlers(handlers, name, returnType) {
     return handlers.map(({args, action}, index) => {
-      return `public ${returnType} ${name}${index + 1}` +
+      return `${returnType} ${name}${index + 1}` +
         `(${args}) {\n${action}\n}`
     });
   },

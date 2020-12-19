@@ -14,10 +14,9 @@
 
 %%
 
-\s+    /* skip whitespace */
+\s+    %empty
 
-\d+    return Token::NUMBER
-\w+    { int x = 10; return Token::IDENTIFIER }
+\d+    NUMBER
 
 /lex
 

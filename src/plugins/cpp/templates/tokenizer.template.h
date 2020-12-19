@@ -8,10 +8,20 @@
 #define __Syntax_Tokenizer_h
 
 // ------------------------------------------------------------------
+// TokenType.
+
+enum class TokenType {
+  __UNKNOWN,
+  // clang-format off
+  {{{TOKEN_TYPES}}}
+  // clang-format on
+};
+
+// ------------------------------------------------------------------
 // Token.
 
 struct Token {
-  int type;
+  TokenType type;
   std::string value;
 
   int startOffset;
@@ -20,9 +30,14 @@ struct Token {
   int endLine;
   int startColumn;
   int endColumn;
+};
 
+// ------------------------------------------------------------------
+// Token.
+
+enum TokenizerState {
   // clang-format off
-  {{{TOKEN_NAMES}}}
+  {{{TOKENIZER_STATES}}}
   // clang-format on
 };
 
@@ -30,6 +45,30 @@ struct Token {
 // Tokenizer.
 
 class Tokenizer {
+ public:
+  /**
+   * Initializes a parsing string.
+   */
+  void initString(const std::string& str) {
+    str_ = str;
+
+    // Initialize states.
+    states_.clear();
+    states_.push_back(TokenizerState::INITIAL);
+
+    cursor_ = 0;
+    currentLine_ = 1;
+    currentColumn_ = 0;
+    currentLineBeginOffset_ = 0;
+
+    tokenStartOffset_ = 0;
+    tokenEndOffset_ = 0;
+    tokenStartLine_ = 0;
+    tokenEndLine_ = 0;
+    tokenStartColumn_ = 0;
+    tokenEndColumn_ = 0;
+  }
+
  private:
   /**
    * Tokenizing string.
@@ -68,6 +107,10 @@ class Tokenizer {
    */
   std::string yytext;
   int yyleng;
+
+  // clang-format off
+  {{{LEX_RULE_HANDLERS}}}
+  // clang-format on
 };
 
 #endif
