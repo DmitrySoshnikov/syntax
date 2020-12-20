@@ -158,26 +158,18 @@ const CppParserGeneratorTrait = {
 
       let action = this._actionFromHandler(handler);
 
-      this._lexHandlers.push({args: '', action});
+      this._lexHandlers.push({
+        args: 'const Tokenizer& tokenizer, const std::string& yytext',
+        action,
+      });
 
-      let flags = [];
-
-      if (lexRule.isCaseInsensitive()) {
-        flags.push('i');
-      }
-
-      if (flags.length > 0) {
-        flags = `(?${flags.join('')})`
-      } else {
-        flags = '';
-      }
-
-      // Example: new string[] {@"^\s+", "_lexRule1"},
-      return `new string[] { @"${flags}${lexRule.getRawMatcher()}", ` +
-        `"_lexRule${this._lexHandlers.length}" }`;
+      return `{std::regex(R"(${lexRule.getRawMatcher()})"), ` +
+        `&_lexRule${this._lexHandlers.length}}`;
     });
 
-    this.writeData('LEX_RULES', `{ ${lexRules.join(',\n')} }`);
+    this.writeData('LEX_RULES_COUNT', lexRules.length);
+
+    this.writeData('LEX_RULES', `{{\n  ${lexRules.join(',\n  ')}\n}}`);
   },
 
   generateLexRulesByStartConditions() {

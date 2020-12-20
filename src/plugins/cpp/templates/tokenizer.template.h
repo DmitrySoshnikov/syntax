@@ -7,6 +7,8 @@
 #ifndef __Syntax_Tokenizer_h
 #define __Syntax_Tokenizer_h
 
+class Tokenizer;
+
 // ------------------------------------------------------------------
 // TokenType.
 
@@ -30,6 +32,16 @@ struct Token {
   int endLine;
   int startColumn;
   int endColumn;
+};
+
+typedef TokenType (*LexRuleHandler)(const Tokenizer&, const std::string&);
+
+// ------------------------------------------------------------------
+// Lex rule: [regex, handler]
+
+struct LexRule {
+  std::regex rule;
+  LexRuleHandler handler;
 };
 
 // ------------------------------------------------------------------
@@ -71,6 +83,14 @@ class Tokenizer {
 
  private:
   /**
+   * Lexical rules.
+   */
+  // clang-format off
+  static constexpr size_t LEX_RULES_COUNT = {{{LEX_RULES_COUNT}}};
+  static std::array<LexRule, LEX_RULES_COUNT> lexRules_;
+  // clang-format on
+
+  /**
    * Tokenizing string.
    */
   std::string str_;
@@ -107,10 +127,20 @@ class Tokenizer {
    */
   std::string yytext;
   int yyleng;
-
-  // clang-format off
-  {{{LEX_RULE_HANDLERS}}}
-  // clang-format on
 };
+
+// ------------------------------------------------------------------
+// Lexical rule handlers.
+
+// clang-format off
+{{{LEX_RULE_HANDLERS}}}
+// clang-format on
+
+// ------------------------------------------------------------------
+// Lexical rules.
+
+// clang-format off
+std::array<LexRule, Tokenizer::LEX_RULES_COUNT> Tokenizer::lexRules_ = {{{LEX_RULES}}};
+// clang-format on
 
 #endif

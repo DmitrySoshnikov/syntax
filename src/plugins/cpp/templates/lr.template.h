@@ -20,6 +20,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
 
+#include <array>
+#include <regex>
 #include <string>
 #include <vector>
 
