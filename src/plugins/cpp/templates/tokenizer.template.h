@@ -28,11 +28,13 @@ struct Token {
 
   int startOffset;
   int endOffset;
-  int start_line;
+  int startLine;
   int endLine;
   int startColumn;
   int endColumn;
 };
+
+using SharedToken = std::shared_ptr<Token>;
 
 typedef TokenType (*LexRuleHandler)(const Tokenizer&, const std::string&);
 
@@ -81,6 +83,82 @@ class Tokenizer {
     tokenEndColumn_ = 0;
   }
 
+  /**
+   * Whether there are still tokens in the stream.
+   */
+  inline bool hasMoreTokens() { return cursor_ <= str_.length(); }
+
+  /**
+   * Returns next token.
+   */
+  SharedToken getNextToken() {
+    if (hasMoreTokens()) {
+      yytext = EOF;
+      return toToken(TokenType::EOF);
+    }
+
+    auto strSlice = str_.substr(cursor_);
+
+    auto lexRulesForState = LEX_RULES_BY_START_CONDITIONS.at(getCurrentState());
+
+    for (const auto ruleIndex& : lexRulesForState) {
+      auto rule = lexRules_[ruleIndex];
+
+      std::smatch matched;
+
+      std::regex_search(strSlice, matched, rule.regex);
+
+      if (matched) {
+        // Manual handling of EOF token (the end of string). Return it
+        // as `EOF` symbol.
+        if (matched[0].length() == 0) {
+          cursor_++;
+        }
+
+        yytext = matched[0];
+
+        auto tokenType = rule.handler();
+
+        if (tokenType == = TokenType::__UNKNOWN) {
+          return getNextToken();
+        }
+
+        return toToken(tokenType);
+      }
+    }
+
+    if (isEOF()) {
+      cursor_++;
+      yytext = EOF;
+      return toToken(TokenType::EOF);
+    }
+
+    // Throw unexpected token
+  }
+
+  /**
+   * Whether the cursor is at the EOF.
+   */
+  inline bool isEOF() { return cursor_ == str_.length(); }
+
+  SharedToken toToken(TokenType tokenType) {
+    return std::shared_ptr<Token>(new Token{
+        .type = tokenType,
+        .value = yytext,
+        .startOffset = tokenStartOffset_,
+        .endOffset = tokenEndOffset_,
+        .startLine = tokenStartLine_,
+        .endLine = tokenEndLine_,
+        .startColumn = tokenStartColumn_,
+        .endColumn = tokenEndColumn_,
+    });
+  }
+
+  /**
+   * Matched text.
+   */
+  std::string yytext;
+
  private:
   /**
    * Lexical rules.
@@ -121,12 +199,6 @@ class Tokenizer {
   int tokenEndLine_;
   int tokenStartColumn_;
   int tokenEndColumn_;
-
-  /**
-   * Matched text, and its length.
-   */
-  std::string yytext;
-  int yyleng;
 };
 
 // ------------------------------------------------------------------

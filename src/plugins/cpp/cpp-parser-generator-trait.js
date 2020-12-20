@@ -262,7 +262,7 @@ const CppParserGeneratorTrait = {
     const handlers = this._generateHandlers(
       this._lexHandlers,
       '_lexRule',
-      'TokenType'
+      'inline TokenType'
     );
     this.writeData('LEX_RULE_HANDLERS', handlers.join('\n\n'));
   },
