@@ -172,6 +172,9 @@ const CppParserGeneratorTrait = {
     this.writeData('LEX_RULES', `{{\n  ${lexRules.join(',\n  ')}\n}}`);
   },
 
+  /**
+   * Lex rules by start condition.
+   */
   generateLexRulesByStartConditions() {
     const lexGrammar = this._grammar.getLexGrammar();
     const lexRulesByConditions = lexGrammar.getRulesByStartConditions();
@@ -181,14 +184,14 @@ const CppParserGeneratorTrait = {
     this.writeData('TOKENIZER_STATES', tokenizerStates.join(',\n  '));
 
     for (const condition in lexRulesByConditions) {
-      result[condition] = lexRulesByConditions[condition].map(lexRule =>
+      result[`TokenizerState::${condition}`] = lexRulesByConditions[condition].map(lexRule =>
         lexGrammar.getRuleIndex(lexRule)
       );
     }
 
     this.writeData(
       'LEX_RULES_BY_START_CONDITIONS',
-      `${this._toCppMap(result, 'string')}`,
+      `${this._toCppMap(result, '', 'raw')}`,
     );
   },
 
@@ -220,6 +223,7 @@ const CppParserGeneratorTrait = {
     switch (keyType) {
       case 'string': return `"${key}"`;
       case 'number': return Number(key);
+      case 'raw': return key;
       default:
         throw new Error('_mapKey: Incorrect type ' + keyType);
     }
@@ -227,13 +231,14 @@ const CppParserGeneratorTrait = {
 
   _mapValue(value, valueType) {
     if (Array.isArray(value)) {
-      // Support only int arrays here for simplicity.
-      return `vec! [ ${value.join(', ')} ]`;
+      // Support only int vectors here for simplicity.
+      return `{${value.join(', ')}}`;
     }
 
     switch (valueType) {
       case 'string': return `"${value}"`;
       case 'number': return Number(value);
+      case 'raw': return value;
       default: return value;
     }
   },
@@ -241,14 +246,14 @@ const CppParserGeneratorTrait = {
   /**
    * Converts JS object to C++ map type representation.
    */
-  _toCppMap(object, typeName, keyType = 'string', valueType = 'string') {
+  _toCppMap(object, typeName = '', keyType = 'string', valueType = 'string') {
     let result = [];
     for (let k in object) {
       let value = object[k];
       let key = k.replace(/"/g, '\\"');
       result.push(
-        `${this._mapKey(key, keyType)} => ` +
-        `${this._mapValue(value, valueType)}`
+        `{${this._mapKey(key, keyType)}, ` +
+        `${this._mapValue(value, valueType)}}`
       );
     }
     return `${typeName} { ${result.join(', ')} }`;
@@ -272,7 +277,7 @@ const CppParserGeneratorTrait = {
    */
   generateTokenTypes() {
     const tokenTypes = [...this._grammar.getTokenSymbols()];
-    let index = tokenTypes.length + 1; // + 1 for __UNKNOWN
+    let index = tokenTypes.length + 2; // + 2 for __UNKNOWN and __EOF
     this._grammar.getTerminalSymbols().forEach(terminal => {
       tokenTypes.push(`TOKEN_TYPE_${index}`);
       this._terminalsMap[terminal] = index;

@@ -14,6 +14,7 @@ class Tokenizer;
 
 enum class TokenType {
   __UNKNOWN,
+  __EOF,
   // clang-format off
   {{{TOKEN_TYPES}}}
   // clang-format on
@@ -42,7 +43,7 @@ typedef TokenType (*LexRuleHandler)(const Tokenizer&, const std::string&);
 // Lex rule: [regex, handler]
 
 struct LexRule {
-  std::regex rule;
+  std::regex regex;
   LexRuleHandler handler;
 };
 
@@ -89,37 +90,58 @@ class Tokenizer {
   inline bool hasMoreTokens() { return cursor_ <= str_.length(); }
 
   /**
+   * Returns current tokenizing state.
+   */
+  TokenizerState getCurrentState() { return states_.back(); }
+
+  /**
+   * Enters a new state pushing it on the states stack.
+   */
+  void pushState(TokenizerState state) { states_.push_back(state); }
+
+  /**
+   * Alias for `push_state`.
+   */
+  void begin(TokenizerState state) { states_.push_back(state); }
+
+  /**
+   * Exits a current state popping it from the states stack.
+   */
+  TokenizerState popState() {
+    auto state = states_.back();
+    states_.pop_back();
+    return state;
+  }
+
+  /**
    * Returns next token.
    */
   SharedToken getNextToken() {
-    if (hasMoreTokens()) {
-      yytext = EOF;
-      return toToken(TokenType::EOF);
+    if (!hasMoreTokens()) {
+      yytext = __EOF;
+      return toToken(TokenType::__EOF);
     }
 
     auto strSlice = str_.substr(cursor_);
 
-    auto lexRulesForState = LEX_RULES_BY_START_CONDITIONS.at(getCurrentState());
+    auto lexRulesForState = lexRulesByStartConditions_.at(getCurrentState());
 
-    for (const auto ruleIndex& : lexRulesForState) {
+    for (const auto& ruleIndex : lexRulesForState) {
       auto rule = lexRules_[ruleIndex];
-
-      std::smatch matched;
-
-      std::regex_search(strSlice, matched, rule.regex);
+      auto matched = match_(strSlice, rule.regex);
 
       if (matched) {
+        yytext = std::string(matched);
+
         // Manual handling of EOF token (the end of string). Return it
         // as `EOF` symbol.
-        if (matched[0].length() == 0) {
+        if (yytext.length() == 0) {
           cursor_++;
         }
 
-        yytext = matched[0];
+        auto tokenType = rule.handler(*this, yytext);
 
-        auto tokenType = rule.handler();
-
-        if (tokenType == = TokenType::__UNKNOWN) {
+        if (tokenType == TokenType::__UNKNOWN) {
           return getNextToken();
         }
 
@@ -129,11 +151,11 @@ class Tokenizer {
 
     if (isEOF()) {
       cursor_++;
-      yytext = EOF;
-      return toToken(TokenType::EOF);
+      yytext = __EOF;
+      return toToken(TokenType::__EOF);
     }
 
-    // Throw unexpected token
+    throwUnexpectedToken(strSlice[0], currentLine_, currentColumn_);
   }
 
   /**
@@ -155,18 +177,46 @@ class Tokenizer {
   }
 
   /**
+   * Throws default "Unexpected token" exception, showing the actual
+   * line from the source, pointing with the ^ marker to the bad token.
+   * In addition, shows `line:column` location.
+   */
+  [[noreturn]] void throwUnexpectedToken(char symbol, int line, int column) {
+    std::stringstream errMsg;
+    errMsg << "Unexpected token \"" << symbol << "\" at " << line << ":"
+           << column;
+    throw new std::runtime_error(errMsg.str().c_str());
+  }
+
+  /**
    * Matched text.
    */
   std::string yytext;
 
  private:
+  const char* match_(const std::string& strSlice, const std::regex re) {
+    std::smatch matched;
+
+    if (std::regex_search(strSlice, matched, re)) {
+      return matched[0].str().c_str();
+    }
+
+    return nullptr;
+  }
+
   /**
    * Lexical rules.
    */
   // clang-format off
   static constexpr size_t LEX_RULES_COUNT = {{{LEX_RULES_COUNT}}};
   static std::array<LexRule, LEX_RULES_COUNT> lexRules_;
+  static std::map<TokenizerState, std::vector<size_t>> lexRulesByStartConditions_;
   // clang-format on
+
+  /**
+   * Special EOF token.
+   */
+  static std::string __EOF;
 
   /**
    * Tokenizing string.
@@ -181,7 +231,7 @@ class Tokenizer {
   /**
    * States.
    */
-  std::vector<int> states_;
+  std::vector<TokenizerState> states_;
 
   /**
    * Line-based location tracking.
@@ -204,6 +254,8 @@ class Tokenizer {
 // ------------------------------------------------------------------
 // Lexical rule handlers.
 
+std::string Tokenizer::__EOF("$");
+
 // clang-format off
 {{{LEX_RULE_HANDLERS}}}
 // clang-format on
@@ -213,6 +265,7 @@ class Tokenizer {
 
 // clang-format off
 std::array<LexRule, Tokenizer::LEX_RULES_COUNT> Tokenizer::lexRules_ = {{{LEX_RULES}}};
+std::map<TokenizerState, std::vector<size_t>> Tokenizer::lexRulesByStartConditions_ = {{{LEX_RULES_BY_START_CONDITIONS}}};
 // clang-format on
 
 #endif
