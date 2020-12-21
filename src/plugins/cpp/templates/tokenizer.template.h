@@ -128,10 +128,12 @@ class Tokenizer {
 
     for (const auto& ruleIndex : lexRulesForState) {
       auto rule = lexRules_[ruleIndex];
-      auto matched = match_(strSlice, rule.regex);
+      std::smatch sm;
 
-      if (matched) {
-        yytext = std::string(matched);
+      if (std::regex_search(strSlice, sm, rule.regex)) {
+        yytext = sm[0];
+
+        cursor_ += yytext.length();
 
         // Manual handling of EOF token (the end of string). Return it
         // as `EOF` symbol.
@@ -194,16 +196,6 @@ class Tokenizer {
   std::string yytext;
 
  private:
-  const char* match_(const std::string& strSlice, const std::regex re) {
-    std::smatch matched;
-
-    if (std::regex_search(strSlice, matched, re)) {
-      return matched[0].str().c_str();
-    }
-
-    return nullptr;
-  }
-
   /**
    * Lexical rules.
    */
