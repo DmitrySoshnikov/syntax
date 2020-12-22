@@ -133,6 +133,7 @@ class Tokenizer {
       if (std::regex_search(strSlice, sm, rule.regex)) {
         yytext = sm[0];
 
+        captureLocations_(yytext);
         cursor_ += yytext.length();
 
         // Manual handling of EOF token (the end of string). Return it
@@ -186,7 +187,8 @@ class Tokenizer {
   [[noreturn]] void throwUnexpectedToken(char symbol, int line, int column) {
     std::stringstream errMsg;
     errMsg << "Unexpected token \"" << symbol << "\" at " << line << ":"
-           << column;
+           << column << "\n";
+    std::cerr << errMsg.str();
     throw new std::runtime_error(errMsg.str().c_str());
   }
 
@@ -197,12 +199,42 @@ class Tokenizer {
 
  private:
   /**
+   * Captures token locations.
+   */
+  void captureLocations_(const std::string& matched) {
+    std::smatch sm;
+    std::string value = matched;
+
+    // Absolute offsets.
+    tokenStartOffset_ = cursor_;
+
+    // Line-based locations, start.
+    tokenStartLine_ = currentLine_;
+    tokenStartColumn_ = tokenStartOffset_ - currentLineBeginOffset_;
+
+    // Extract `\n` in the matched token.
+    while (regex_search(value, sm, nlRe_)) {
+      currentLine_++;
+      currentLineBeginOffset_ = tokenStartOffset_ + sm.position() + 1;
+      value = sm.suffix();
+    }
+
+    tokenEndOffset_ = cursor_ + matched.length();
+
+    // Line-based locations, end.
+    tokenEndLine_ = currentLine_;
+    tokenEndColumn_ = tokenEndOffset_ - currentLineBeginOffset_;
+    currentColumn_ = tokenEndColumn_;
+  }
+
+  /**
    * Lexical rules.
    */
   // clang-format off
   static constexpr size_t LEX_RULES_COUNT = {{{LEX_RULES_COUNT}}};
   static std::array<LexRule, LEX_RULES_COUNT> lexRules_;
   static std::map<TokenizerState, std::vector<size_t>> lexRulesByStartConditions_;
+  static std::regex nlRe_;
   // clang-format on
 
   /**
@@ -258,6 +290,7 @@ std::string Tokenizer::__EOF("$");
 // clang-format off
 std::array<LexRule, Tokenizer::LEX_RULES_COUNT> Tokenizer::lexRules_ = {{{LEX_RULES}}};
 std::map<TokenizerState, std::vector<size_t>> Tokenizer::lexRulesByStartConditions_ = {{{LEX_RULES_BY_START_CONDITIONS}}};
+std::regex Tokenizer::nlRe_{R"(\n+)"};
 // clang-format on
 
 #endif

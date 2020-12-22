@@ -21,6 +21,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 
 #include <array>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <regex>
