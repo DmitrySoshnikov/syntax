@@ -157,11 +157,11 @@ const lexRules = [[/^\/\/.*/, function() { /* skip comments */ }],
 [/^%token/, function() { return '%token' }],
 [/^\/\*(.|\n|\r)*?\*\//, function() { return 'CODE' }],
 [/^\/\/.*/, function() { return 'CODE' }],
-[/^\/[^ /]*?['"{}'][^ ]*?\//, function() { return 'CODE' }],
+[/^\/[^ \/]*?['"{}'][^ ]*?\//, function() { return 'CODE' }],
 [/^"(\\\\|\\"|[^"])*"/, function() { return 'CODE' }],
 [/^'(\\\\|\\'|[^'])*'/, function() { return 'CODE' }],
-[/^[/"'][^{}/"']+/, function() { return 'CODE' }],
-[/^[^{}/"']+/, function() { return 'CODE' }],
+[/^[\/"'][^{}\/"']+/, function() { return 'CODE' }],
+[/^[^{}\/"']+/, function() { return 'CODE' }],
 [/^\{/, function() { yy.depth++; return '{'; }],
 [/^\}/, function() { if (yy.depth==0) this.popState(); else yy.depth--; return '}' }],
 [/^[a-zA-Z][a-zA-Z0-9_\-']*/, function() { return 'ID' }],
@@ -176,7 +176,7 @@ const lexRules = [[/^\/\/.*/, function() { /* skip comments */ }],
 [/^\{\{[\w\W]*?\}\}/, function() { yytext = yytext.slice(2, -2); return 'CODE'; }],
 [/^%[a-zA-Z]+[^\r\n]*/, function() { /* skip unrecognized options */ }],
 [/^(?:"|')([^"']*)(?:"|')/, function() { return 'STRING' }],
-[/^[-+!%$#@&*(){}~`^|\\:;/,]+/, function() { return 'SPECIAL_CHAR' }]];
+[/^[-+!%$#@&*(){}~`^|\\:;\/,]+/, function() { return 'SPECIAL_CHAR' }]];
 const lexRulesByConditions = {"INITIAL":[0,1,2,3,4,5,6,7,8,18,19,20,21,22,23,24,25,26,27,28,29,30],"action":[9,10,11,12,13,14,15,16,17]};
 
 const EOF_TOKEN = {

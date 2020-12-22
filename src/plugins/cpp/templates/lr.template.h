@@ -31,12 +31,87 @@
 
 namespace syntax {
 
+// ------------------------------------
+// Module include prologue.
+//
+// Should include at least value/result type:
+//
+// type Value = <...>;
+//
+// Or struct Value { ... };
+//
+// Can also include parsing hooks:
+//
+//   void onParseBegin(const Parser& parser, const std::string& str) {
+//     ...
+//   }
+//
+//   void onParseBegin(const Parser& parser, const Value& result) {
+//     ...
+//   }
+//
+// clang-format off
+{{{MODULE_INCLUDE}}}
+// clang-format on
+
 /**
  * Tokenizer class.
  */
 // clang-format off
 {{{TOKENIZER}}}
 // clang-format on
+
+/**
+ * Parsing table action.
+ */
+enum class Action {
+  Accept,
+  Shift,
+  Reduce,
+  Transit,
+};
+
+/**
+ * Parsing table entry.
+ */
+struct TE {
+  Action action;
+  int value;
+};
+
+/**
+ * Encoded production.
+ *
+ * opcode - encoded index
+ * rhsLength - length of the RHS to pop.
+ */
+struct Production {
+  int opcode;
+  int rhsLength;
+};
+
+// Key: Encoded symbol (terminal or non-terminal) index
+// Value: TE
+using Row = std::map<int, TE>;
+
+/**
+ * Base class for the parser.
+ */
+class yyparse {
+private:
+  // clang-format off
+  static constexpr size_t PRODUCTIONS_COUNT = {{{PRODUCTIONS_COUNT}}};
+  static std::array<Production, PRODUCTIONS_COUNT> productions_;
+  // clang-format on
+};
+
+// ------------------------------------------------------------------
+// Productions.
+
+// clang-format off
+std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
+// clang-format on
+
 
 }  // namespace syntax
 

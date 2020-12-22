@@ -45,9 +45,9 @@ const CppParserGeneratorTrait = {
    *
    *   std::vector<Row> table {
    *     Row {
-   *       {0, {Action::Shift, 4}},
-   *       {5, {Action::Reduce, 2}},
-   *       {3, {Action::Accept, 0}},
+   *       {0, {TE::Shift, 4}},
+   *       {5, {TE::Reduce, 2}},
+   *       {3, {TE::Accept, 0}},
    *     }
    *    };
    */
@@ -59,13 +59,13 @@ const CppParserGeneratorTrait = {
       Object.keys(row).forEach(key => {
         const entry = row[key];
         if (entry[0] === 's') {
-          row[key] = `{A::Shift, ${entry.slice(1)}}`;
+          row[key] = `{TE::Shift, ${entry.slice(1)}}`;
         } else if (entry[0] === 'r') {
-          row[key] = `{A::Reduce, ${entry.slice(1)}}`;
+          row[key] = `{TE::Reduce, ${entry.slice(1)}}`;
         } else if (entry === 'acc') {
-          row[key] = `{A::Accept, 0}`;
+          row[key] = `{TE::Accept, 0}`;
         } else {
-          row[key] = `{A::Transit, ${entry}}`;
+          row[key] = `{TE::Transit, ${entry}}`;
         }
       });
 
@@ -114,11 +114,30 @@ const CppParserGeneratorTrait = {
   },
 
   /**
-   * Default format in the [ ] array notation.
+   * Productions array in C++ format.
+   */
+  generateProductions() {
+    this.writeData(
+      'PRODUCTIONS',
+      `{{${this.generateProductionsData().join(',\n')}}}`
+    );
+  },
+
+  /**
+   * Default format in the { } array notation.
    */
   generateProductionsData() {
+    this.writeData(
+      'PRODUCTIONS_COUNT',
+      this._grammar.getProductions().length,
+    );
     return this.generateRawProductionsData()
-      .map(data => `new object[] { ${data} }`);
+      .map(data => {
+        // Remove the semantic action handler, since in Rust
+        // we use a different structure to hold it.
+        data.length = 2;
+        return `{${data.join(', ')}}`;
+      });
   },
 
   /**
@@ -296,16 +315,6 @@ const CppParserGeneratorTrait = {
       'void'
     );
     this.writeData('PRODUCTION_HANDLERS', handlers.join('\n\n'));
-  },
-
-  /**
-   * Productions array in C++ format.
-   */
-  generateProductions() {
-    this.writeData(
-      'PRODUCTIONS',
-      `{ ${this.generateProductionsData().join(',\n')} }`
-    );
   },
 
   _generateHandlers(handlers, name, returnType) {
