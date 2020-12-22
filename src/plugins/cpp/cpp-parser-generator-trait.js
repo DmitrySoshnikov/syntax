@@ -210,7 +210,7 @@ const CppParserGeneratorTrait = {
     return code.replace(tokenRe, (_match, token) => {
       token = token.replace(/^['"]|['"]$/g, '');
       if (token === '%empty' || token === 'nullptr' || token === 'NULL') {
-        return `return TokenType::__UNKNOWN;`;
+        return `return TokenType::__EMPTY;`;
       }
       if (this._terminalsMap.hasOwnProperty(token)) {
         return `return TokenType::TOKEN_TYPE_${this._terminalsMap[token]};`;
@@ -277,7 +277,7 @@ const CppParserGeneratorTrait = {
    */
   generateTokenTypes() {
     const tokenTypes = [...this._grammar.getTokenSymbols()];
-    let index = tokenTypes.length + 2; // + 2 for __UNKNOWN and __EOF
+    let index = tokenTypes.length + 2; // + 2 for __EMPTY and __EOF
     this._grammar.getTerminalSymbols().forEach(terminal => {
       tokenTypes.push(`TOKEN_TYPE_${index}`);
       this._terminalsMap[terminal] = index;

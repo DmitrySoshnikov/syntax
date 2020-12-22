@@ -13,7 +13,7 @@ class Tokenizer;
 // TokenType.
 
 enum class TokenType {
-  __UNKNOWN,
+  __EMPTY,
   __EOF,
   // clang-format off
   {{{TOKEN_TYPES}}}
@@ -144,7 +144,7 @@ class Tokenizer {
 
         auto tokenType = rule.handler(*this, yytext);
 
-        if (tokenType == TokenType::__UNKNOWN) {
+        if (tokenType == TokenType::__EMPTY) {
           return getNextToken();
         }
 
@@ -185,9 +185,23 @@ class Tokenizer {
    * In addition, shows `line:column` location.
    */
   [[noreturn]] void throwUnexpectedToken(char symbol, int line, int column) {
+    std::stringstream ss{str_};
+    std::string lineStr;
+    int currentLine = 0;
+
+    while (currentLine++ <= line) {
+      std::getline(ss, lineStr, '\n');
+    }
+
+    auto pad = std::string(column, ' ');
+
     std::stringstream errMsg;
-    errMsg << "Unexpected token \"" << symbol << "\" at " << line << ":"
-           << column << "\n";
+
+    errMsg << "Syntax Error:\n\n"
+           << lineStr << "\n"
+           << pad << "^\nUnexpected token \"" << symbol << "\" at " << line
+           << ":" << column << "\n\n";
+
     std::cerr << errMsg.str();
     throw new std::runtime_error(errMsg.str().c_str());
   }
@@ -202,8 +216,7 @@ class Tokenizer {
    * Captures token locations.
    */
   void captureLocations_(const std::string& matched) {
-    std::smatch sm;
-    std::string value = matched;
+    auto len = matched.length();
 
     // Absolute offsets.
     tokenStartOffset_ = cursor_;
@@ -213,13 +226,16 @@ class Tokenizer {
     tokenStartColumn_ = tokenStartOffset_ - currentLineBeginOffset_;
 
     // Extract `\n` in the matched token.
-    while (regex_search(value, sm, nlRe_)) {
+    std::stringstream ss{matched};
+    std::string lineStr;
+    std::getline(ss, lineStr, '\n');
+    while (ss.tellg() > 0 && ss.tellg() <= len) {
       currentLine_++;
-      currentLineBeginOffset_ = tokenStartOffset_ + sm.position() + 1;
-      value = sm.suffix();
+      currentLineBeginOffset_ = tokenStartOffset_ + ss.tellg();
+      std::getline(ss, lineStr, '\n');
     }
 
-    tokenEndOffset_ = cursor_ + matched.length();
+    tokenEndOffset_ = cursor_ + len;
 
     // Line-based locations, end.
     tokenEndLine_ = currentLine_;
@@ -234,7 +250,6 @@ class Tokenizer {
   static constexpr size_t LEX_RULES_COUNT = {{{LEX_RULES_COUNT}}};
   static std::array<LexRule, LEX_RULES_COUNT> lexRules_;
   static std::map<TokenizerState, std::vector<size_t>> lexRulesByStartConditions_;
-  static std::regex nlRe_;
   // clang-format on
 
   /**
@@ -290,7 +305,6 @@ std::string Tokenizer::__EOF("$");
 // clang-format off
 std::array<LexRule, Tokenizer::LEX_RULES_COUNT> Tokenizer::lexRules_ = {{{LEX_RULES}}};
 std::map<TokenizerState, std::vector<size_t>> Tokenizer::lexRulesByStartConditions_ = {{{LEX_RULES_BY_START_CONDITIONS}}};
-std::regex Tokenizer::nlRe_{R"(\n+)"};
 // clang-format on
 
 #endif
