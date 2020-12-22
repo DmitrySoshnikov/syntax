@@ -73,9 +73,11 @@ const CppParserGeneratorTrait = {
         table[state],
         'Row',
         'number',
-        'string',
+        'raw',
       );
     });
+
+    this.writeData('ROWS_COUNT', entries.length);
 
     return `{\n    ${entries.join(',\n    ')}\n}`;
   },
@@ -219,10 +221,7 @@ const CppParserGeneratorTrait = {
    * referred from `yyparse`.
    */
   _scopeVars(code) {
-    code = code
-      .replace(/yytext/g, 'yyparse.yytext')
-      .replace(/yyleng/g, 'yyparse.yyleng')
-      .replace(/yyloc/g, 'YyLoc.yyloc');
+    code = code.replace(/yytext/g, 'tokenizer.yytext');
 
     const tokenRe = /return\s+([^;]+?);/g;
 
@@ -275,7 +274,7 @@ const CppParserGeneratorTrait = {
         `${this._mapValue(value, valueType)}}`
       );
     }
-    return `${typeName} { ${result.join(', ')} }`;
+    return `${typeName} {${result.join(', ')}}`;
   },
 
 

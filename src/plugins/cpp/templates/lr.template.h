@@ -51,8 +51,7 @@ namespace syntax {
 //   }
 //
 // clang-format off
-{{{MODULE_INCLUDE}}}
-// clang-format on
+{{{MODULE_INCLUDE}}}  // clang-format on
 
 /**
  * Tokenizer class.
@@ -62,9 +61,9 @@ namespace syntax {
 // clang-format on
 
 /**
- * Parsing table action.
+ * Parsing table type.
  */
-enum class Action {
+enum class TE {
   Accept,
   Shift,
   Reduce,
@@ -74,8 +73,8 @@ enum class Action {
 /**
  * Parsing table entry.
  */
-struct TE {
-  Action action;
+struct TableEntry {
+  TE type;
   int value;
 };
 
@@ -91,17 +90,20 @@ struct Production {
 };
 
 // Key: Encoded symbol (terminal or non-terminal) index
-// Value: TE
-using Row = std::map<int, TE>;
+// Value: TableEntry
+using Row = std::map<int, TableEntry>;
 
 /**
  * Base class for the parser.
  */
 class yyparse {
-private:
+ private:
   // clang-format off
   static constexpr size_t PRODUCTIONS_COUNT = {{{PRODUCTIONS_COUNT}}};
   static std::array<Production, PRODUCTIONS_COUNT> productions_;
+
+  static constexpr size_t ROWS_COUNT = {{{ROWS_COUNT}}};
+  static std::array<Row, ROWS_COUNT> table_;
   // clang-format on
 };
 
@@ -112,6 +114,12 @@ private:
 std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
 // clang-format on
 
+// ------------------------------------------------------------------
+// Parsing table.
+
+// clang-format off
+std::array<Row, yyparse::ROWS_COUNT> yyparse::table_ = {{{TABLE}}};
+// clang-format on
 
 }  // namespace syntax
 
