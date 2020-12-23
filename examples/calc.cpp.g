@@ -22,15 +22,10 @@
 
 %{
 
-struct Value {
-  int data;
-  Value operator+(Value& other) {
-    return Value{data + other.data};
-  }
-  Value operator*(Value& other) {
-    return Value{data * other.data};
-  }
-};
+// Type of the parsing value. Can either
+// be a type alias or an actual struct:
+
+using Value = int;
 
 %}
 

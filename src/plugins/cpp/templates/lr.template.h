@@ -105,14 +105,19 @@ class yyparse {
   std::stack<Value> valuesStack;
 
   /**
-   * Result value.
+   * Token values stack.
    */
-  Value __;
+  std::stack<std::string> tokensStack;
 
   /**
    * Parsing states stack.
    */
   std::stack<int> statesStack;
+
+  /**
+   * Previous state to calculate the next one.
+   */
+  int previousState;
 
  private:
   // clang-format off
@@ -130,6 +135,21 @@ class yyparse {
 // clang-format off
 std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
 // clang-format on
+
+#define POP_V()             \
+  parser.valuesStack.top(); \
+  parser.valuesStack.pop()
+
+#define POP_T()             \
+  parser.tokensStack.top(); \
+  parser.tokensStack.pop()
+
+#define PUSH_VR() parser.valuesStack.push(__)
+#define PUSH_TR() parser.tokensStack.push(__)
+
+#define CAPTURE_STATE()                            \
+  parser.previousState = parser.statesStack.top(); \
+  parser.statesStack.pop()
 
 // clang-format off
 {{{PRODUCTION_HANDLERS}}}
