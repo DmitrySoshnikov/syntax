@@ -26,6 +26,7 @@
 #include <memory>
 #include <regex>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -97,6 +98,22 @@ using Row = std::map<int, TableEntry>;
  * Base class for the parser.
  */
 class yyparse {
+ public:
+  /**
+   * Parsing values stack.
+   */
+  std::stack<Value> valuesStack;
+
+  /**
+   * Result value.
+   */
+  Value __;
+
+  /**
+   * Parsing states stack.
+   */
+  std::stack<int> statesStack;
+
  private:
   // clang-format off
   static constexpr size_t PRODUCTIONS_COUNT = {{{PRODUCTIONS_COUNT}}};
@@ -112,6 +129,10 @@ class yyparse {
 
 // clang-format off
 std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
+// clang-format on
+
+// clang-format off
+{{{PRODUCTION_HANDLERS}}}
 // clang-format on
 
 // ------------------------------------------------------------------

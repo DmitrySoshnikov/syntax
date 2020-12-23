@@ -104,15 +104,44 @@ const CppParserGeneratorTrait = {
 
     action = this._actionFromHandler(action);
 
-    const args = this
-      .getSemanticActionParams(production)
-      // Append type information for C++.
-      .map(arg => `Value ${arg}`)
-      .join(',');
+    const usedArgs = this.getSemanticActionParams(production)
+      .map(arg => action.includes(arg) ? arg : null)
+      .filter(Boolean);
+
+    action = this._generateArgsPrologue(
+      action,
+      usedArgs,
+      // Total number of args.
+      production.isEpsilon() ? 0 : production.getRHS().length
+    );
 
     // Save the action, they are injected later.
-    this._productionHandlers.push({args, action});
+    this._productionHandlers.push({args: ['yyparse& parser'], action});
     return `"_handler${this._productionHandlers.length}"`;
+  },
+
+  /**
+   * Generates prologue for fetching arguments from the parsing stack.
+   */
+  _generateArgsPrologue(action, usedArgs, totalArgsCount) {
+    const argsPrologue = [];
+
+    for (let i = totalArgsCount; i > 0; i--) {
+      const arg = '_' + i;
+
+      if (!usedArgs.includes(arg)) {
+        // Just pop if arg is not used in the handler.
+        argsPrologue.push(`parser.valuesStack.pop();`);
+      } else {
+        argsPrologue.push(`auto ${arg} = parser.valuesStack.top(); parser.valuesStack.pop();`);
+      }
+    }
+
+    return (
+      '// Semantic values prologue.\n' +
+      argsPrologue.join('\n') + '\n\n' +
+      action
+    );
   },
 
   /**
@@ -221,7 +250,9 @@ const CppParserGeneratorTrait = {
    * referred from `yyparse`.
    */
   _scopeVars(code) {
-    code = code.replace(/yytext/g, 'tokenizer.yytext');
+    code = code
+      .replace(/yytext/g, 'tokenizer.yytext')
+      .replace(/\b__\b/g, 'parser.__');
 
     const tokenRe = /return\s+([^;]+?);/g;
 

@@ -20,14 +20,28 @@
 
 /lex
 
+%{
+
+struct Value {
+  int data;
+  Value operator+(Value& other) {
+    return Value{data + other.data};
+  }
+  Value operator*(Value& other) {
+    return Value{data * other.data};
+  }
+};
+
+%}
+
 %left '+'
 %left '*'
 
 %%
 
 E
-  : E '+' E
-  | E '*' E
-  | '(' E ')'
+  : E '+' E   { $$ = $1 + $3 }
+  | E '*' E   { $$ = $1 * $3 }
+  | '(' E ')' { $$ = $2 }
   | NUMBER
   ;
