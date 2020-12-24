@@ -13,8 +13,7 @@ class Tokenizer;
 // TokenType.
 
 enum class TokenType {
-  __EMPTY,
-  __EOF,
+  __EMPTY = -1,
   // clang-format off
   {{{TOKEN_TYPES}}}
   // clang-format on

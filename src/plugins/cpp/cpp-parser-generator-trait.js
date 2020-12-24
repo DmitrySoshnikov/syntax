@@ -367,12 +367,16 @@ const CppParserGeneratorTrait = {
    * Creates token names.
    */
   generateTokenTypes() {
-    const tokenTypes = [...this._grammar.getTokenSymbols()];
-    let index = tokenTypes.length + 2; // + 2 for __EMPTY and __EOF
-    this._grammar.getTerminalSymbols().forEach(terminal => {
-      tokenTypes.push(`TOKEN_TYPE_${index}`);
-      this._terminalsMap[terminal] = index;
-      this._terminalsIndexMap[index++] = terminal;
+    const tokenTypes = Object.keys(this._tokens).map(token => {
+      const index = this._tokens[token];
+      if (this._grammar._tokensMap.hasOwnProperty(token)) {
+        return `${token} = ${index}`;
+      }
+      this._terminalsMap[token] = index;
+      if (token === '$') {
+        return `__EOF = ${index}`;
+      }
+      return `TOKEN_TYPE_${index} = ${index}`;
     });
     this.writeData('TOKEN_TYPES', tokenTypes.join(',\n  '));
   },
