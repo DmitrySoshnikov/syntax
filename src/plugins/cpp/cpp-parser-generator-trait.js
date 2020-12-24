@@ -22,6 +22,13 @@ const CppParserGeneratorTrait = {
    * Generates parser class name.
    */
   generateParserClassName(className) {
+    // Forward:
+    this.writeData('PARSER_CLASS_NAME', className);
+
+    // Class name:
+    this.writeData('PARSER_CLASS_NAME', className);
+
+    // Alias:
     this.writeData('PARSER_CLASS_NAME', className);
   },
 
@@ -144,13 +151,13 @@ const CppParserGeneratorTrait = {
         argsPrologue.push(
           info.isUsed
            ? `auto ${name} = POP_T();`
-           : `parser.tokensStack.pop();`
+           : `parser.tokensStack.pop_back();`
         );
       } else {
         argsPrologue.push(
           info.isUsed
            ? `auto ${name} = POP_V();`
-           : `parser.valuesStack.pop();`
+           : `parser.valuesStack.pop_back();`
         );
       }
     });
@@ -200,10 +207,8 @@ const CppParserGeneratorTrait = {
       this._grammar.getProductions().length,
     );
     return this.generateRawProductionsData()
-      .map(data => {
-        // Remove the semantic action handler, since in Rust
-        // we use a different structure to hold it.
-        data.length = 2;
+      .map((data, index) => {
+        data[2] = index == 0 ? `nullptr` : `&_handler${index}`;
         return `{${data.join(', ')}}`;
       });
   },

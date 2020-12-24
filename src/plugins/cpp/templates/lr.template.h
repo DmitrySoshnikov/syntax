@@ -20,13 +20,13 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
 
+#include <assert.h>
 #include <array>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
-#include <stack>
 #include <string>
 #include <vector>
 
@@ -61,6 +61,21 @@ namespace syntax {
 {{{TOKENIZER}}}
 // clang-format on
 
+#define POP_V()              \
+  parser.valuesStack.back(); \
+  parser.valuesStack.pop_back()
+
+#define POP_T()              \
+  parser.tokensStack.back(); \
+  parser.tokensStack.pop_back()
+
+#define PUSH_VR() parser.valuesStack.push_back(__)
+#define PUSH_TR() parser.tokensStack.push_back(__)
+
+#define CAPTURE_STATE()                             \
+  parser.previousState = parser.statesStack.back(); \
+  parser.statesStack.pop_back()
+
 /**
  * Parsing table type.
  */
@@ -79,6 +94,14 @@ struct TableEntry {
   int value;
 };
 
+// clang-format off
+class {{{PARSER_CLASS_NAME}}};
+// clang-format on
+
+using yyparse = {{{PARSER_CLASS_NAME}}};
+
+typedef void (*ProductionHandler)(yyparse&);
+
 /**
  * Encoded production.
  *
@@ -88,6 +111,7 @@ struct TableEntry {
 struct Production {
   int opcode;
   int rhsLength;
+  ProductionHandler handler;
 };
 
 // Key: Encoded symbol (terminal or non-terminal) index
@@ -95,31 +119,140 @@ struct Production {
 using Row = std::map<int, TableEntry>;
 
 /**
- * Base class for the parser.
+ * Parser class.
  */
-class yyparse {
+// clang-format off
+class {{{PARSER_CLASS_NAME}}} {
+  // clang-format on
  public:
   /**
    * Parsing values stack.
    */
-  std::stack<Value> valuesStack;
+  std::vector<Value> valuesStack;
 
   /**
    * Token values stack.
    */
-  std::stack<std::string> tokensStack;
+  std::vector<std::string> tokensStack;
 
   /**
    * Parsing states stack.
    */
-  std::stack<int> statesStack;
+  std::vector<int> statesStack;
+
+  /**
+   * Tokenizer.
+   */
+  Tokenizer tokenizer;
 
   /**
    * Previous state to calculate the next one.
    */
   int previousState;
 
+  /**
+   * Parses a string.
+   */
+  Value parse(const std::string& str) {
+    // onParseBegin(*this, str);
+
+    // Initialize the tokenizer and the string.
+    tokenizer.initString(str);
+
+    // Initialize the stacks.
+    valuesStack.clear();
+    tokensStack.clear();
+    statesStack.clear();
+
+    // Initial 0 state.
+    statesStack.push_back(0);
+
+    auto token = tokenizer.getNextToken();
+    auto shiftedToken = token;
+
+    // Main parsing loop.
+    for (;;) {
+      auto state = statesStack.back();
+      auto column = (int)token->type;
+
+      if (table_[state].count(column) == 0) {
+        throwUnexpectedToken(token);
+      }
+
+      auto entry = table_[state].at(column);
+
+      // Shift a token, go to state.
+      if (entry.type == TE::Shift) {
+        // Push token.
+        tokensStack.push_back(token->value);
+
+        // Push next state number: "s5" -> 5
+        statesStack.push_back(entry.value);
+
+        shiftedToken = token;
+        token = tokenizer.getNextToken();
+      }
+
+      // Reduce by production.
+      else if (entry.type == TE::Reduce) {
+        auto productionNumber = entry.value;
+        auto production = productions_[productionNumber];
+
+        tokenizer.yytext = shiftedToken->value;
+
+        auto rhsLength = production.rhsLength;
+        while (rhsLength > 0) {
+          statesStack.pop_back();
+          rhsLength--;
+        }
+
+        // Call the handler. Previous state and result are
+        // determined after the handler call.
+        production.handler(*this);
+
+        auto symbolToReduceWith = production.opcode;
+        auto nextStateEntry = table_[previousState].at(symbolToReduceWith);
+        assert(nextStateEntry.type == TE::Transit);
+
+        statesStack.push_back(nextStateEntry.value);
+      }
+
+      // Accept the string.
+      else if (entry.type == TE::Reduce) {
+        // Pop state number.
+        statesStack.pop_back();
+
+        // Pop the parsed value.
+        auto result = valuesStack.back();
+        valuesStack.pop_back();
+
+        if (statesStack.size() != 1 || statesStack.back() != 0 ||
+            tokenizer.hasMoreTokens()) {
+          throwUnexpectedToken(token);
+        }
+
+        statesStack.pop_back();
+
+        // onParseEnd(*this, result);
+        return result;
+      }
+    }
+  }
+
  private:
+  /**
+   * Throws parser error on unexpected token.
+   */
+  [[noreturn]] void throwUnexpectedToken(SharedToken token) {
+    if (token->type == TokenType::__EOF && !tokenizer.hasMoreTokens()) {
+      std::string errMsg = "Unexpected end of input.\n";
+      std::cerr << errMsg;
+      throw std::runtime_error(errMsg.c_str());
+    }
+    tokenizer.throwUnexpectedToken(token->value, token->startLine,
+                                   token->startColumn);
+  }
+
   // clang-format off
   static constexpr size_t PRODUCTIONS_COUNT = {{{PRODUCTIONS_COUNT}}};
   static std::array<Production, PRODUCTIONS_COUNT> productions_;
@@ -133,26 +266,11 @@ class yyparse {
 // Productions.
 
 // clang-format off
-std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
+{{{PRODUCTION_HANDLERS}}}
 // clang-format on
 
-#define POP_V()             \
-  parser.valuesStack.top(); \
-  parser.valuesStack.pop()
-
-#define POP_T()             \
-  parser.tokensStack.top(); \
-  parser.tokensStack.pop()
-
-#define PUSH_VR() parser.valuesStack.push(__)
-#define PUSH_TR() parser.tokensStack.push(__)
-
-#define CAPTURE_STATE()                            \
-  parser.previousState = parser.statesStack.top(); \
-  parser.statesStack.pop()
-
 // clang-format off
-{{{PRODUCTION_HANDLERS}}}
+std::array<Production, yyparse::PRODUCTIONS_COUNT> yyparse::productions_ = {{{PRODUCTIONS}}};
 // clang-format on
 
 // ------------------------------------------------------------------

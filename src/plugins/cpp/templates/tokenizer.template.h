@@ -158,7 +158,8 @@ class Tokenizer {
       return toToken(TokenType::__EOF);
     }
 
-    throwUnexpectedToken(strSlice[0], currentLine_, currentColumn_);
+    throwUnexpectedToken(std::string(1, strSlice[0]), currentLine_,
+                         currentColumn_);
   }
 
   /**
@@ -184,7 +185,8 @@ class Tokenizer {
    * line from the source, pointing with the ^ marker to the bad token.
    * In addition, shows `line:column` location.
    */
-  [[noreturn]] void throwUnexpectedToken(char symbol, int line, int column) {
+  [[noreturn]] void throwUnexpectedToken(const std::string& symbol, int line,
+                                         int column) {
     std::stringstream ss{str_};
     std::string lineStr;
     int currentLine = 0;
