@@ -72,10 +72,6 @@ namespace syntax {
 #define PUSH_VR() parser.valuesStack.push_back(__)
 #define PUSH_TR() parser.tokensStack.push_back(__)
 
-#define CAPTURE_STATE()                             \
-  parser.previousState = parser.statesStack.back(); \
-  parser.statesStack.pop_back()
-
 /**
  * Parsing table type.
  */
@@ -206,9 +202,10 @@ class {{{PARSER_CLASS_NAME}}} {
           rhsLength--;
         }
 
-        // Call the handler. Previous state and result are
-        // determined after the handler call.
+        // Call the handler.
         production.handler(*this);
+
+        auto previousState = statesStack.back();
 
         auto symbolToReduceWith = production.opcode;
         auto nextStateEntry = table_[previousState].at(symbolToReduceWith);
@@ -218,7 +215,7 @@ class {{{PARSER_CLASS_NAME}}} {
       }
 
       // Accept the string.
-      else if (entry.type == TE::Reduce) {
+      else if (entry.type == TE::Accept) {
         // Pop state number.
         statesStack.pop_back();
 

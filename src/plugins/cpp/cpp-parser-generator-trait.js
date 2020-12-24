@@ -183,7 +183,6 @@ const CppParserGeneratorTrait = {
     }
     return (
       `${action}\n\n // Semantic action epilogue.\n` +
-      `CAPTURE_STATE();\n` +
       `${pushResult}();\n`
     );
   },
@@ -208,7 +207,7 @@ const CppParserGeneratorTrait = {
     );
     return this.generateRawProductionsData()
       .map((data, index) => {
-        data[2] = index == 0 ? `nullptr` : `&_handler${index}`;
+        data[2] = `&_handler${index + 1}`;
         return `{${data.join(', ')}}`;
       });
   },
