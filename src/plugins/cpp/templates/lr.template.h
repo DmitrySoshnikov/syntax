@@ -30,8 +30,6 @@
 #include <string>
 #include <vector>
 
-namespace syntax {
-
 // ------------------------------------
 // Module include prologue.
 //
@@ -53,6 +51,8 @@ namespace syntax {
 //
 // clang-format off
 {{{MODULE_INCLUDE}}}  // clang-format on
+
+namespace syntax {
 
 /**
  * Tokenizer class.
@@ -150,7 +150,9 @@ class {{{PARSER_CLASS_NAME}}} {
    * Parses a string.
    */
   Value parse(const std::string& str) {
-    // onParseBegin(*this, str);
+    // clang-format off
+    {{{ON_PARSE_BEGIN_CALL}}}
+    // clang-format on
 
     // Initialize the tokenizer and the string.
     tokenizer.initString(str);
@@ -230,7 +232,10 @@ class {{{PARSER_CLASS_NAME}}} {
 
         statesStack.pop_back();
 
-        // onParseEnd(*this, result);
+        // clang-format off
+        {{{ON_PARSE_END_CALL}}}
+        // clang-format on
+
         return result;
       }
     }

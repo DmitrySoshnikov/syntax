@@ -1,6 +1,6 @@
 # syntax
 
-[![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli) [![npm downloads](https://img.shields.io/npm/dt/syntax-cli.svg)](https://www.npmjs.com/package/syntax-cli)
+[![Build Status](https://travis-ci.org/DmitrySoshnikov/syntax.svg?branch=master)](https://travis-ci.org/DmitrySoshnikov/syntax) [![npm version](https://badge.fury.io/js/syntax-cli.svg)](https://badge.fury.io/js/syntax-cli)
 
 Syntactic analysis toolkit, language-agnostic parser generator.
 
@@ -19,6 +19,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Python plugin](#python-plugin)
   - [PHP plugin](#php-plugin)
   - [Ruby plugin](#ruby-plugin)
+  - [C++ plugin](#cpp-plugin)
   - [C# plugin](#c-plugin)
   - [Rust plugin](#rust-plugin)
   - [Java plugin](#java-plugin)
@@ -176,6 +177,33 @@ puts CalcParser.parse('2 + 2 * 2') // 6
 ```
 
 Ruby's parsing hooks can be found in [the following example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/module-include.rb.g).
+
+#### C++ plugin
+
+Syntax has support for modern C++ as a target language. See its [calculator example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.cpp.g):
+
+```
+./bin/syntax -g examples/calc.cpp.g -m lalr1 -o CalcParser.h
+```
+
+Then callers can use the module as:
+
+```cpp
+#include "CalcParser.h"
+
+using namespace syntax;
+
+...
+
+std::string s{R"(2 + 2 * 2)"};
+
+CalcParser parser();
+
+std::cout << parser.parse("2 + 2 * 2");  // 6
+std::cout << parser.parse("(2 + 2) * 2") // 8
+```
+
+Parsing hooks example in C++ format can be found in [this example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.cpp.ast.g).
 
 #### C# plugin
 

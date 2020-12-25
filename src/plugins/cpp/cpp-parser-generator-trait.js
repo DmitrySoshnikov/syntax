@@ -4,6 +4,7 @@
  */
 
 import fs from 'fs';
+import colors from 'colors';
 
 /**
  * C++ tokenizer template.
@@ -195,6 +196,38 @@ const CppParserGeneratorTrait = {
       'PRODUCTIONS',
       `{{${this.generateProductionsData().join(',\n')}}}`
     );
+  },
+
+  /**
+   * Module include.
+   */
+  generateModuleInclude() {
+    const moduleInclude = this._grammar.getModuleInclude();
+
+    const hasValueType =
+      /\b(?:using|class|struct)\s+Value\b|\btypedef\s+\w+\s+Value/.test(moduleInclude);
+
+    if (!hasValueType) {
+      throw new Error(
+        `\n\C++ plugin should provide module include and define at least ` +
+        `the ${colors.bold('Value')} type. Example:\n\n` +
+        `${colors.bold('using Value = <...>;\n')}`
+      );
+    }
+
+    // Parser hooks.
+    const onParseBegin = moduleInclude.includes('void onParseBegin')
+      ? 'onParseBegin(str);'
+      : '';
+
+    const onParseEnd = moduleInclude.includes('void onParseEnd')
+      ? 'onParseEnd(result);'
+      : '';
+
+    this.writeData('ON_PARSE_BEGIN_CALL', onParseBegin);
+    this.writeData('ON_PARSE_END_CALL', onParseEnd);
+
+    this.writeData('MODULE_INCLUDE', moduleInclude);
   },
 
   /**
