@@ -1,0 +1,124 @@
+/**
+ * S-expression parser.
+ *
+ * ./bin/syntax -g parser/s-expression.cpp.bnf -m LALR1 -o ~/SExpressionParser.h
+ *
+ * Examples:
+ *
+ * Atom: 42, foo, bar, "Hello World"
+ *
+ * List: (), (+ 5 x), (print "hello")
+ *
+ * Usage:
+ *
+ *  string exp{R"( (var x (+ "hello" 10)) )"};
+ *
+ *  SExpressionParser parser;
+ *
+ *  auto ast = parser.parse(exp);
+ *
+ *  cout << "(";
+ *  cout << ast.list[0].symbol << " "; // var
+ *  cout << ast.list[1].symbol << " ("; // x (
+ *  cout << ast.list[2].list[0].symbol << " "; // +
+ *  cout << ast.list[2].list[1].str << " "; // "hello"
+ *  cout << ast.list[2].list[2].number << "))\n"; 10 ))
+ *
+ * Result: (var x (+ "hello" 10))
+ */
+
+// -----------------------------------------------
+// Lexical grammar (tokens):
+
+%lex
+
+%%
+
+\s+               %empty
+
+\"[^\"]*\"        STRING
+
+\d+               NUMBER
+
+[\w\-+*=<>/]+     SYMBOL
+
+/lex
+
+// -----------------------------------------------
+// Syntactic grammar (BNF):
+
+%{
+
+#include <string>
+#include <initializer_list>
+
+/**
+ * Expression type.
+ */
+enum class ExpType {
+  Number,
+  String,
+  Symbol,
+  List,
+};
+
+/**
+ * Expression.
+ */
+class Exp {
+ public:
+  ExpType type;
+
+  int number;
+  std::string str;
+  std::string symbol;
+  std::vector<Exp> list;
+
+  // Numbers:
+  Exp(int number) : type(ExpType::Number), number(number) {}
+
+  // Strings, Symbols:
+  Exp(std::string& strVal) {
+    if (strVal[0] == '"') {
+      type = ExpType::String;
+      str = strVal;
+    } else {
+      type = ExpType::Symbol;
+      symbol = strVal;
+    }
+  }
+
+  // Lists:
+  Exp(std::vector<Exp> list) : type(ExpType::List), list(list) {}
+
+  // List init:
+  Exp(const std::initializer_list<Exp> &list) : type(ExpType::List), list(list) {}
+
+  ~Exp() {}
+};
+
+using Value = Exp;
+
+%}
+
+%%
+
+Exp
+  : Atom
+  | List
+  ;
+
+Atom
+  : NUMBER { $$ = Exp(std::stoi($1)) }
+  | STRING { $$ = Exp($1) }
+  | SYMBOL { $$ = Exp($1) }
+  ;
+
+List
+  : '(' ListEntries ')' { $$ = $2 }
+  ;
+
+ListEntries
+  : ListEntries Exp { $1.list.push_back($2); $$ = $1 }
+  | /* empty */     { $$ = Exp(std::vector<Exp>{}) }
+  ;
