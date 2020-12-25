@@ -195,9 +195,7 @@ using namespace syntax;
 
 ...
 
-std::string s{R"(2 + 2 * 2)"};
-
-CalcParser parser();
+CalcParser parser;
 
 std::cout << parser.parse("2 + 2 * 2");  // 6
 std::cout << parser.parse("(2 + 2) * 2") // 8
