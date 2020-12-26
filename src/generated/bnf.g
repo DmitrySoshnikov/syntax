@@ -18,6 +18,7 @@
       ["%right\\b",                                 "return '%right'"],
       ["%nonassoc\\b",                              "return '%nonassoc'"],
       ["%token",                                    "return '%token'"],
+      ["%empty",                                    "return '%empty'"],
 
       // Code inside an action block { } may contain { } from the language
       // itself, so we collect the action block piece by piece, handling
@@ -122,7 +123,8 @@
 
     "Primary":      [["ID",                         "$$ = $1"],
                      ["SPECIAL_CHAR",               "$$ = $1"],
-                     ["STRING",                     "$$ = $1"]],
+                     ["STRING",                     "$$ = $1"],
+                     ["%empty",                     "$$ = null"]],
 
     "Action":       [["{ ActionBody }",             "$$ = $2"],
                      ["ε",                          "$$ = null"]],

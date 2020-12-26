@@ -120,5 +120,5 @@ List
 
 ListEntries
   : ListEntries Exp { $1.list.push_back($2); $$ = $1 }
-  | /* empty */     { $$ = Exp(std::vector<Exp>{}) }
+  | %empty          { $$ = Exp(std::vector<Exp>{}) }
   ;
