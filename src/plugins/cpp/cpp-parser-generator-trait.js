@@ -101,6 +101,21 @@ const CppParserGeneratorTrait = {
   },
 
   /**
+   * Generates final parsed result.
+   */
+  generateParsedResult() {
+    const stack =
+      this._grammar.getAugmentedProduction().derivesPropagatingToken()
+        ? 'tokensStack'
+        : 'valuesStack';
+
+    this.writeData(
+      'PARSED_RESULT',
+      `auto result = ${stack}.back(); ${stack}.pop_back();`
+    );
+  },
+
+  /**
    * Production handlers are implemented as methods on the `yyparse` class.
    */
   buildSemanticAction(production) {
@@ -114,8 +129,8 @@ const CppParserGeneratorTrait = {
 
     const argsInfo = this._getParamsInfo(production, action);
 
-    action = this._generateHandlerPrologue(action, argsInfo);
-    action = this._generateHandlerEpilogue(action, argsInfo);
+    action = this._generateHandlerPrologue(production, action, argsInfo);
+    action = this._generateHandlerEpilogue(production, action);
 
     // Save the action, they are injected later.
     this._productionHandlers.push({args: ['yyparse& parser'], action});
@@ -143,12 +158,12 @@ const CppParserGeneratorTrait = {
   /**
    * Generates prologue for fetching arguments from the parsing stack.
    */
-  _generateHandlerPrologue(action, argsInfo) {
+  _generateHandlerPrologue(production, action, argsInfo) {
     const argsPrologue = [];
 
     Object.keys(argsInfo).reverse().forEach(name => {
       const info = argsInfo[name];
-      if (info.isToken) {
+      if (info.isToken || production.derivesPropagatingToken()) {
         argsPrologue.push(
           info.isUsed
            ? `auto ${name} = POP_T();`
@@ -173,15 +188,10 @@ const CppParserGeneratorTrait = {
   /**
    * Generates handler epilogue.
    */
-  _generateHandlerEpilogue(action, argsInfo) {
-    const propagating = /\b__ = (_\d+)\b/.exec(action);
-    let pushResult = 'PUSH_VR';
-    if (propagating != null) {
-      const arg = argsInfo[propagating[1]];
-      if (arg != null && arg.isToken) {
-        pushResult = 'PUSH_TR';
-      }
-    }
+  _generateHandlerEpilogue(production, action) {
+    const pushResult = production.derivesPropagatingToken()
+      ? 'PUSH_TR'
+      : 'PUSH_VR';
     return (
       `${action}\n\n // Semantic action epilogue.\n` +
       `${pushResult}();\n`

@@ -63,7 +63,7 @@ void onParseBegin(const std::string& str) {
 
 // On parser end hook:
 void onParseEnd(Node* result) {
-  std::cout << result << "\n";
+  std::cout << "Result: " << result << "\n";
 }
 
 

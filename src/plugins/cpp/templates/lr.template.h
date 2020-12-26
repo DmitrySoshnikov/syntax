@@ -222,8 +222,9 @@ class {{{PARSER_CLASS_NAME}}} {
         statesStack.pop_back();
 
         // Pop the parsed value.
-        auto result = valuesStack.back();
-        valuesStack.pop_back();
+        // clang-format off
+        {{{PARSED_RESULT}}}
+        // clang-format on
 
         if (statesStack.size() != 1 || statesStack.back() != 0 ||
             tokenizer.hasMoreTokens()) {

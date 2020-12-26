@@ -49,6 +49,49 @@ export default class Production {
   }
 
   /**
+   * Whether the production propagating.
+   */
+  isPropagating() {
+    if (this._isPropagating == null) {
+      this._isPropagating =
+        this.getRHS().length === 1 &&
+        /\$\$\s+=\s+\$1/.test(this._rawSemanticAction);
+    }
+    return this._isPropagating;
+  }
+
+  /**
+   * Whther this production derives token.
+   */
+  derivesPropagatingToken() {
+    if (this._derivesPropagatingToken == null) {
+      if (!this.isPropagating()) {
+        return (this._derivesPropagatingToken = false);
+      }
+
+      const symbol = this.getRHS()[0].getSymbol();
+
+      if (this._grammar.isTokenSymbol(symbol)) {
+        return (this._derivesPropagatingToken = true);
+      }
+
+      const productionsForSymbol = this._grammar.getProductionsForSymbol(
+        symbol
+      );
+
+      for (const production of productionsForSymbol) {
+        if (production.derivesPropagatingToken(production)) {
+          return (this._derivesPropagatingToken = true);
+        }
+      }
+
+      return (this._derivesPropagatingToken = false);
+    }
+
+    return this._derivesPropagatingToken;
+  }
+
+  /**
    * Rewrites named arguments to positioned ones.
    * $foo -> $1, ...
    */

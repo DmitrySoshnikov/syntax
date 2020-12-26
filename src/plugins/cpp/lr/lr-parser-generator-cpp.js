@@ -65,5 +65,6 @@ export default class LRParserGeneratorCpp extends LRParserGeneratorDefault {
     this.generateParseTable();
     this.generateProductionHandlers();
     this.generateParserClassName(this._parserClassName);
+    this.generateParsedResult();
   }
 };
