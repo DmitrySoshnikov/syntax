@@ -363,7 +363,7 @@ e
 
 Simple tokens like `'+'` can be defined inline (with quotes), and complex tokens like `NUMBER` has to be defined in the lexical grammar. Lexical and syntactic grammars can also be defined in two separate files.
 
-A grammar in Yacc/Bison format is also _just parsed_ by _Syntax_ using our [BNF parser](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.g). The resulting parsed AST corresponds exactly to the JSON-like notation described above.
+A grammar in Yacc/Bison format is also _just parsed_ by _Syntax_ using our [BNF parser](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/bnf.bnf). The resulting parsed AST corresponds exactly to the JSON-like notation described above.
 
 #### Grammar properties
 
