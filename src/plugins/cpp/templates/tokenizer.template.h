@@ -188,7 +188,7 @@ class Tokenizer {
                                          int column) {
     std::stringstream ss{str_};
     std::string lineStr;
-    int currentLine = 0;
+    int currentLine = 1;
 
     while (currentLine++ <= line) {
       std::getline(ss, lineStr, '\n');

@@ -20,8 +20,8 @@
  *  cout << "(";
  *  cout << ast.list[0].symbol << " "; // var
  *  cout << ast.list[1].symbol << " ("; // x (
- *  cout << ast.list[2].list[0].symbol << " "; // +
- *  cout << ast.list[2].list[1].str << " "; // "hello"
+ *  cout << ast.list[2].list[0].string << " "; // +
+ *  cout << ast.list[2].list[1].string << " "; // "hello"
  *  cout << ast.list[2].list[2].number << "))\n"; 10 ))
  *
  * Result: (var x (+ "hello" 10))
@@ -70,8 +70,7 @@ class Exp {
   ExpType type;
 
   int number;
-  std::string str;
-  std::string symbol;
+  std::string string;
   std::vector<Exp> list;
 
   // Numbers:
@@ -81,10 +80,10 @@ class Exp {
   Exp(std::string& strVal) {
     if (strVal[0] == '"') {
       type = ExpType::String;
-      str = strVal;
+      string = strVal;
     } else {
       type = ExpType::Symbol;
-      symbol = strVal;
+      string = strVal;
     }
   }
 
