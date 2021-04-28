@@ -80,7 +80,7 @@ class Exp {
   Exp(std::string& strVal) {
     if (strVal[0] == '"') {
       type = ExpType::String;
-      string = strVal;
+      string = strVal.substr(1, strVal.size() - 2);
     } else {
       type = ExpType::Symbol;
       string = strVal;
