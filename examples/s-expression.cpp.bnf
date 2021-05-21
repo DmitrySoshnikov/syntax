@@ -18,11 +18,11 @@
  *  auto ast = parser.parse(exp);
  *
  *  cout << "(";
- *  cout << ast.list[0].symbol << " "; // var
- *  cout << ast.list[1].symbol << " ("; // x (
- *  cout << ast.list[2].list[0].string << " "; // +
- *  cout << ast.list[2].list[1].string << " "; // "hello"
- *  cout << ast.list[2].list[2].number << "))\n"; 10 ))
+ *  cout << ast->list[0]->symbol << " "; // var
+ *  cout << ast->list[1]->symbol << " ("; // x (
+ *  cout << ast->list[2]->list[0]->string << " "; // +
+ *  cout << ast->list[2]->list[1]->string << " "; // "hello"
+ *  cout << ast->list[2]->list[2]->number << "))\n"; 10 ))
  *
  * Result: (var x (+ "hello" 10))
  */
@@ -71,7 +71,7 @@ class Exp {
 
   int number;
   std::string string;
-  std::vector<Exp> list;
+  std::vector<std::shared_ptr<Exp>> list;
 
   // Numbers:
   Exp(int number) : type(ExpType::Number), number(number) {}
@@ -88,15 +88,15 @@ class Exp {
   }
 
   // Lists:
-  Exp(std::vector<Exp> list) : type(ExpType::List), list(list) {}
+  Exp(std::vector<std::shared_ptr<Exp>> list) : type(ExpType::List), list(list) {}
 
   // List init:
-  Exp(const std::initializer_list<Exp> &list) : type(ExpType::List), list(list) {}
+  Exp(const std::initializer_list<std::shared_ptr<Exp>> &list) : type(ExpType::List), list(list) {}
 
   ~Exp() {}
 };
 
-using Value = Exp;
+using Value = std::shared_ptr<Exp>;
 
 %}
 
@@ -108,9 +108,9 @@ Exp
   ;
 
 Atom
-  : NUMBER { $$ = Exp(std::stoi($1)) }
-  | STRING { $$ = Exp($1) }
-  | SYMBOL { $$ = Exp($1) }
+  : NUMBER { $$ = std::make_shared<Exp>(std::stoi($1)) }
+  | STRING { $$ = std::make_shared<Exp>($1) }
+  | SYMBOL { $$ = std::make_shared<Exp>($1) }
   ;
 
 List
@@ -118,6 +118,6 @@ List
   ;
 
 ListEntries
-  : ListEntries Exp { $1.list.push_back($2); $$ = $1 }
-  | %empty          { $$ = Exp(std::vector<Exp>{}) }
+  : ListEntries Exp { $1->list.push_back($2); $$ = $1 }
+  | %empty          { $$ = std::make_shared<Exp>(std::vector<std::shared_ptr<Exp>>{}) }
   ;
