@@ -24,6 +24,7 @@ export default class BaseParserGenerator {
     this._customTokenizer = customTokenizer || options.customTokenizer;
     this._encodeSymbols();
     this._options = options;
+
     const templateTags = this.getTemplateTags();
     this._openTag = templateTags.open;
     this._closeTag = templateTags.close;
