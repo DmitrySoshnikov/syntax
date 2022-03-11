@@ -22,7 +22,7 @@ end
 # TokenizerData: state of the tokenizer process
 Base.@kwdef mutable struct TokenizerData
   tokensDict = {{{TOKENS}}}
-  EOF_TOKEN = Token(type = tokensDict["[EOF]"], value = "")
+  EOF_TOKEN = Token(type = tokensDict[EOF], value = EOF)
   lexRules = {{{LEX_RULES}}}
   lexRulesByConditionsDict = {{{LEX_RULES_BY_START_CONDITIONS}}}
   initstring::String
@@ -43,9 +43,9 @@ end
 # injected by parser
 {{{LEX_RULE_HANDLERS}}}
 
-function initTokenizer(tokenizingString::String)
+function initTokenizer(tokenizingString::AbstractString)
   mydata = TokenizerData(
-    initString = tokenizingString,
+    initstring = tokenizingString,
     states = Stack{String}(),
     tokensQueue = Queue{String}()
   )
@@ -64,11 +64,11 @@ function getCurrentState(tokenizerData::TokenizerData)
   return first(tokenizerData.states)
 end
 
-function pushState!(tokenizerData::TokenizerData, newState::String)
+function pushState!(tokenizerData::TokenizerData, newState::AbstractString)
   push!(tokenizerData.states, newState)
 end
 
-function begin!(tokenizerData::TokenizerData, beginState::String)
+function begin!(tokenizerData::TokenizerData, beginState::AbstractString)
   pushState!(tokenizerData, beginState)
 end
 
@@ -81,35 +81,36 @@ function getNextToken!(tokenizerData::TokenizerData)
     # process tokens waiting in the queue
     return toToken(tokenizerData, dequeue(tokenizerData.tokensQueue), "")
   end
-  if !hasMoreTokens
+  if !hasMoreTokens(tokenizerData)
     return tokenizerData.EOF_TOKEN
   end
 
   ss = SubString(tokenizerData.initstring, tokenizerData.cursor)
   lexrulesforstate = tokenizerData.lexRulesByConditionsDict[getCurrentState(tokenizerData)]
   # loop through all the lexer rules for this state to see what we can match
-  for rule ∈ lexrulesforstate
-    match = match(rule[1], ss)
-    local matchstr = ""
-    if !isnothing(match)
-      matchstr = match.match
+  for rulenum ∈ lexrulesforstate
+    rule = tokenizerData.lexRules[rulenum + 1]
+    regexmatch = match(rule[1], ss)
+    matchstr = ""
+    if !isnothing(regexmatch)
+      matchstr = regexmatch.match
       captureLocation(tokenizerData, matchstr)
-      tokenizerData.cursor += length(match)
+      tokenizerData.cursor += length(regexmatch)
     end
     # EOF token
-    if length(ss) == 0 && !isnothing(match) && length(match) == 0
+    if length(ss) == 0 && !isnothing(regexmatch) && length(regexmatch) == 0
       tokenizerData.cursor += 1
     end
-    if !isnothing(match)
-      yytext = matchstr
-      yylength = length(matchstr)
+    if !isnothing(regexmatch)
+      global yytext = matchstr
+      global yylength = length(matchstr)
 
       # the rules have strings that represent the names of functions to call
       ruleFunction = getfield(Main, Symbol(rule[2]))
-      tokens = ruleFunction(tokenizerData)
+      tokens = ruleFunction()
       local token
       if isnothing(tokens)
-        return getNextToken(tokenizerData)
+        return getNextToken!(tokenizerData)
       end
       if tokens isa AbstractVector
         token = tokens[1]
@@ -133,7 +134,7 @@ function getNextToken!(tokenizerData::TokenizerData)
 end
 
 # Given a string that matches a token, captures the location and start/end offsets
-function captureLocation(tokenizerData::TokenizerData, matched::String)
+function captureLocation(tokenizerData::TokenizerData, matched::AbstractString)
   newline = r"\n"
 
   # absolute offsets
@@ -155,7 +156,7 @@ function captureLocation(tokenizerData::TokenizerData, matched::String)
   tokenizerData.tokenEndColumn = tokenizerData.currentColumn = tokenizerData.tokenEndOffset - tokenizerData.currentLineBeginOffset
 end
 
-function toToken(tokenizerData::TokenizerData, tokenType::String, yytext::String)
+function toToken(tokenizerData::TokenizerData, tokenType::AbstractString, yytext::AbstractString)
   return Token(
       type = tokenizerData.tokensDict[tokenType],
       value = yytext,

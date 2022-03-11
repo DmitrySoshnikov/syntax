@@ -21,11 +21,11 @@ using DataStructures;
 
 # Constants and globals
 const EOF = "\$"
-yytext::String = ""
-yylength::Int = 0
-__res::Any = nothing
-__loc::yyLoc = nothing
-should_capture_locations::Bool = {{{CAPTURE_LOCATIONS}}}
+yytext = ""
+yylength = 0
+__res = nothing
+__loc = nothing
+should_capture_locations = {{{CAPTURE_LOCATIONS}}}
 
 # Types
 struct SyntaxError <: Exception end
@@ -98,6 +98,13 @@ end
 
 {{{PRODUCTION_HANDLERS}}}
 
+# blank stand-ins for begin and end
+function parseBegin()
+end
+
+function parseEnd()
+end
+
 #=
   Primary parsing function
     ss - the code to parse, in a String
@@ -105,10 +112,10 @@ end
     onParseEnd - a function to call when parsing ends, should accept as a single argument with the parsed value result
 =#
 # Q for Dmetry: ok to default tokenizer here? other implementations throw but I wanted to keep the parse interface to only the string required
-function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onParseBegin::Function = nothing, onParseEnd::Function = nothing)
+function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onParseBegin::Function = parseBegin, onParseEnd::Function = parseEnd)
   # constants inserted by the parser generator
-  const productions = {{{PRODUCTIONS}}} # [[1, 2, "handler1"], [3, 4, "handler2], ...] i.e. Vector{Vector{Union{Integer, String}}}
-  const table = {{{TABLE}}} # i.e. Dict{Int, String}
+  productions = {{{PRODUCTIONS}}} # [[1, 2, "handler1"], [3, 4, "handler2], ...] i.e. Vector{Vector{Union{Integer, String}}}
+  table = {{{TABLE}}} # i.e. Dict{Int, String}
 
   # initialization and prep for parsing
   !isnothing(onParseBegin) && onParseBegin()
@@ -117,28 +124,28 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
   push!(stack, 0)
 
   # begin parsing
-  token = getNextToken(tokenizerData)
+  token = getNextToken!(tokenizerData)
   shiftedToken = nothing
   while hasMoreTokens(tokenizerData) || !isempty(stack)
     # get a token and look it up in our parsing table
     isnothing(token) && unexpectedEndOfInput()
     state = first(stack)
     column = token.type + 1
-    entry = get(stack[state + 1], column, nothing)
+    entry = get(table[state + 1], column, nothing)
     if isnothing(entry)
       unexpectedToken(tokenizerData, token)
       break
     end
 
     # found 'shift' instruction, which starts with s then has <next state number> - i.e. s5 means "shift to state 5"
-    if entry[1] == "s"
+    if entry[1] == 's'
       push!(stack, StackEntry(symbol = token.type, semanticValue = token.value, loc = yyloc(token)))
       push!(stack, convert(Int, SubString(entry, 2)))
       shiftedToken = token
-      token = getNextToken(tokenizerData)
+      token = getNextToken!(tokenizerData)
 
     # found "reduce" instruction, which starts with r then has <production number> to reduce by - i.e. r2 means "reduce by production 2"
-    elseif entry[1] == "r"
+    elseif entry[1] == 'r'
       production = productions[convert(Int, SubString(entry, 2))]
 
       # Handler can be optional: [0, 3] - no handler, [0, 3, "_handler1"] - has handler.
@@ -166,8 +173,8 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
       symbolToProduceWith = production[1]
       reduceStackEntry = StackEntry(symbol = symbolToProduceWith, semanticValue = nothing, loc = nothing)
       if hasSemanticAction
-        yytext = isnothing(shiftedToken) ? nothing : shiftedToken.value
-        yylength = isnothing(shiftedToken) ? 0 : length(shiftedToken.value)
+        global yytext = isnothing(shiftedToken) ? nothing : shiftedToken.value
+        global yylength = isnothing(shiftedToken) ? 0 : length(shiftedToken.value)
         semanticActionHandler = getfield(Main, Symbol(production[3]))
         semanticActionArgs = semanticValueArgs
         should_capture_locations && vcat(semanticActionArgs, locationArgs)
@@ -175,7 +182,9 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
         # call the handler the result is put in __res, which is accessed/assigned to by for example $$ = <something> in the grammar
         semanticActionHandler(semanticActionArgs...)
         reduceStackEntry.semanticValue = __res
-        should_capture_locations && reduceStackEntry.loc = __loc
+        if should_capture_locations
+          reduceStackEntry.loc = __loc
+        end
       end
       push!(stack, reduceStackEntry)
       push!(table[previousState + 1][symbolToProduceWith])

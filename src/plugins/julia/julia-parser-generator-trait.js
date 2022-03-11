@@ -76,7 +76,7 @@ const JuliaParserGeneratorTrait = {
    */
   _dictKey(key, keyType) {
     switch (keyType) {
-      case 'string': return `"${key}"`;
+      case 'string': return `raw"${key}"`;
       case 'number': return Number(key);
       default:
         throw new Error('_dictKey: Incorrect type ' + keyType);
@@ -106,7 +106,7 @@ const JuliaParserGeneratorTrait = {
   generateTokensTable() {
     this.writeData(
       'TOKENS',
-      this._buildJuliaTable(this._tokens),
+      this._toJuliaDictionary(this._tokens, 'string', 'number'),
     );
   },
 
@@ -128,6 +128,39 @@ const JuliaParserGeneratorTrait = {
     // "_handler1", "_handler2", etc.
     this._productionHandlers.push({args, action});
     return `_handler${this._productionHandlers.length}`;
+  },
+
+  /**
+   * We override this because the standard parser generator
+   * uses variable __ as value of $$ in grammar production,
+   * but Julia puts special meaning on all-underscore variable
+   * names so we need to instead replace with our variable, _res
+   * 
+   * From Julia manual:
+   * A particular class of variable names is one that contains only underscores. These identifiers can only be assigned
+   * values but cannot be used to assign values to other variables. More technically, they can only be used as an L-value, 
+   * but not as an R-value
+   * 
+   */
+  getSemanticActionCode(production) {
+    const rawAction = production.getRawSemanticAction();
+
+    if (!rawAction) {
+      return null;
+    }
+
+    let action = rawAction
+      // Replace $1, $2, @1, ... $$ with _1, _2, _1loc, ... __, etc.
+      .replace(/\$(\d+)/g, '_$1')
+      .replace(/@(\d+)/g, '_$1loc')
+      .replace(/\$\$/g, 'global __res')
+      .replace(/@\$/g, 'global __loc');
+
+    if (this._grammar.shouldCaptureLocations()) {
+      action = this.createLocationPrologue(production) + action;
+    }
+
+    return action || null;
   },
 
   /**
@@ -157,7 +190,7 @@ const JuliaParserGeneratorTrait = {
    */
   generateProductionsData() {
     return this.generateRawProductionsData()
-      .map(data => JSON.stringify(data));
+      .map(data => `[ ${data} ]`);
   },
 
   /**
