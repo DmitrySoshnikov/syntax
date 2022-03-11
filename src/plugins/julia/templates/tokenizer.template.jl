@@ -7,15 +7,6 @@
 
 =#
 
-using DataStructures;
-
-# probably needs to be moved to parser template instead
-struct SyntaxError <: Exception end
-
-# for now placed here, probably belong somewhere else but not sure where yet
-global yytext::String
-global yylength::Int
-
 #  Token: encapsulates token type, the matched value, and also location data.
 Base.@kwdef mutable struct Token
     type::Int
@@ -86,11 +77,11 @@ function popState!(tokenizerData::TokenizerData)
 end
 
 function getNextToken!(tokenizerData::TokenizerData)
-  if (!isempty(tokenizerData.tokensQueue))
+  if !isempty(tokenizerData.tokensQueue)
     # process tokens waiting in the queue
     return toToken(tokenizerData, dequeue(tokenizerData.tokensQueue), "")
   end
-  if (!hasMoreTokens)
+  if !hasMoreTokens
     return tokenizerData.EOF_TOKEN
   end
 
@@ -100,24 +91,27 @@ function getNextToken!(tokenizerData::TokenizerData)
   for rule ∈ lexrulesforstate
     match = match(rule[1], ss)
     local matchstr = ""
-    if (!isnothing(match))
+    if !isnothing(match)
       matchstr = match.match
       captureLocation(tokenizerData, matchstr)
       tokenizerData.cursor += length(match)
     end
     # EOF token
-    if (length(ss) == 0 && !isnothing(match) && length(match) == 0)
+    if length(ss) == 0 && !isnothing(match) && length(match) == 0
       tokenizerData.cursor += 1
     end
-    if (!isnothing(match))
+    if !isnothing(match)
       yytext = matchstr
-      yylength = length(match)
-      tokens = (rule[2])(tokenizerData)
+      yylength = length(matchstr)
+
+      # the rules have strings that represent the names of functions to call
+      ruleFunction = getfield(Main, Symbol(rule[2]))
+      tokens = ruleFunction(tokenizerData)
       local token
-      if (isnothing(tokens))
+      if isnothing(tokens)
         return getNextToken(tokenizerData)
       end
-      if (tokens isa AbstractVector)
+      if tokens isa AbstractVector
         token = tokens[1]
         for i in 2:length(tokens)
           enqueue!(tokenizerData.tokensQueue, tokens[i])
@@ -130,7 +124,7 @@ function getNextToken!(tokenizerData::TokenizerData)
   end
 
   # If we are at the end of the file, push the cursor past the end and return that we have eaten EOF
-  if (isEOF(tokenizerData))
+  if isEOF(tokenizerData)
     tokenizerData.cursor += 1
     return tokenizerData.EOF_TOKEN
   end
@@ -180,14 +174,4 @@ end
 
 function isEOF(tokenizerData::TokenizerData)
   return tokenizerData.cursor == (length(tokenizerData.initstring) + 1)
-end
-
-#=
-  Throws default "Unexpected token" exception, showing the actual
-  line from the source, pointing with the ^ marker to the bad token.
-  In addition, shows line:column location.
-=#
-function throwUnexpectedToken(tokenizerData::TokenizerData, symbol::String, line::Int, column::Int)
-  message = string("\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")
-  throw(SyntaxError(message))
 end
