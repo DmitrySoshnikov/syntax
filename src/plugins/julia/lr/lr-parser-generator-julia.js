@@ -66,6 +66,5 @@ export default class LRParserGeneratorExample extends LRParserGeneratorDefault {
     super.generateParserData();
     this.generateLexHandlers();
     this.generateProductionHandlers();
-    this.generateParserClassName(this._parserClassName);
   }
 };

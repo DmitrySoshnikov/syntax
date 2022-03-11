@@ -299,4 +299,4 @@ const JuliaParserGeneratorTrait = {
   },
 };
 
-module.exports = ExampleParserGeneratorTrait;
+module.exports = JuliaParserGeneratorTrait;
