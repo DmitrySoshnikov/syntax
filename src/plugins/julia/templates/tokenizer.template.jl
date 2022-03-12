@@ -106,7 +106,7 @@ function getNextToken!(tokenizerData::TokenizerData)
       global yylength = length(matchstr)
 
       # the rules have strings that represent the names of functions to call
-      ruleFunction = getfield(Main, Symbol(rule[2]))
+      ruleFunction = getfield(SyntaxParser, Symbol(rule[2]))
       tokens = ruleFunction()
       local token
       if isnothing(tokens)
