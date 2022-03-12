@@ -11,8 +11,8 @@
 Base.@kwdef mutable struct Token
     type::Int
     value::String
-    startOffset::Int = 1
-    endOffset::Int = 1
+    startOffset::Int = 0
+    endOffset::Int = 0
     startLine::Int = 1
     endLine::Int = 1
     startColumn::Int = 1
@@ -31,9 +31,9 @@ Base.@kwdef mutable struct TokenizerData
   tokensQueue::Queue{String}
   currentLine = 1
   currentColumn = 1
-  currentLineBeginOffset = 1
-  tokenStartOffset = 1
-  tokenEndOffset = 1
+  currentLineBeginOffset = 0
+  tokenStartOffset = 0
+  tokenEndOffset = 0
   tokenStartLine = 1
   tokenEndLine = 1
   tokenStartColumn = 1

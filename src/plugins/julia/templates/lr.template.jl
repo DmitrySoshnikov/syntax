@@ -66,7 +66,7 @@ end
   In addition, shows line:column location.
 =#
 function throwUnexpectedToken(tokenizerData::TokenizerData, symbol, line::Int, column::Int)
-  throw(SyntaxError(string("Incorrect Syntax\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
+  throw(SyntaxError(string("Incorrect Syntax\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
 end
 
 # --------------------------------------------------------------
