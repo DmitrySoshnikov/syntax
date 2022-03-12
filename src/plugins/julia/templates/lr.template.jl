@@ -28,7 +28,13 @@ __loc = nothing
 should_capture_locations = {{{CAPTURE_LOCATIONS}}}
 
 # Types
-struct SyntaxError <: Exception end
+struct SyntaxError <: Exception
+  msg::AbstractString
+end
+
+function Base.showerror(io::IO, err::SyntaxError)
+  print(io, err.msg)
+end
 
 Base.@kwdef mutable struct yyLoc
   startoffset
@@ -40,9 +46,9 @@ Base.@kwdef mutable struct yyLoc
 end
 
 Base.@kwdef mutable struct StackEntry
-  symbol::Int
-  semanticValue::Any
-  loc::yyLoc
+  symbol
+  semanticValue
+  loc
 end
 
 # --------------------------------------------------------------
@@ -59,8 +65,8 @@ end
   line from the source, pointing with the ^ marker to the bad token.
   In addition, shows line:column location.
 =#
-function throwUnexpectedToken(tokenizerData::TokenizerData, symbol::String, line::Int, column::Int)
-  throw(SyntaxError(string("\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
+function throwUnexpectedToken(tokenizerData::TokenizerData, symbol, line::Int, column::Int)
+  throw(SyntaxError(string("Incorrect Syntax\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
 end
 
 # --------------------------------------------------------------
@@ -102,7 +108,7 @@ end
 function parseBegin()
 end
 
-function parseEnd()
+function parseEnd(value)
 end
 
 #=
@@ -130,7 +136,7 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
     # get a token and look it up in our parsing table
     isnothing(token) && unexpectedEndOfInput()
     state = first(stack)
-    column = token.type + 1
+    column = token.type
     entry = get(table[state + 1], column, nothing)
     if isnothing(entry)
       unexpectedToken(tokenizerData, token)
@@ -140,13 +146,13 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
     # found 'shift' instruction, which starts with s then has <next state number> - i.e. s5 means "shift to state 5"
     if entry[1] == 's'
       push!(stack, StackEntry(symbol = token.type, semanticValue = token.value, loc = yyloc(token)))
-      push!(stack, convert(Int, SubString(entry, 2)))
+      push!(stack, tryparse(Int, SubString(entry, 2)))
       shiftedToken = token
       token = getNextToken!(tokenizerData)
 
     # found "reduce" instruction, which starts with r then has <production number> to reduce by - i.e. r2 means "reduce by production 2"
     elseif entry[1] == 'r'
-      production = productions[convert(Int, SubString(entry, 2))]
+      production = productions[tryparse(Int, SubString(entry, 2)) + 1]
 
       # Handler can be optional: [0, 3] - no handler, [0, 3, "_handler1"] - has handler.
       hasSemanticAction = length(production) > 2
@@ -154,7 +160,7 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
       locationArgs = should_capture_locations ? Vector{Any}() : nothing
       rhsLength = production[2]
       if rhsLength != 0
-        while rhsLength > 1
+        while rhsLength > 0
           # pop the state number
           pop!(stack)
 
@@ -187,7 +193,7 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
         end
       end
       push!(stack, reduceStackEntry)
-      push!(table[previousState + 1][symbolToProduceWith])
+      push!(stack, tryparse(Int, table[previousState + 1][symbolToProduceWith]))
 
     # Accepted; time to pop the starting production and it's state number
     elseif entry == "acc"
@@ -215,7 +221,7 @@ function unexpectedToken(tokenizerData::TokenizerData, token::Token)
   if token.type == tokenizerData.EOF_TOKEN.type
     unexpectedEndOfInput()
   else
-    throwUnexpectedToken(parserData.tokenizerData, token.value, token.startLine, token.startColumn)
+    throwUnexpectedToken(tokenizerData, token.value, token.startLine, token.startColumn)
   end
 end
 

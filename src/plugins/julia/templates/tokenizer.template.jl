@@ -95,10 +95,10 @@ function getNextToken!(tokenizerData::TokenizerData)
     if !isnothing(regexmatch)
       matchstr = regexmatch.match
       captureLocation(tokenizerData, matchstr)
-      tokenizerData.cursor += length(regexmatch)
+      tokenizerData.cursor += length(matchstr)
     end
     # EOF token
-    if length(ss) == 0 && !isnothing(regexmatch) && length(regexmatch) == 0
+    if length(ss) == 0 && !isnothing(regexmatch) && length(matchstr) == 0
       tokenizerData.cursor += 1
     end
     if !isnothing(regexmatch)
