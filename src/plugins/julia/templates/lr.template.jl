@@ -40,7 +40,7 @@ end
 
 Base.@kwdef mutable struct yyLoc
   startoffset
-  endoffsset
+  endoffset
   startline
   endline
   startcolumn
@@ -86,7 +86,7 @@ function yyloc(start, ending)
     endoffset = ending.endoffset,
     startline = start.startline,
     endline = ending.endline,
-    startcolum = start.startcolum,
+    startcolumn = start.startcolumn,
     endcolumn = ending.endcolumn
   )
 end
@@ -99,7 +99,7 @@ function yyloc(token)
     endoffset = token.endoffset,
     startline = token.startline,
     endline = token.endline,
-    startcolum = token.startcolum,
+    startcolumn = token.startcolumn,
     endcolumn = token.endcolumn
   )
 end
@@ -185,7 +185,9 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
         global yylength = isnothing(shiftedToken) ? 0 : length(shiftedToken.value)
         semanticActionHandler = getfield(SyntaxParser, Symbol(production[3]))
         semanticActionArgs = semanticValueArgs
-        should_capture_locations && vcat(semanticActionArgs, locationArgs)
+        if should_capture_locations
+          semanticActionArgs = vcat(semanticActionArgs, locationArgs)
+        end
         
         # call the handler the result is put in __res, which is accessed/assigned to by for example $$ = <something> in the grammar
         semanticActionHandler(semanticActionArgs...)

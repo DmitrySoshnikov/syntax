@@ -11,12 +11,12 @@
 Base.@kwdef mutable struct Token
     type::Int
     value::String
-    startOffset::Int = 1
-    endOffset::Int = 1
-    startLine::Int = 1
-    endLine::Int = 1
-    startColumn::Int = 1
-    endColumn::Int = 1
+    startoffset::Int = 1
+    endoffset::Int = 1
+    startline::Int = 1
+    endline::Int = 1
+    startcolumn::Int = 1
+    endcolumn::Int = 1
 end
 
 # TokenizerData: state of the tokenizer process
@@ -32,12 +32,12 @@ Base.@kwdef mutable struct TokenizerData
   currentLine = 1
   currentColumn = 1
   currentLineBeginOffset = 1
-  tokenStartOffset = 1
-  tokenEndOffset = 1
-  tokenStartLine = 1
-  tokenEndLine = 1
-  tokenStartColumn = 1
-  tokenEndColumn = 1
+  tokenStartoffset = 1
+  tokenEndoffset = 1
+  tokenStartline = 1
+  tokenEndline = 1
+  tokenStartcolumn = 1
+  tokenEndcolumn = 1
 end
 
 # injected by parser
@@ -138,34 +138,34 @@ function captureLocation(tokenizerData::TokenizerData, matched::AbstractString)
   newline = r"\n"
 
   # absolute offsets
-  tokenizerData.tokenStartOffset = tokenizerData.cursor
+  tokenizerData.tokenStartoffset = tokenizerData.cursor
 
   # token start line-based locations
-  tokenizerData.tokenStartLine = tokenizerData.currentLine
-  tokenizerData.tokenStartColumn = tokenizerData.tokenStartOffset - tokenizerData.currentLineBeginOffset + 1
+  tokenizerData.tokenStartline = tokenizerData.currentLine
+  tokenizerData.tokenStartcolumn = tokenizerData.tokenStartoffset - tokenizerData.currentLineBeginOffset + 1
 
   # extract new line in the matched token
   for i in [x.offset for x in eachmatch(newline,matched)]
     tokenizerData.currentLine += 1
-    tokenizerData.currentLineBeginOffset = tokenizerData.tokenStartOffset + i
+    tokenizerData.currentLineBeginOffset = tokenizerData.tokenStartoffset + i
   end
-  tokenizerData.tokenEndOffset = tokenizerData.cursor + length(matched)
+  tokenizerData.tokenEndoffset = tokenizerData.cursor + length(matched)
 
   # token end line-based locations
-  tokenizerData.tokenEndLine = tokenizerData.currentLine
-  tokenizerData.tokenEndColumn = tokenizerData.currentColumn = tokenizerData.tokenEndOffset - tokenizerData.currentLineBeginOffset
+  tokenizerData.tokenEndline = tokenizerData.currentLine
+  tokenizerData.tokenEndcolumn = tokenizerData.currentColumn = tokenizerData.tokenEndoffset - tokenizerData.currentLineBeginOffset
 end
 
 function toToken(tokenizerData::TokenizerData, tokenType::AbstractString, yytext::AbstractString)
   return Token(
       type = tokenizerData.tokensDict[tokenType],
       value = yytext,
-      startOffset = tokenizerData.tokenStartOffset,
-      endOffset = tokenizerData.tokenEndOffset,
-      startLine = tokenizerData.tokenStartLine,
-      endLine = tokenizerData.tokenEndLine,
-      startColumn = tokenizerData.tokenStartColumn,
-      endColumn = tokenizerData.tokenEndColumn
+      startoffset = tokenizerData.tokenStartoffset,
+      endoffset = tokenizerData.tokenEndoffset,
+      startline = tokenizerData.tokenStartline,
+      endline = tokenizerData.tokenEndline,
+      startcolumn = tokenizerData.tokenStartcolumn,
+      endcolumn = tokenizerData.tokenEndcolumn
     )
 end
 

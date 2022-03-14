@@ -154,13 +154,25 @@ const JuliaParserGeneratorTrait = {
       .replace(/\$(\d+)/g, '_$1')
       .replace(/@(\d+)/g, '_$1loc')
       .replace(/\$\$/g, 'global __res')
-      .replace(/@\$/g, 'global __loc');
+      .replace(/@\$/g, '__loc');
 
     if (this._grammar.shouldCaptureLocations()) {
       action = this.createLocationPrologue(production) + action;
     }
 
     return action || null;
+  },
+
+  createLocationPrologue(production) {
+    // Code that goes within the handler itself to handle the location data
+    if (production.isEpsilon()) {
+      return 'global __loc = null\n';
+    }
+
+    const start = 1;
+    const end = production.getRHS().length;
+
+    return `global __loc = yyloc(_${start}loc, _${end}loc)\n`;
   },
 
   /**

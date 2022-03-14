@@ -1,0 +1,84 @@
+/**
+ * Captures location info. Julia version.
+ *
+ * In order to capture locations, pass the `--loc` option.
+ *
+ * Locations in handlers are accessible via `@` notation, e.g. @1, @2, etc.
+ * A named accessors are available as well: @foo, @bar.
+ *
+ * A location is a vector of structure:
+ *
+ * [
+ *   startOffset,
+ *   endOffset,
+ *   startLine,
+ *   endLine,
+ *   startColumn,
+ *   endColum,
+ * ]
+ *
+ * The resulting location is in the @$. It is calculated automatically from
+ * first and last symbol on a RHS handle, and it also can be overridden
+ * manually.
+ *
+ * ./bin/syntax -g examples/calc-loc.jl.bnf -m slr1 -o ~/CalcLoc.jl --loc
+ *
+ * Example full structure:
+ *
+ *
+ */
+
+ %lex
+
+%%
+
+\s+       # ignore whitespace
+\d+       return "NUMBER"
+
+/lex
+
+%{
+  
+  function calcloc(s, e)
+    return [s.startoffset, e.endoffset, s.startline, e.endline, s.startcolumn, e.endcolumn]
+  end
+
+  function singleloc(t)
+    return [t.startoffset, t.endoffset, t.startline, t.endline, t.startcolumn, t.endcolumn]
+  end
+
+  function numericliteral(value, loc)
+    return [value, loc]
+  end
+
+  function binaryexpression(op, left, right, loc)
+    return [op, left, right, loc]
+  end
+
+%}
+
+%left '+'
+%left '*'
+
+%%
+
+exp
+  : exp '+' exp
+    /* Explicitly calculate location */
+    { $$ = binaryexpression("+", $1, $3, calcloc(@1, @3)) }
+
+  | exp '*' exp
+    /* Use default result location: @$ */
+    { $$ = binaryexpression("*", $1, $3, @$) }
+
+  | '(' exp ')'
+    { $$ = $2 }
+
+  | number
+    /* Named args and position */
+    { $$ = numericliteral($number, singleloc(@number)) }
+  ;
+
+number
+  : NUMBER { $$ = tryparse(Int, yytext) }
+  ;
