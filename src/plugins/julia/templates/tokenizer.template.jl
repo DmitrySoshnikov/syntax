@@ -11,8 +11,8 @@
 Base.@kwdef mutable struct Token
     type::Int
     value::String
-    startOffset::Int = 0
-    endOffset::Int = 0
+    startOffset::Int = 1
+    endOffset::Int = 1
     startLine::Int = 1
     endLine::Int = 1
     startColumn::Int = 1
@@ -31,9 +31,9 @@ Base.@kwdef mutable struct TokenizerData
   tokensQueue::Queue{String}
   currentLine = 1
   currentColumn = 1
-  currentLineBeginOffset = 0
-  tokenStartOffset = 0
-  tokenEndOffset = 0
+  currentLineBeginOffset = 1
+  tokenStartOffset = 1
+  tokenEndOffset = 1
   tokenStartLine = 1
   tokenEndLine = 1
   tokenStartColumn = 1
@@ -142,12 +142,12 @@ function captureLocation(tokenizerData::TokenizerData, matched::AbstractString)
 
   # token start line-based locations
   tokenizerData.tokenStartLine = tokenizerData.currentLine
-  tokenizerData.tokenStartColumn = tokenizerData.tokenStartOffset - tokenizerData.currentLineBeginOffset
+  tokenizerData.tokenStartColumn = tokenizerData.tokenStartOffset - tokenizerData.currentLineBeginOffset + 1
 
   # extract new line in the matched token
   for i in [x.offset for x in eachmatch(newline,matched)]
     tokenizerData.currentLine += 1
-    tokenizerData.currentLineBeginOffset = tokenizerData.tokenStartOffset + i + 1
+    tokenizerData.currentLineBeginOffset = tokenizerData.tokenStartOffset + i
   end
   tokenizerData.tokenEndOffset = tokenizerData.cursor + length(matched)
 
