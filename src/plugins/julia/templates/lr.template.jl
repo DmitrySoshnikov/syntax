@@ -18,6 +18,11 @@ module SyntaxParser
 =#
 
 # --------------------------------------------------------------
+# Exports: The parse method, if concerned about disambiguating with other
+# parse methods in your use case, use 'import' instead of 'using'
+export parse
+
+# --------------------------------------------------------------
 # Shared includes
 using DataStructures
 
@@ -49,7 +54,7 @@ end
 
 Base.@kwdef mutable struct StackEntry
     symbol
-    semanticValue
+    semanticvalue
     loc
 end
 
@@ -67,7 +72,7 @@ end
   line from the source, pointing with the ^ marker to the bad token.
   In addition, shows line:column location.
 =#
-function throwUnexpectedToken(tokenizerData::TokenizerData, symbol, line::Int, column::Int)
+function throwunexpectedtoken(tokenizerData::TokenizerData, symbol, line::Integer, column::Integer)
     throw(SyntaxError(string("Incorrect Syntax\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
 end
 
@@ -107,9 +112,9 @@ end
 {{{PRODUCTION_HANDLERS}}}
 
 # blank stand-ins for begin and end
-function parseBegin() end
+function parsebegin() end
 
-function parseEnd(value) end
+function parseend(value) end
 
 #=
   Primary parsing function
@@ -118,49 +123,49 @@ function parseEnd(value) end
     onParseEnd - a function to call when parsing ends, should accept as a single argument with the parsed value result
 =#
 # Q for Dmetry: ok to default tokenizer here? other implementations throw but I wanted to keep the parse interface to only the string required
-function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onParseBegin::Function = parseBegin, onParseEnd::Function = parseEnd)
+function parse(ss::AbstractString; tokenizerInitFunction::Function = inittokenizer, onparsebegin::Function = parsebegin, onparseend::Function = parseend)
     # constants inserted by the parser generator
     productions = {{{PRODUCTIONS}}} # [[1, 2, "handler1"], [3, 4, "handler2], ...] i.e. Vector{Vector{Union{Integer, String}}}
     table = {{{TABLE}}} # i.e. Dict{Int, String}
 
     # initialization and prep for parsing
-    !isnothing(onParseBegin) && onParseBegin()
+    !isnothing(onparsebegin) && onparsebegin()
     tokenizerData = tokenizerInitFunction(ss)
     stack = Stack{Union{StackEntry,Integer}}()
     push!(stack, 0)
 
     # begin parsing
-    token = getNextToken!(tokenizerData)
-    shiftedToken = nothing
-    while hasMoreTokens(tokenizerData) || !isempty(stack)
+    token = getnexttoken!(tokenizerData)
+    shiftedtoken = nothing
+    while hasmoretokens(tokenizerData) || !isempty(stack)
         # get a token and look it up in our parsing table
-        isnothing(token) && unexpectedEndOfInput()
+        isnothing(token) && unexpectedendofinput()
         state = first(stack)
         column = token.type
         entry = get(table[state+1], column, nothing)
         if isnothing(entry)
-            unexpectedToken(tokenizerData, token)
+            unexpectedtoken(tokenizerData, token)
             break
         end
 
         # found 'shift' instruction, which starts with s then has <next state number> - i.e. s5 means "shift to state 5"
         if entry[1] == 's'
-            push!(stack, StackEntry(symbol = token.type, semanticValue = token.value, loc = yyloc(token)))
+            push!(stack, StackEntry(symbol = token.type, semanticvalue = token.value, loc = yyloc(token)))
             push!(stack, tryparse(Int, SubString(entry, 2)))
-            shiftedToken = token
-            token = getNextToken!(tokenizerData)
+            shiftedtoken = token
+            token = getnexttoken!(tokenizerData)
 
             # found "reduce" instruction, which starts with r then has <production number> to reduce by - i.e. r2 means "reduce by production 2"
         elseif entry[1] == 'r'
             production = productions[tryparse(Int, SubString(entry, 2))+1]
 
             # Handler can be optional: [0, 3] - no handler, [0, 3, "_handler1"] - has handler.
-            hasSemanticAction = length(production) > 2
-            semanticValueArgs = Vector{Any}()
-            locationArgs = should_capture_locations ? Vector{Any}() : nothing
-            rhsLength = production[2]
-            if rhsLength != 0
-                while rhsLength > 0
+            hassemanticaction = length(production) > 2
+            semanticvalueargs = Vector()
+            locationargs = should_capture_locations ? Vector() : nothing
+            rhslength = production[2]
+            if rhslength != 0
+                while rhslength > 0
                     # pop the state number
                     pop!(stack)
 
@@ -168,34 +173,34 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
                     stackEntry = pop!(stack)
 
                     # collection all the semantic values from the stack to the argument list, which will be passed to the action handler
-                    if hasSemanticAction
-                        pushfirst!(semanticValueArgs, stackEntry.semanticValue)
-                        should_capture_locations && pushfirst!(locationArgs, stackEntry.loc)
+                    if hassemanticaction
+                        pushfirst!(semanticvalueargs, stackEntry.semanticvalue)
+                        should_capture_locations && pushfirst!(locationargs, stackEntry.loc)
                     end
-                    rhsLength -= 1
+                    rhslength -= 1
                 end
             end
-            previousState = first(stack)
-            symbolToProduceWith = production[1]
-            reduceStackEntry = StackEntry(symbol = symbolToProduceWith, semanticValue = nothing, loc = nothing)
-            if hasSemanticAction
-                global yytext = isnothing(shiftedToken) ? nothing : shiftedToken.value
-                global yylength = isnothing(shiftedToken) ? 0 : length(shiftedToken.value)
-                semanticActionHandler = getfield(SyntaxParser, Symbol(production[3]))
-                semanticActionArgs = semanticValueArgs
+            previousstate = first(stack)
+            symboltoproducewith = production[1]
+            reducestackentry = StackEntry(symbol = symboltoproducewith, semanticvalue = nothing, loc = nothing)
+            if hassemanticaction
+                global yytext = isnothing(shiftedtoken) ? nothing : shiftedtoken.value
+                global yylength = isnothing(shiftedtoken) ? 0 : length(shiftedtoken.value)
+                semanticactionhandler = getfield(SyntaxParser, Symbol(production[3]))
+                semanticactionargs = semanticvalueargs
                 if should_capture_locations
-                    semanticActionArgs = vcat(semanticActionArgs, locationArgs)
+                    semanticactionargs = vcat(semanticactionargs, locationargs)
                 end
 
                 # call the handler the result is put in __res, which is accessed/assigned to by for example $$ = <something> in the grammar
-                semanticActionHandler(semanticActionArgs...)
-                reduceStackEntry.semanticValue = __res
+                semanticactionhandler(semanticactionargs...)
+                reducestackentry.semanticvalue = __res
                 if should_capture_locations
-                    reduceStackEntry.loc = __loc
+                    reducestackentry.loc = __loc
                 end
             end
-            push!(stack, reduceStackEntry)
-            push!(stack, tryparse(Int, table[previousState+1][symbolToProduceWith]))
+            push!(stack, reducestackentry)
+            push!(stack, tryparse(Int, table[previousstate+1][symboltoproducewith]))
 
             # Accepted; time to pop the starting production and it's state number
         elseif entry == "acc"
@@ -204,14 +209,14 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
             parsed = pop!(stack)
 
             # Check for if the stack has other stuff on it, which would be bad
-            if length(stack) != 1 || first(stack) != 0 || hasMoreTokens(tokenizerData)
-                unexpectedToken(tokenizerData, token)
+            if length(stack) != 1 || first(stack) != 0 || hasmoretokens(tokenizerData)
+                unexpectedtoken(tokenizerData, token)
             end
 
             # success!
-            parsedValue = parsed.semanticValue
-            !isnothing(onParseEnd) && onParseEnd(parsedValue)
-            return parsedValue
+            parsedvalue = parsed.semanticvalue
+            !isnothing(onparseend) && onparseend(parsedvalue)
+            return parsedvalue
         end
     end
 
@@ -219,19 +224,19 @@ function parse(ss::String; tokenizerInitFunction::Function = initTokenizer, onPa
     return nothing
 end
 
-function unexpectedToken(tokenizerData::TokenizerData, token::Token)
+function unexpectedtoken(tokenizerData::TokenizerData, token::Token)
     if token.type == tokenizerData.EOF_TOKEN.type
-        unexpectedEndOfInput()
+        unexpectedendofinput()
     else
-        throwUnexpectedToken(tokenizerData, token.value, token.startline, token.startcolumn)
+        throwunexpectedtoken(tokenizerData, token.value, token.startline, token.startcolumn)
     end
 end
 
-function unexpectedEndOfInput()
-    parseError("Unexpected end of input.")
+function unexpectedendofinput()
+    parseerror("Unexpected end of input.")
 end
 
-function parseError(message::String)
+function parseerror(message::AbstractString)
     throw(SyntaxError(message))
 end
 
