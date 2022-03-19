@@ -1,0 +1,373 @@
+/**
+ * Generated parser in Julia language
+ *
+ * ./bin/syntax -g examples/letter.jl.bnf -m lalr1 -o LetterParser.jl
+ *
+ * In this example I construct a simple "list style" AST, in the form of
+ * Julia Vector{Any} lists
+ *
+ * Example: see examples/test.letter
+
+// ------------
+// Lexical Grammar
+%lex
+
+%%
+
+\/\/.*            # skip single line comments
+
+\/\*(.|\s)*\*\/   # skip multiline comments
+
+\s+               # skip whitespace
+
+"[^"]*""          return "STRING"
+
+// Keywords
+\bdef\b           return "DEF"
+\breturn\b        return "RETURN"
+\bif\b            return "IF"
+\belse\b          return "ELSE"
+\blet\b           return "LET"
+\bwhile\b         return "WHILE"
+\bdo\b            return "DO"
+\bfor\b           return "FOR"
+
+\bclass\b         return "CLASS"
+\bextends\b       return "EXTENDS"
+\bsuper\b         return "SUPER"
+\bnew\b           return "NEW"
+\bthis\b          return "THIS"
+
+\btrue\b          return "TRUE"
+\bfalse\b         return "FALSE"
+\bnull\b          return "NULL"
+
+\d+               return "NUMBER"
+\w+               return "IDENTIFIER"
+
+\|\|              return "LOGICAL_OR"
+\&\&              return "LOGICAL_AND"
+
+[\=!]\=           return "EQUALITY_OPERATOR"
+[><]\=?           return "RELATIONAL_OPERATOR"
+
+\=                return "SIMPLE_ASSIGN"
+[*/\+\-]\=        return "COMPLEX_ASSIGN"
+
+[+\-]             return "ADDITIVE_OPERATOR"
+[*/]              return "MULTIPLICATIVE_OPERATOR"
+
+
+/lex
+
+// -------------
+// Module Include
+%{
+
+function BinaryExpression(left, operator, right)
+  return [operator, left, right]
+end
+
+function Literal(value)
+  return value
+end
+
+function IfStatement(test, consequent, alternate)
+  return ["If", test, consequent, alternate]
+end
+
+function LogicalExpression(left, operator, right)
+  return [operator, left, right]
+end
+
+function UnaryExpression(operator, argument)
+  return [operator, argument]
+end
+
+function MemberExpression(object, property)
+  return ["MemberExpression", object, property]
+end
+
+function CallExpression(callee, args)
+  return ["Call", callee, args]
+end
+
+%}
+
+%nonassoc THEN          // virtual token THEN precedes real token ELSE, parser knows to prefer the ELSE pathway
+%nonassoc ELSE          // ELSE has higher precedence as later it goes, higher it is...this removes shift-reduce conflict in if...else
+
+// -------------
+// Syntactic grammar
+
+%%
+
+Program
+  : StatementList     { $$ = ["Program", $1] }
+  ;
+
+StatementList
+  : Statement     { $$ = [$1] }
+  | StatementList Statement   {
+      append!($1, [$2])
+      $$ = $1
+    }
+  ;
+
+Statement
+  : ExpressionStatement
+  | EmptyStatement
+  | BlockStatement
+  | FunctionDeclaration
+  | ReturnStatement
+  | IfStatement
+  | VariableStatement
+  | IterationStatement
+  | ClassDeclaration
+  ;
+
+ClassDeclaration
+  : CLASS Identifier OptClassExtends Statement    { $$ = ["ClassDeclaration", $2, $3, $4] } /* class, id, superclass, body */
+  ;
+
+OptClassExtends
+  : ClassExtends
+  | /* empty */   { $$ = nothing }
+  ;
+
+ClassExtends
+  : EXTENDS Identifier    { $$ = $2 }
+  ;
+
+IterationStatement
+  : WhileStatement
+  ;
+
+WhileStatement
+  : WHILE '(' Expression ')' Statement    { $$ = ["WhileStatement", $3, $5] } /* While, test, body */
+  ;
+
+VariableStatement
+  : LET VariableDeclarationList ';'   { $$ = ["VariableStatement", $2 ] } /* Var, declarations */
+  ;
+
+VariableDeclarationList
+ : VariableDeclaration    { $$ = [$1] }
+ | VariableDeclarationList ',' VariableDeclaration    {
+    append!($1,[$3])
+    $$ = $1
+   }
+ ;
+
+ VariableDeclaration
+   : Identifier OptVariableInitializer    { $$ = ["VariableDeclaration", $1, $2] } /* Var, id, init */
+   ;
+
+OptVariableInitializer
+  : VariableInitializer
+  | /* empty */ { $$ = nothing }
+  ;
+
+VariableInitializer
+  : SIMPLE_ASSIGN AssignmentExpression    { $$ = $2 }
+  ;
+
+IfStatement
+  : IF '(' Expression ')' Statement %prec THEN      { $$ = IfStatement($3, $5) }            // VIRTUAL TOKEN!!! to do precedence, Syntax puts it in 
+  | IF '(' Expression ')' Statement ELSE Statement    { $$ = IfStatement($3, $5, $7) }
+  ;
+
+FunctionDeclaration
+  : DEF Identifier '(' OptFormalParameterList ')' BlockStatement   { $$ = ["FunctionDeclaration", $2, $4, $6] }  /* Function, name, params, body */
+  ;
+
+Identifier
+  : IDENTIFIER      { $$ = ["Identifier", $1] }
+  ;
+
+OptFormalParameterList
+  : FormalParameterList
+  | /* empty */     { $$ = [] }
+  ;
+
+FormalParameterList
+  : Identifier      { $$ = [$1] }
+  | FormalParameterList ',' Identifier    {
+      append!($1, [$3])
+      $$ = $1
+    }
+  ;
+
+ReturnStatement
+  : RETURN OptExpression ';'    { $$ = ["ReturnStatement", $2] }
+  ;
+
+OptExpression
+  : Expression      { $$ = $1 }
+  | /* empty */     { $$ = nothing }
+  ;
+
+ExpressionStatement
+  : Expression ';'    { $$ = ["ExpressionStatement", $1] }
+  ;
+
+EmptyStatement
+  : ';'   { $$ = ["EmptyStatement"] }
+  ;
+
+BlockStatement
+  : '{' OptStatementList '}'   { $$ = ["BlockStatement", $2] }
+  ;
+
+/**
+ * Left-hand side expression
+ * 
+ * foo = 10;
+ * foo["bar"] = 10;
+ * foo[0] = 10;
+ * foo.bar = 20;
+ * foo.bar.baz;
+ */
+LeftHandSideExpression
+  : MemberExpression
+  | CallExpression
+  ;
+
+CallExpression
+  : CallMemberExpression
+  | CallExpression Arguments    { $$ = CallExpression($1, $2) }
+  ;
+
+CallMemberExpression
+  : MemberExpression Arguments    { $$ = CallExpression($1, $2) }
+  | Super Arguments     { $$ = CallExpression($1, $2) }
+  ;
+
+MemberExpression
+  : PrimaryExpression
+  | MemberExpression '.' Identifier  { $$ = MemberExpression($1, $3) }
+  | MemberExpression '[' Expression ']'   { $$ = MemberExpression($1, $3) }
+  ;
+
+OptStatementList
+  : StatementList
+  | /* empty */   { $$ = [] }
+  ;
+
+Expression
+  : AssignmentExpression
+  ;
+
+AssignmentExpression
+  : LogicalORExpression
+  | LeftHandSideExpression AssignmentOperator AssignmentExpression    { $$ = ["AssignmentExpression", $2, $1, $3] } /* Assign, op, left, right */
+  ;
+
+AssignmentOperator
+  : SIMPLE_ASSIGN
+  | COMPLEX_ASSIGN
+  ;
+
+LogicalORExpression
+  : LogicalANDExpression
+  | LogicalORExpression LOGICAL_OR LogicalANDExpression   { $$ = LogicalExpression($1, $2, $3) }
+  ;
+
+LogicalANDExpression
+  : EqualityExpression
+  | LogicalANDExpression LOGICAL_AND EqualityExpression   { $$ = LogicalExpression($1, $2, $3) }
+  ;
+
+EqualityExpression
+  : RelationalExpression
+  | EqualityExpression EQUALITY_OPERATOR RelationalExpression   { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+RelationalExpression
+  : AdditiveExpression
+  | RelationalExpression RELATIONAL_OPERATOR AdditiveExpression   { $$ = BinaryExpression($1, $2, $3) }
+  ;
+
+AdditiveExpression
+  : AdditiveExpression ADDITIVE_OPERATOR MultiplicativeExpression     { $$ = BinaryExpression($1, $2, $3) }
+  | MultiplicativeExpression
+  ;
+
+MultiplicativeExpression
+  : MultiplicativeExpression MULTIPLICATIVE_OPERATOR PrimaryExpression      { $$ = BinaryExpression($1, $2, $3) }
+  | UnaryExpression
+  ;
+
+UnaryExpression
+  : LeftHandSideExpression
+  | ADDITIVE_OPERATOR UnaryExpression   { $$ = UnaryExpression($1, $2) }
+  ;
+
+Super
+  : SUPER   { $$ = "Super" }
+  ;
+
+Arguments
+  : '(' OptArgumentList ')'   { $$ = $2 }
+  ;
+
+OptArgumentList
+  : ArgumentList
+  | /* empty */     { $$ = [] }
+  ;
+
+ArgumentList
+  : AssignmentExpression    { $$ = [$1] }
+  | ArgumentList ',' AssignmentExpression   {
+      append!($1, [$3])
+      $$ = $1
+    }
+  ;
+
+PrimaryExpression
+  : Literal
+  | Identifier
+  | ThisExpression
+  | NewExpression
+  | ParenthesizedExpression
+  ;
+
+ThisExpression
+  : THIS    { $$ = ["ThisExpression"] }
+  ;
+
+NewExpression
+  : NEW MemberExpression Arguments    { $$ = ["NewExpression", $2, $3] } /* new, callee, arguments */
+  ;
+
+Literal
+  : NumericLiteral
+  | StringLiteral
+  | TrueLiteral
+  | FalseLiteral
+  | NullLiteral
+  ;
+
+TrueLiteral
+  : TRUE    { $$ = Literal(true) }
+  ;
+
+FalseLiteral
+  : FALSE   { $$ = Literal(false) }
+  ;
+
+NullLiteral
+  : NULL    { $$ = Literal(null) }
+  ;
+
+StringLiteral
+  : STRING    { $$ = Literal($1[begin+1:end-1]) }
+  ;
+
+NumericLiteral
+  : NUMBER      { $$ = Literal(tryparse(Int, $1)) }
+  ;
+
+ParenthesizedExpression
+  : '(' Expression ')'      { $$ = $2 }
+  ;

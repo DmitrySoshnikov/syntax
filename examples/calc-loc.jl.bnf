@@ -21,10 +21,7 @@
  * first and last symbol on a RHS handle, and it also can be overridden
  * manually.
  *
- * ./bin/syntax -g examples/calc-loc.jl.bnf -m slr1 -o ~/CalcLoc.jl --loc
- *
- * Example full structure:
- *
+ * ./bin/syntax -g examples/calc-loc.jl.bnf -m slr1 -o ~/CalcLoc.jl --locß
  *
  */
 

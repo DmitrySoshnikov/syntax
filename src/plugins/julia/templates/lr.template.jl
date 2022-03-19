@@ -225,7 +225,7 @@ function unexpectedToken(tokenizerData::TokenizerData, token::Token)
   if token.type == tokenizerData.EOF_TOKEN.type
     unexpectedEndOfInput()
   else
-    throwUnexpectedToken(tokenizerData, token.value, token.startLine, token.startColumn)
+    throwUnexpectedToken(tokenizerData, token.value, token.startline, token.startcolumn)
   end
 end
 

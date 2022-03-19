@@ -3,7 +3,6 @@
  *
  * ./bin/syntax -g examples/calc.jl.g -m lalr1 -o CalcParser.jl
  *
- * TODO: write out example of how to call it from julia code
  */
 
 {
