@@ -21,7 +21,7 @@ export default class BaseParserGenerator {
 
     this._grammar = grammar;
     this._outputFile = outputFile;
-    this._customTokenizer = customTokenizer;
+    this._customTokenizer = customTokenizer || options.customTokenizer;
     this._encodeSymbols();
     this._options = options;
 
