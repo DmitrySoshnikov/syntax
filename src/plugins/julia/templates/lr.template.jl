@@ -67,15 +67,6 @@ end
 
 {{{TOKENIZER}}}
 
-#=
-  Throws default "Unexpected token" exception, showing the actual
-  line from the source, pointing with the ^ marker to the bad token.
-  In addition, shows line:column location.
-=#
-function throwunexpectedtoken(tokenizerData::TokenizerData, symbol, line::Integer, column::Integer)
-    throw(SyntaxError(string("Incorrect Syntax\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
-end
-
 # --------------------------------------------------------------
 # Parser implementation
 

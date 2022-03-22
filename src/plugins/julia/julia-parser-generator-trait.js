@@ -35,9 +35,6 @@ const JuliaParserGeneratorTrait = {
    * The parsing action can be "Shift/s", "Reduce/r", a state
    * transition number, or "Accept/acc".
    *
-   * Example:
-   * 
-   *
    */
   generateParseTable() {
     this.writeData(

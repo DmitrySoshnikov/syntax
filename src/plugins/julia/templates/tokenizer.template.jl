@@ -43,6 +43,15 @@ end
 # injected by parser
 {{{LEX_RULE_HANDLERS}}}
 
+#=
+  Throws default "Unexpected token" exception, showing the actual
+  line from the source, pointing with the ^ marker to the bad token.
+  In addition, shows line:column location.
+=#
+function throwunexpectedtoken(tokenizerData::TokenizerData, symbol, line::Integer, column::Integer)
+    throw(SyntaxError(string("\n\n", split(tokenizerData.initstring, "\n")[line], "\n", " "^(column - 1), "^\nUnexpected Token: \"", symbol, "\" at ", line, ":", column, ".")))
+end
+
 function inittokenizer(tokenizingString::AbstractString)
     mydata = TokenizerData(
         initstring = tokenizingString,

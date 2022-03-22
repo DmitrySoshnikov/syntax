@@ -20,8 +20,6 @@
 
 \s+               # skip whitespace
 
-"[^"]*""          return "STRING"
-
 // Keywords
 \bdef\b           return "DEF"
 \breturn\b        return "RETURN"
@@ -342,7 +340,6 @@ NewExpression
 
 Literal
   : NumericLiteral
-  | StringLiteral
   | TrueLiteral
   | FalseLiteral
   | NullLiteral
@@ -358,10 +355,6 @@ FalseLiteral
 
 NullLiteral
   : NULL    { $$ = Literal(null) }
-  ;
-
-StringLiteral
-  : STRING    { $$ = Literal($1[begin+1:end-1]) }
   ;
 
 NumericLiteral

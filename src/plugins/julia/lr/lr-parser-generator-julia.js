@@ -27,9 +27,9 @@ const JL_LR_PARSER_TEMPLATE = fs.readFileSync(
 );
 
 /**
- * LR parser generator for Example language.
+ * LR parser generator for Julia language.
  */
-export default class LRParserGeneratorExample extends LRParserGeneratorDefault {
+export default class LRParserGeneratorJulia extends LRParserGeneratorDefault {
 
   /**
    * Instance constructor.
