@@ -1,0 +1,28 @@
+
+class Point {
+    def constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    def getX() {
+        return this.x;
+    }
+
+    def getY() {
+        return this.y;
+    }
+}
+
+class Point3D extends Point {
+    def constructor(x, y, z) {
+        super(x, y);
+        this.z = z;
+    }
+
+    def getZ() {
+        return this.z;
+    }
+}
+
+let p = new Point3D(10, 20, 30);

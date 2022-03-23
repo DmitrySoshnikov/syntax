@@ -400,6 +400,8 @@ const parsers = {
         h: require(ROOT + 'plugins/cpp/lr/lr-parser-generator-cpp.js').default,
         cpp: require(ROOT + 'plugins/cpp/lr/lr-parser-generator-cpp.js')
           .default,
+        jl: require(ROOT + 'plugins/julia/lr/lr-parser-generator-julia.js')
+          .default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;
