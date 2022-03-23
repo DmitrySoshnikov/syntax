@@ -110,7 +110,7 @@ MacBook-Pro-4:Personal Development maestro$ touch demo/src/Demo.jl
 
 ### 4. Create grammar file
 
-We use simple calculator grammar for the example. In the `demo/grammar.g` add:
+We use simple calculator grammar for the example. In the `demo/src/grammar.g` add:
 
 ```
 /**
