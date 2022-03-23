@@ -23,6 +23,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [C# plugin](#c-plugin-1)
   - [Rust plugin](#rust-plugin)
   - [Java plugin](#java-plugin)
+  - [Julia plugin](#julia-plugin)
 - [Grammar format](#grammar-format)
   - [JSON-like notation](#json-like-notation)
   - [Yacc/Bison notation](#yaccbison-notation)
@@ -279,6 +280,46 @@ public class SyntaxTest {
 ```
 
 Check out [README](https://github.com/DmitrySoshnikov/syntax/blob/master/src/plugins/java/README.md) from the Java plugin for more information.
+
+#### Julia plugin
+
+Julia is a general purpose programming language often used within the scientific computing space. Julia was designed from the beginning for high performance and utilizes LLVM as a compile target. Julia is a dynamically typed functional programming language which relies heavily on the concept of Multiple Dispatch. Syntax has support for generating parsers in Julia. See the [simple example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.jl.g), and an example of [more complex usage to generate a Vector based AST](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/letter.jl.bnf) with recursive structures.
+
+```
+./bin/syntax -g examples/calc.jl.g -m lalr1 -o SyntaxParser.jl
+```
+
+The resultant parser module depends on the common DataStructures.jl package for clarity and performance reasons. Callers can include the Julia file which defines a module called SyntaxParser.jl, which contains the parser, and use it as:
+
+```julia
+using Pkg
+Pkg.add("DataStructures")
+
+output = SyntaxParser.parse("5 + 5")
+```
+
+For complex Julia parser implementations it is recommended to leverage the JSON-like notation for the lexical grammar, as it is easier to properly manage and understand escape sequences that need to travel between JavaScript in the parser generator to Julia notation in the resultant parser file. For example, the following includes proper escape sequences for handling strings that are read in and will have escaped double quotes inside them as well as numbers with scientific notation:
+
+```js
+{
+  rules: [
+    // Comments
+    ["\\/\\/.*",                                    `# skip single line comments`],
+    ["\/\\*[\\s\\S]*?\\*\/",                        `# skip multiline comments`],
+    [`\\s+`,                                        `# skip whitespace`],
+
+    // Math operators (+, -, *, /, %)
+    [`(\\+|\\-)`,                                   `return "ADDITIVE_OPERATOR"`],
+    [`(\\*|\\/|%)`,                                 `return "MULTIPLICATIVE_OPERATOR"`],
+
+    // Literals
+    [`[-+]?([0-9]*[.])?[0-9]+([eE][-+]?\\d+)?`,     `return "NUMERIC"`],
+    [`\\"(?:[^\\"\\\\]|\\\\.)*\\"`,                 `return "STRING"`],
+    [`#-?\\d+`,                                     `return "OBJECT"`],
+    [`E_[a-zA-Z]+`,                                 `return "ERROR"`],
+  ]
+}
+```
 
 ### Grammar format
 
