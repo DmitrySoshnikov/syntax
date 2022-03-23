@@ -12,6 +12,7 @@ Currently _Syntax_ supports the following plugins:
 - PHP
 - C#
 - Rust
+- Julia
 
 Below are the steps which will help you implementing a parser generator for a needed target language.
 
