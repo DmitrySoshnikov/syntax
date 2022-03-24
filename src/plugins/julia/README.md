@@ -15,7 +15,7 @@ npm install -g syntax-cli
 Use Julia to generate the project by invoking the package management capability, which you can do by hitting the ']' key while in the Julia REPL:
 
 ```
-MacBook-Pro-4:Personal Development maestro$ julia
+$ julia
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
   (_)     | (_) (_)    |
@@ -31,11 +31,11 @@ MacBook-Pro-4:Personal Development maestro$ julia
     demo/src/demo.jl
 
 (@v1.7) pkg> activate demo
-  Activating project at `~/Development/Personal Development/demo`
+  Activating project at `~/demo`
 
 (demo) pkg> status
      Project demo v0.1.0
-      Status `~/Development/Personal Development/demo/Project.toml` (empty project)
+      Status `~/demo/Project.toml` (empty project)
 
 (demo) pkg> 
 ```
@@ -46,9 +46,9 @@ MacBook-Pro-4:Personal Development maestro$ julia
 (demo) pkg> add DataStructures
     Updating registry at `~/.julia/registries/General.toml`
    Resolving package versions...
-    Updating `~/Development/Personal Development/demo/Project.toml`
+    Updating `~/demo/Project.toml`
   [864edb3b] + DataStructures v0.18.11
-    Updating `~/Development/Personal Development/demo/Manifest.toml`
+    Updating `~/demo/Manifest.toml`
   [34da2185] + Compat v3.42.0
   [864edb3b] + DataStructures v0.18.11
   [bac558e1] + OrderedCollections v1.4.1
@@ -105,7 +105,7 @@ Exit the Julia REPL by hitting the backspace key to go back to Julia prompt and 
 
 ```
 julia> exit()
-MacBook-Pro-4:Personal Development maestro$ touch demo/src/Demo.jl
+$ touch demo/src/Demo.jl
 ```
 
 ### 4. Create grammar file
