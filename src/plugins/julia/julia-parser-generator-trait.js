@@ -150,8 +150,8 @@ const JuliaParserGeneratorTrait = {
       // Replace $1, $2, @1, ... $$ with _1, _2, _1loc, ... __, etc.
       .replace(/\$(\d+)/g, '_$1')
       .replace(/@(\d+)/g, '_$1loc')
-      .replace(/\$\$/g, 'global __res')
-      .replace(/@\$/g, '__loc');
+      .replace(/\$\$/g, 'parserdata.__res')
+      .replace(/@\$/g, 'parserdata.__loc');
 
     if (this._grammar.shouldCaptureLocations()) {
       action = this.createLocationPrologue(production) + action;
@@ -163,13 +163,13 @@ const JuliaParserGeneratorTrait = {
   createLocationPrologue(production) {
     // Code that goes within the handler itself to handle the location data
     if (production.isEpsilon()) {
-      return 'global __loc = null\n';
+      return 'parserdata.__loc = null\n';
     }
 
     const start = 1;
     const end = production.getRHS().length;
 
-    return `global __loc = yyloc(_${start}loc, _${end}loc)\n`;
+    return `parserdata.__loc = yyloc(_${start}loc, _${end}loc)\n`;
   },
 
   /**
@@ -276,7 +276,7 @@ const JuliaParserGeneratorTrait = {
    * Julia language specific lex rules handler declarations.
    */
   generateLexHandlers() {
-    const handlers = this._generateHandlers(
+    const handlers = this._generateLexHandlers(
       this._lexHandlers,
       '_lexRule',
     );
@@ -287,7 +287,7 @@ const JuliaParserGeneratorTrait = {
    * Julia language specific handler declarations.
    */
   generateProductionHandlers() {
-    const handlers = this._generateHandlers(
+    const handlers = this._generateProductionHandlers(
       this._productionHandlers,
       '_handler',
     );
@@ -320,21 +320,28 @@ const JuliaParserGeneratorTrait = {
   },
 
   /**
-   * Generates function declarations for handlers.
+   * Generates function declarations for production handlers.
    *
    * Example:
    *
-   * function _handler1(_1, _2)
-   *   _res = _1 + _2;
+   * function _handler1(parserdata, _1, _2)
+   *   parserdata._res = _1 + _2;
    * end
-   *
-   * Or:
+   */
+  _generateProductionHandlers(handlers, name) {
+    return handlers.map(({args, action}, index) => {
+      return `function ${name}${index + 1}(parserdata, ${args}) \n${action}\n end`
+    });
+  },
+
+  /**
+   * Generates function declarations for lexical handlers.
    *
    * function _lexRule1()
    *   return "NUMBER";
    * end
    */
-  _generateHandlers(handlers, name) {
+  _generateLexHandlers(handlers, name) {
     return handlers.map(({args, action}, index) => {
       return `function ${name}${index + 1}(${args}) \n${action}\n end`
     });

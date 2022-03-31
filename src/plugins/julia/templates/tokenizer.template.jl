@@ -85,7 +85,7 @@ function popstate!(tokenizerData::TokenizerData)
     return pop!(tokenizerData.states)
 end
 
-function getnexttoken!(tokenizerData::TokenizerData)
+function getnexttoken!(parserdata::ParserData, tokenizerData::TokenizerData)
     if !isempty(tokenizerData.tokensQueue)
         # process tokens waiting in the queue
         return totoken(tokenizerData, dequeue(tokenizerData.tokensQueue), "")
@@ -111,15 +111,15 @@ function getnexttoken!(tokenizerData::TokenizerData)
             tokenizerData.cursor += 1
         end
         if !isnothing(regexmatch)
-            global yytext = matchstr
-            global yylength = length(matchstr)
+            parserdata.yytext = matchstr
+            parserdata.yylength = length(matchstr)
 
             # the rules have strings that represent the names of functions to call
             rulefunction = getfield(SyntaxParser, Symbol(rule[2]))
             tokens = rulefunction()
             local token
             if isnothing(tokens)
-                return getnexttoken!(tokenizerData)
+                return getnexttoken!(parserdata, tokenizerData)
             end
             if tokens isa AbstractVector
                 token = tokens[1]
@@ -129,7 +129,7 @@ function getnexttoken!(tokenizerData::TokenizerData)
             else
                 token = tokens
             end
-            return totoken(tokenizerData, token, yytext)
+            return totoken(tokenizerData, token, parserdata.yytext)
         end
     end
 
