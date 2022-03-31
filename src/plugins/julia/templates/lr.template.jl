@@ -26,13 +26,13 @@ export parse
 # Shared includes
 using DataStructures
 
-# Constants and globals
+# Basic constants and globals - should capture locations is inserted by the parser generator based on parameters given to the command line
 const EOF = "\$"
 const should_capture_locations = {{{CAPTURE_LOCATIONS}}}
 
 # Types
 struct SyntaxError <: Exception
-    msg::AbstractString
+    msg::String
 end
 
 function Base.showerror(io::IO, err::SyntaxError)
@@ -40,30 +40,26 @@ function Base.showerror(io::IO, err::SyntaxError)
 end
 
 Base.@kwdef mutable struct yyLoc
-    startoffset
-    endoffset
-    startline
-    endline
-    startcolumn
-    endcolumn
+    startoffset::Int
+    endoffset::Int
+    startline::Int
+    endline::Int
+    startcolumn::Int
+    endcolumn::Int
 end
 
 Base.@kwdef mutable struct StackEntry
-    symbol
-    semanticvalue
-    loc
+    symbol::Int
+    semanticvalue::Any
+    loc::Union{yyLoc, Nothing}
 end
 
 Base.@kwdef mutable struct ParserData
-    yytext
-    yylength = 0
+    yytext::String
+    yylength::Int = 0
     __res = nothing
     __loc = nothing
 end
-
-# --------------------------------------------------------------
-# Module includes provided by the grammar.
-{{{MODULE_INCLUDE}}}
 
 # --------------------------------------------------------------
 # Tokenizer.
@@ -105,10 +101,18 @@ end
 
 {{{PRODUCTION_HANDLERS}}}
 
+# Constant mappings inserted by the parser generator by processing the grammar definition 
+const productions = {{{PRODUCTIONS}}} # [[1, 2, "handler1"], [3, 4, "handler2], ...] i.e. Vector{Vector{Union{Integer, String}}}
+const table = {{{TABLE}}} # i.e. Dict{Int, String}
+
 # blank stand-ins for begin and end
 function parsebegin() end
 
 function parseend(value) end
+
+# --------------------------------------------------------------
+# Module includes provided by the grammar.
+{{{MODULE_INCLUDE}}}
 
 #=
   Primary parsing function
@@ -117,30 +121,26 @@ function parseend(value) end
     onParseEnd - a function to call when parsing ends, should accept as a single argument with the parsed value result
 =#
 function parse(ss::AbstractString; tokenizerinitfunction::Function = inittokenizer, onparsebegin::Function = parsebegin, onparseend::Function = parseend)
-    # constants inserted by the parser generator
-    productions = {{{PRODUCTIONS}}} # [[1, 2, "handler1"], [3, 4, "handler2], ...] i.e. Vector{Vector{Union{Integer, String}}}
-    table = {{{TABLE}}} # i.e. Dict{Int, String}
-
     # initialize our parser data
     parserdata = ParserData(yytext = "", yylength = 0, __res = nothing, __loc = nothing)
 
     # initialization and prep for parsing
     !isnothing(onparsebegin) && onparsebegin()
-    tokenizerData = tokenizerinitfunction(ss)
-    stack = Stack{Union{StackEntry,Integer}}()
+    tokenizerdata = tokenizerinitfunction(ss)
+    stack = Stack{Union{StackEntry,Int}}()
     push!(stack, 0)
 
     # begin parsing
-    token = getnexttoken!(parserdata, tokenizerData)
+    token = getnexttoken!(parserdata, tokenizerdata)::Token
     shiftedtoken = nothing
-    while hasmoretokens(tokenizerData) || !isempty(stack)
+    while hasmoretokens(tokenizerdata) || !isempty(stack)
         # get a token and look it up in our parsing table
         isnothing(token) && unexpectedendofinput()
         state = first(stack)
         column = token.type
         entry = get(table[state+1], column, nothing)
         if isnothing(entry)
-            unexpectedtoken(tokenizerData, token)
+            unexpectedtoken(tokenizerdata, token)
             break
         end
 
@@ -149,7 +149,7 @@ function parse(ss::AbstractString; tokenizerinitfunction::Function = inittokeniz
             push!(stack, StackEntry(symbol = token.type, semanticvalue = token.value, loc = yyloc(token)))
             push!(stack, tryparse(Int, SubString(entry, 2)))
             shiftedtoken = token
-            token = getnexttoken!(parserdata, tokenizerData)
+            token = getnexttoken!(parserdata, tokenizerdata)::Token
 
             # found "reduce" instruction, which starts with r then has <production number> to reduce by - i.e. r2 means "reduce by production 2"
         elseif entry[1] == 'r'
@@ -166,12 +166,12 @@ function parse(ss::AbstractString; tokenizerinitfunction::Function = inittokeniz
                     pop!(stack)
 
                     # pop the stack entry
-                    stackEntry = pop!(stack)
+                    stackentry = pop!(stack)
 
                     # collection all the semantic values from the stack to the argument list, which will be passed to the action handler
                     if hassemanticaction
-                        pushfirst!(semanticvalueargs, stackEntry.semanticvalue)
-                        should_capture_locations && pushfirst!(locationargs, stackEntry.loc)
+                        pushfirst!(semanticvalueargs, stackentry.semanticvalue)
+                        should_capture_locations && pushfirst!(locationargs, stackentry.loc)
                     end
                     rhslength -= 1
                 end
@@ -205,8 +205,8 @@ function parse(ss::AbstractString; tokenizerinitfunction::Function = inittokeniz
             parsed = pop!(stack)
 
             # Check for if the stack has other stuff on it, which would be bad
-            if length(stack) != 1 || first(stack) != 0 || hasmoretokens(tokenizerData)
-                unexpectedtoken(tokenizerData, token)
+            if length(stack) != 1 || first(stack) != 0 || hasmoretokens(tokenizerdata)
+                unexpectedtoken(tokenizerdata, token)
             end
 
             # success!
@@ -220,11 +220,11 @@ function parse(ss::AbstractString; tokenizerinitfunction::Function = inittokeniz
     return nothing
 end
 
-function unexpectedtoken(tokenizerData::TokenizerData, token::Token)
-    if token.type == tokenizerData.EOF_TOKEN.type
+function unexpectedtoken(tokenizerdata::TokenizerData, token::Token)
+    if token.type == EOF_TOKEN.type
         unexpectedendofinput()
     else
-        throwunexpectedtoken(tokenizerData, token.value, token.startline, token.startcolumn)
+        throwunexpectedtoken(tokenizerdata, token.value, token.startline, token.startcolumn)
     end
 end
 
@@ -232,7 +232,7 @@ function unexpectedendofinput()
     parseerror("Unexpected end of input.")
 end
 
-function parseerror(message::AbstractString)
+function parseerror(message)
     throw(SyntaxError(message))
 end
 
