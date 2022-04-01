@@ -77,5 +77,5 @@ exp
   ;
 
 number
-  : NUMBER { $$ = tryparse(Int, yytext) }
+  : NUMBER { $$ = tryparse(Int, parserdata.yytext) }
   ;
