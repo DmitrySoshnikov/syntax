@@ -18,11 +18,6 @@ module SyntaxParser
 =#
 
 # --------------------------------------------------------------
-# Exports: The parse method, if concerned about disambiguating with other
-# parse methods in your use case, use 'import' instead of 'using'
-export parse
-
-# --------------------------------------------------------------
 # Shared includes
 using DataStructures
 
