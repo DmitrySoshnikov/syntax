@@ -176,11 +176,33 @@ export default class Grammar {
    * Reads grammar file data. Supports reading `bnf`,
    * and `lex` grammars based on mode.
    */
-  static dataFromGrammarFile(grammarFile, grammarType = 'bnf') {
-    return Grammar.dataFromString(
-      fs.readFileSync(grammarFile, 'utf-8'),
-      grammarType
-    );
+  static dataFromGrammarFile(grammarFile, grammarType = 'bnf', loc = false) {
+    const grammar = fs.readFileSync(grammarFile, 'utf8');
+
+    // check if the bnf grammar contains location capture characters
+    if (grammarType === 'bnf' && !loc) {
+      const bnf = grammar
+        // lexer rules
+        .replace(/%lex[\n\s\S]*?\/lex/g, '')
+        // comments
+        .replace(/\/\*[\n\s\S]*?\*\//g, '')
+        .replace(/\/\/.*?\n/g, '')
+        //strings
+        .replace(/'(\\.|[^'\\])*'/g, '')
+        .replace(/"(\\.|[^"\\])*"/g, '')
+        .replace(/`(\\.|[^`\\])*`/g, '')
+        // module include
+        .replace(/%{[\n\s\S]*?%}/g, '');
+
+      if (bnf.includes('@')) {
+        console.info(colors.red(
+          'The grammar file contains location capture characters (@), which require the ' +
+          '"--loc" option, but it has not been provided. The generated parser will throw an error.'
+        ));
+      }
+    }
+
+    return Grammar.dataFromString(grammar, grammarType);
   }
 
   /**
