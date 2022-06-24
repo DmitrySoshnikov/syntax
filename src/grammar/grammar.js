@@ -176,11 +176,11 @@ export default class Grammar {
    * Reads grammar file data. Supports reading `bnf`,
    * and `lex` grammars based on mode.
    */
-  static dataFromGrammarFile(grammarFile, grammarType = 'bnf', loc = false) {
+  static dataFromGrammarFile(grammarFile, { grammarType = 'bnf', useLocation = false }) {
     const grammar = fs.readFileSync(grammarFile, 'utf8');
 
     // check if the bnf grammar contains location capture characters
-    if (grammarType === 'bnf' && !loc) {
+    if (grammarType === 'bnf' && !useLocation) {
       const bnf = grammar
         // lexer rules
         .replace(/%lex[\n\s\S]*?\/lex/g, '')

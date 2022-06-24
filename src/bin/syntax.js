@@ -554,7 +554,10 @@ function getGrammar(grammarFile, mode) {
     return null;
   }
 
-  const grammarData = Grammar.dataFromGrammarFile(grammarFile, 'bnf', options.loc);
+  const grammarData = Grammar.dataFromGrammarFile(grammarFile, {
+    grammarType: 'bnf',
+    useLocation: options.loc,
+  });
 
   // If explicit lexical grammar file was passed, use it.
   const lexGrammarData = getLexGrammarData(options);
