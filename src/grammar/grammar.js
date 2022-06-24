@@ -194,7 +194,7 @@ export default class Grammar {
         // module include
         .replace(/%{[\n\s\S]*?%}/g, '');
 
-      if (bnf.includes('@')) {
+      if (/@\w+/.test(bnf)) {
         console.info(colors.red(
           'The grammar file contains location capture characters (@), which require the ' +
           '"--loc" option, but it has not been provided. The generated parser will throw an error.'
