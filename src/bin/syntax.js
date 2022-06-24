@@ -587,7 +587,7 @@ function getLexGrammarData(options) {
 
   // If explicit lexical grammar file was passed, use it.
   if (options.lex) {
-    data = Grammar.dataFromGrammarFile(options.lex, 'lex');
+    data = Grammar.dataFromGrammarFile(options.lex, { grammarType: 'lex' });
   }
 
   if (options['ignore-whitespaces'] && !data) {

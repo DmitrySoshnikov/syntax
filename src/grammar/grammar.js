@@ -168,7 +168,7 @@ export default class Grammar {
    * for the specific options.
    */
   static fromGrammarFile(grammarFile, options = {}, grammarType = 'bnf') {
-    const grammarData = Grammar.dataFromGrammarFile(grammarFile, grammarType);
+    const grammarData = Grammar.dataFromGrammarFile(grammarFile, { grammarType });
     return Grammar.fromData(grammarData, options);
   }
 
