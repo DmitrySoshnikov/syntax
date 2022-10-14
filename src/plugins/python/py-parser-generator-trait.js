@@ -51,7 +51,7 @@ const PythonParserGeneratorTrait = {
    */
   createLocationPrologue(production) {
     if (production.isEpsilon()) {
-      return '__loc = None;';
+      return '__loc = None';
     }
     return CodeUnit.createLocationPrologue(production);
   },
