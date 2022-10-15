@@ -171,7 +171,7 @@ class Tokenizer(object):
     def throw_unexpected_token(self, symbol, line, column):
         line_source = self._string.split('\n')[line - 1]
 
-        pad = ' ' * column;
+        pad = ' ' * column
         line_data = '\n\n' + line_source + '\n' + pad + '^\n'
 
         raise Exception(

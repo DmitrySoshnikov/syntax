@@ -592,7 +592,7 @@ export default class Grammar {
   _generateLexRulesDataForTerminals() {
     return this.getTerminals().map(terminal => [
       LexRule.matcherFromTerminal(terminal.getSymbol()), // matcher
-      `return ${terminal.quotedTerminal()};`, // token handler
+      `return ${terminal.quotedTerminal()}`, // token handler
     ]);
   }
 
