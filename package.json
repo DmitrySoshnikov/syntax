@@ -43,7 +43,7 @@
     "babel-preset-env": "^1.6.0",
     "babel-plugin-transform-object-rest-spread": "6.23.0",
     "shelljs": "^0.8.5",
-    "jest-cli": "^20.0.4",
+    "jest-cli": "^29.3.1",
     "eslint": "^4.11.0",
     "prettier": "^1.11.1"
   }
