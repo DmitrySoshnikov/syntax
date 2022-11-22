@@ -1,7 +1,7 @@
 %%
 
 /**
- * This grammar has "shit-reduce" conflicts. See how to resolve them using
+ * This grammar has "shift-reduce" conflicts. See how to resolve them using
  * operators precedence in the `./examples/calculator-assoc.g`.
  *
  * Also automatic conflicts resolution is possible (see `--resolve-conflicts`
