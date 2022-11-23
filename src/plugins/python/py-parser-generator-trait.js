@@ -103,7 +103,7 @@ const PythonParserGeneratorTrait = {
         flags = '';
       }
 
-      return `['${flags}${lexRule.getRawMatcher()}', ` +
+      return `[r'${flags}${lexRule.getRawMatcher()}', ` +
         `_lex_rule${this._lexHandlers.length}]`;
     });
 
