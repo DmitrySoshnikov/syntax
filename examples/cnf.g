@@ -70,7 +70,7 @@
       ["v",                                    "return 'OR';"],
       ["\\^",                                  "return 'AND';"],
       ["¬",                                    "return 'NOT';"],
-      ["[a-zA-Z]*",                            "return 'ID';"],
+      ["[a-zA-Z]+",                            "return 'ID';"],
       ["\\(",                                  "return 'LPAREN';"],
       ["\\)",                                  "return 'RPAREN';"],
     ]

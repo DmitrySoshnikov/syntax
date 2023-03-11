@@ -364,7 +364,7 @@ JSON-"like" is because it's excented JSON notation, and may include any JavaScri
     e: [[`e + e`,   `$$ = $1 + $3`],
         [`e * e`,   `$$ = $1 * $3`],
         [`( e )`,   `$$ = $2`],
-        [`NUMBER`   `$$ = Number($1)`]],
+        [`NUMBER`,   `$$ = Number($1)`]],
   }
 }
 ```
@@ -396,7 +396,7 @@ And here is the same grammar in the Yacc/Bison format:
 
 e
   : e '+' e    { $$ = $1 + $3 }
-  | e '*' e    { $$ = $1 + $3 }
+  | e '*' e    { $$ = $1 * $3 }
   | '(' e ')'  { $$ = $2 }
   | NUMBER     { $$ = Number($1) }
   ;
