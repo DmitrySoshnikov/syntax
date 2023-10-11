@@ -131,7 +131,7 @@ class yyparse {
   private static function yyloc($start, $end) {
     // Epsilon doesn't produce location.
     if (!$start || !$end) {
-      return !$start ? $end : $static;
+      return !$start ? $end : $start;
     }
 
     return array(
@@ -165,15 +165,14 @@ class yyparse {
   }
 
   public static function parse($string) {
-    if (self::$on_parse_begin) {
-      $on_parse_begin = self::$on_parse_begin;
-      $on_parse_begin($string);
+    if (is_callable(self::$on_parse_begin)) {
+      call_user_func(self::$on_parse_begin, $string);
     }
 
     $tokenizer = self::getTokenizer();
 
     if (!$tokenizer) {
-      throw new SyntaxException(`Tokenizer is not provided.`);
+      throw new SyntaxException('Tokenizer is not provided.');
     }
 
     $tokenizer->initString($string);
@@ -267,7 +266,7 @@ class yyparse {
           self::$yyleng = $shifted_token ? strlen($shifted_token['value']) : null;
 
           forward_static_call_array(
-            array('self', $production[2]),
+            array(get_class(), $production[2]),
             $location_args !== null
               ? array_merge($semantic_value_args, $location_args)
               : $semantic_value_args
@@ -302,9 +301,8 @@ class yyparse {
           ? $parsed['semanticValue']
           : true;
 
-        if (self::$on_parse_end) {
-          $on_parse_end = self::$on_parse_end;
-          $on_parse_end($parsed_value);
+        if (is_callable(self::$on_parse_end)) {
+          call_user_func(self::$on_parse_end, $parsed_value);
         }
 
         return $parsed_value;
