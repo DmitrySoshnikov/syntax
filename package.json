@@ -39,9 +39,9 @@
     "colors": "^1.1.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-preset-env": "^1.6.0",
-    "babel-plugin-transform-object-rest-spread": "6.23.0",
+    "@babel/cli": "^7.23.4",
+    "@babel/preset-env": "^7.23.7",
+    "@babel/plugin-transform-object-rest-spread": "7.23.4",
     "shelljs": "^0.8.5",
     "jest-cli": "^29.3.1",
     "eslint": "^8.28.0",

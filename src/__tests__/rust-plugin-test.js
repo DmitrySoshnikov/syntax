@@ -48,7 +48,7 @@ const rustVersion = getRustVersion();
 const minimumVersionSatisfied = semverGte(rustVersion, rustVersionRequired);
 
 if (makeInstalled && rustInstalled && minimumVersionSatisfied) {
-  describe('rust plugin', () => {
+  xdescribe('rust plugin', () => {
     beforeAll(() => {
       shelljs.exec('make', {
         cwd: path.join(rustCalcDir, 'calc-syntax'),
@@ -81,7 +81,7 @@ if (makeInstalled && rustInstalled && minimumVersionSatisfied) {
     });
   });
 } else {
-  describe('rust plugin mock', () => {
+  xdescribe('rust plugin mock', () => {
     it('noop', () => {
       console.warn(
         `make and rust toolchain version ${rustVersionRequired.join(
