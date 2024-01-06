@@ -250,7 +250,7 @@ class {{{PARSER_CLASS_NAME}}} {
     if (token->type == TokenType::__EOF && !tokenizer.hasMoreTokens()) {
       std::string errMsg = "Unexpected end of input.\n";
       std::cerr << errMsg;
-      throw std::runtime_error(errMsg.c_str());
+      std::exit(EXIT_FAILURE);
     }
     tokenizer.throwUnexpectedToken(token->value, token->startLine,
                                    token->startColumn);

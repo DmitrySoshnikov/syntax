@@ -204,7 +204,7 @@ class Tokenizer {
            << ":" << column << "\n\n";
 
     std::cerr << errMsg.str();
-    throw new std::runtime_error(errMsg.str().c_str());
+    std::exit(1);
   }
 
   /**
