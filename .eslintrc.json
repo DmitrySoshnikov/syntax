@@ -27,6 +27,7 @@
       "always"
     ],
     "no-useless-escape": 0,
+    "no-prototype-builtins": 0,
     "no-console": ["error", { "allow": ["warn", "error", "info", "timeEnd", "time"] }]
   }
 }

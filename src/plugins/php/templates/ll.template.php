@@ -60,15 +60,14 @@ class yyparse {
   }
 
   public static function parse($string) {
-    if (self::$on_parse_begin) {
-      $on_parse_begin = self::$on_parse_begin;
-      $on_parse_begin($string);
+    if (is_callable(self::$on_parse_begin)) {
+      call_user_func(self::$on_parse_begin, $string);
     }
 
     $tokenizer = self::getTokenizer();
 
     if (!$tokenizer) {
-      throw new \Exception(`Tokenizer instance wasn't specified.`);
+      throw new \Exception('Tokenizer instance wasn\'t specified.');
     }
 
     $tokenizer->initString($string);

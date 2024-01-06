@@ -76,7 +76,7 @@ class Tokenizer {
   }
 
   public function begin($state) {
-    $this->pushState(state);
+    $this->pushState($state);
   }
 
   public function popState() {

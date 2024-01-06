@@ -67,7 +67,7 @@ plugins.forEach(plugin => {
 console.info(colors.bold('\n[4/6] Transpiling JS code...\n'));
 exec(
   `"node_modules/.bin/babel" ${process.argv[2] ||
-    ''} src/ --out-dir dist/ --ignore templates/,__tests__`
+    ''} src/ --out-dir dist/ --ignore "**/templates/*" --ignore "**/__tests__/*"`
 );
 
 // ----------------------------------------------------------
