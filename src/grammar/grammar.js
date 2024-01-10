@@ -188,9 +188,9 @@ export default class Grammar {
         .replace(/\/\*[\n\s\S]*?\*\//g, '')
         .replace(/\/\/.*?\n/g, '')
         //strings
-        .replace(/'(\\.|[^'\\])*'/g, '')
-        .replace(/"(\\.|[^"\\])*"/g, '')
-        .replace(/`(\\.|[^`\\])*`/g, '')
+        .replace(/'(\\[^']|[^'\\])*'/g, '')
+        .replace(/"(\\[^"]|[^"\\])*"/g, '')
+        .replace(/`(\\[^`]|[^`\\])*`/g, '')
         // module include
         .replace(/%{[\n\s\S]*?%}/g, '');
 
