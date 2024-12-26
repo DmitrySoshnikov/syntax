@@ -1,0 +1,11 @@
+// https://github.com/DmitrySoshnikov/syntax/issues/151
+
+%%
+
+S
+  : A
+  ;
+A
+  : 'a'
+  | /* empty */
+  ;

@@ -6,7 +6,7 @@
 import GrammarSymbol from '../grammar/grammar-symbol';
 import SetsGenerator from '../sets-generator';
 import TablePrinter from '../table-printer';
-import {EOF} from '../special-symbols';
+import {EOF, EPSILON} from '../special-symbols';
 import colors from 'colors';
 import debug from '../debug';
 
@@ -175,20 +175,17 @@ export default class LLParsingTable {
         table[lhsSymbol] = {};
       }
 
-      // All productions goes under the terminal column, if
-      // this terminal is not epsilon. Otherwise, an ε-production
-      // goes under the columns from the Follow set of LHS.
+      // All productions goes under the terminal column
+      // of the First(RHS) terminals.
+      let set = this._setsGenerator.firstOfRHS(rhs);
 
-      let set = !production.isEpsilon()
-        ? this._setsGenerator.firstOfRHS(rhs)
-        : this._setsGenerator.followOf(lhs);
-
-      const keys = Object.keys(set);
-
-      // Got derived epsilon through indirect production, fallback to
-      // Follow(LHS). Example: A: B; B: ε
-      if (keys.length === 1 && GrammarSymbol.isEpsilon(keys[0])) {
-        set = this._setsGenerator.followOf(lhs);
+      // If First(RHS) has an epsilon terminal it means
+      // that we must check also under the Follow(LHS) column.
+      // (because this production can be eliminated by epsilon).
+      if (set[EPSILON]) {
+        // Compute (First(RHS) - {ε}) + Follow(LHS)
+        delete set[EPSILON];
+        set = Object.assign({}, set, this._setsGenerator.followOf(lhs));
       }
 
       for (let terminal in set) {
