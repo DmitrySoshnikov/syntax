@@ -182,7 +182,7 @@ export default class LLParsingTable {
       // If First(RHS) has an epsilon terminal it means
       // that we must check also under the Follow(LHS) column.
       // (because this production can be eliminated by epsilon).
-      if (set[EPSILON]) {
+      if (set.hasOwnProperty(EPSILON)) {
         // Compute (First(RHS) - {ε}) + Follow(LHS)
         delete set[EPSILON];
         set = Object.assign({}, set, this._setsGenerator.followOf(lhs));
