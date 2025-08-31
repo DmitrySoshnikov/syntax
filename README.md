@@ -24,6 +24,7 @@ You can get an introductory overview of the tool in [this article](https://mediu
   - [Rust plugin](#rust-plugin)
   - [Java plugin](#java-plugin)
   - [Julia plugin](#julia-plugin)
+  - [Lua plugin](#lua-plugin)
 - [Grammar format](#grammar-format)
   - [JSON-like notation](#json-like-notation)
   - [Yacc/Bison notation](#yaccbison-notation)
@@ -319,6 +320,21 @@ For complex Julia parser implementations it is recommended to leverage the JSON-
     [`E_[a-zA-Z]+`,                                 `return "ERROR"`],
   ]
 }
+```
+
+#### Lua Plugin
+Syntax supports Lua as a target language. See its [calculator example](https://github.com/DmitrySoshnikov/syntax/blob/master/examples/calc.lua.g):
+
+```
+./bin/syntax -g examples/calc.lua.g -m lalr1 -o calcparser.lua
+```
+
+Then callers can use the module as:
+
+```lua
+Parser = require("calcparser")
+parser = Parser.new()
+print(parser:parse("2^2^2^2")) -- 65536
 ```
 
 ### Grammar format
