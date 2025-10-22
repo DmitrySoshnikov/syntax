@@ -402,6 +402,8 @@ const parsers = {
           .default,
         jl: require(ROOT + 'plugins/julia/lr/lr-parser-generator-julia.js')
           .default,
+        lua: require(ROOT + 'plugins/lua/lr/lr-parser-generator-lua.js')
+          .default,
       };
 
       const LRParserGenerator = GENERATORS[language] || GENERATORS.js;
@@ -587,7 +589,7 @@ function getLexGrammarData(options) {
 
   // If explicit lexical grammar file was passed, use it.
   if (options.lex) {
-    data = Grammar.dataFromGrammarFile(options.lex, { grammarType: 'lex' });
+    data = Grammar.dataFromGrammarFile(options.lex, {grammarType: 'lex'});
   }
 
   if (options['ignore-whitespaces'] && !data) {
