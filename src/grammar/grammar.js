@@ -10,6 +10,7 @@ import LexGrammar from './lex-grammar';
 import LexRule from './lex-rule';
 import LexParser from '../generated/lex-parser.gen.js';
 import Production from './production';
+import {EPSILON} from '../special-symbols.js';
 
 import colors from 'colors';
 import fs from 'fs';
@@ -168,7 +169,7 @@ export default class Grammar {
    * for the specific options.
    */
   static fromGrammarFile(grammarFile, options = {}, grammarType = 'bnf') {
-    const grammarData = Grammar.dataFromGrammarFile(grammarFile, { grammarType });
+    const grammarData = Grammar.dataFromGrammarFile(grammarFile, {grammarType});
     return Grammar.fromData(grammarData, options);
   }
 
@@ -176,7 +177,10 @@ export default class Grammar {
    * Reads grammar file data. Supports reading `bnf`,
    * and `lex` grammars based on mode.
    */
-  static dataFromGrammarFile(grammarFile, { grammarType = 'bnf', useLocation = false }) {
+  static dataFromGrammarFile(
+    grammarFile,
+    {grammarType = 'bnf', useLocation = false}
+  ) {
     const grammar = fs.readFileSync(grammarFile, 'utf8');
 
     // check if the bnf grammar contains location capture characters
@@ -195,10 +199,12 @@ export default class Grammar {
         .replace(/%{[\n\s\S]*?%}/g, '');
 
       if (/@\w+/.test(bnf)) {
-        console.info(colors.red(
-          'The grammar file contains location capture characters (@), which require the ' +
-          '"--loc" option, but it has not been provided. The generated parser will throw an error.'
-        ));
+        console.info(
+          colors.red(
+            'The grammar file contains location capture characters (@), which require the ' +
+              '"--loc" option, but it has not been provided. The generated parser will throw an error.'
+          )
+        );
       }
     }
 
@@ -357,8 +363,8 @@ export default class Grammar {
 
       this._terminalsMap = {};
 
-      this._bnf.forEach(production => {
-        production.getRHS().forEach(symbol => {
+      this._bnf.forEach((production) => {
+        production.getRHS().forEach((symbol) => {
           if (
             symbol.isTerminal() &&
             !this._terminalsMap.hasOwnProperty(symbol.getSymbol())
@@ -378,7 +384,7 @@ export default class Grammar {
    */
   getTerminalSymbols() {
     if (!this._terminalSymbols) {
-      this._terminalSymbols = this.getTerminals().map(symbol =>
+      this._terminalSymbols = this.getTerminals().map((symbol) =>
         symbol.getSymbol()
       );
     }
@@ -391,21 +397,29 @@ export default class Grammar {
   getNonTerminals() {
     if (!this._nonTerminals) {
       this._nonTerminals = [];
-
       this._nonTerminalsMap = {};
-
-      this._bnf.forEach(production => {
+      this._bnf.forEach((production) => {
         if (production.isAugmented()) {
           return;
         }
         let nonTerminal = production.getLHS();
+        // Function Helper
+        const isEpsilon = (production) =>
+          production._RHS.length === 1 &&
+          production._RHS[0].getSymbol() === EPSILON;
+        // Mark Non-Terminal And Check If It Contains Direct Epsilon RHS
         if (!this._nonTerminalsMap.hasOwnProperty(nonTerminal.getSymbol())) {
-          this._nonTerminalsMap[nonTerminal.getSymbol()] = true;
+          this._nonTerminalsMap[nonTerminal.getSymbol()] = {
+            hasDirectEpsilon: isEpsilon(production),
+          };
           this._nonTerminals.push(nonTerminal);
+        } else if (isEpsilon(production)) {
+          this._nonTerminalsMap[nonTerminal.getSymbol()] = {
+            hasDirectEpsilon: true,
+          };
         }
       });
     }
-
     return this._nonTerminals;
   }
 
@@ -414,7 +428,7 @@ export default class Grammar {
    */
   getNonTerminalSymbols() {
     if (!this._nonTerminalSymbols) {
-      this._nonTerminalSymbols = this.getNonTerminals().map(symbol =>
+      this._nonTerminalSymbols = this.getNonTerminals().map((symbol) =>
         symbol.getSymbol()
       );
     }
@@ -431,11 +445,11 @@ export default class Grammar {
 
       this._tokensMap = {};
 
-      this._bnf.forEach(production => {
+      this._bnf.forEach((production) => {
         if (production.isAugmented() || production.isEpsilon()) {
           return;
         }
-        production.getRHS().forEach(symbol => {
+        production.getRHS().forEach((symbol) => {
           let rawSymbol = symbol.getSymbol();
           if (
             !symbol.isTerminal() &&
@@ -457,7 +471,7 @@ export default class Grammar {
    */
   getTokenSymbols() {
     if (!this._tokenSymbols) {
-      this._tokenSymbols = this.getTokens().map(symbol => symbol.getSymbol());
+      this._tokenSymbols = this.getTokens().map((symbol) => symbol.getSymbol());
     }
     return this._tokenSymbols;
   }
@@ -474,7 +488,7 @@ export default class Grammar {
    */
   getProductionsForSymbol(symbol) {
     if (!this._productionsForSymbol.hasOwnProperty(symbol)) {
-      this._productionsForSymbol[symbol] = this._bnf.filter(production => {
+      this._productionsForSymbol[symbol] = this._bnf.filter((production) => {
         return production.getLHS().isSymbol(symbol);
       });
     }
@@ -486,7 +500,7 @@ export default class Grammar {
    */
   getProductionsWithSymbol(symbol) {
     if (!this._productionsWithSymbol.hasOwnProperty(symbol)) {
-      this._productionsWithSymbol[symbol] = this._bnf.filter(production => {
+      this._productionsWithSymbol[symbol] = this._bnf.filter((production) => {
         return production.getRHSSymbolsMap().hasOwnProperty(symbol);
       });
     }
@@ -549,7 +563,7 @@ export default class Grammar {
     let productions = this.getProductions();
     let numberPad = productions.length.toString().length;
 
-    productions.forEach(production => {
+    productions.forEach((production) => {
       let productionOutput =
         `${pad}${this._padLeft(production.getNumber(), numberPad)}. ` +
         production.toString();
@@ -574,7 +588,7 @@ export default class Grammar {
 
     if (operators) {
       operators.forEach((opData, i) => {
-        opData.slice(1).forEach(op => {
+        opData.slice(1).forEach((op) => {
           processedOperators[op] = {
             precedence: i + 1,
             assoc: opData[0],
@@ -590,7 +604,7 @@ export default class Grammar {
    * Generates data arrays for lex rules inferred from terminals.
    */
   _generateLexRulesDataForTerminals() {
-    return this.getTerminals().map(terminal => [
+    return this.getTerminals().map((terminal) => [
       LexRule.matcherFromTerminal(terminal.getSymbol()), // matcher
       `return ${terminal.quotedTerminal()}`, // token handler
     ]);
@@ -624,7 +638,7 @@ export default class Grammar {
     this._tokensMap = {};
 
     return Array.isArray(tokens)
-      ? tokens.map(token => {
+      ? tokens.map((token) => {
           this._tokensMap[token] = true;
           return GrammarSymbol.get(token);
         })
@@ -658,7 +672,7 @@ export default class Grammar {
       processedBnf[0] = augmentedProduction;
     }
 
-    nonTerminals.forEach(LHS => {
+    nonTerminals.forEach((LHS) => {
       originalBnf[LHS].forEach((RHS, k) => {
         let semanticAction = null;
         let precedence = null;

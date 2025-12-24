@@ -34,7 +34,7 @@ export default class GrammarSymbol {
   /**
    * Returns original symbol from an extended name. 1X3 => X
    */
-  getOrignialSymbol() {
+  getOriginalSymbol() {
     if (!this._originalSymbol) {
       this._originalSymbol = this._symbol
         .replace(/^\d+\|/, '')

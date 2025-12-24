@@ -85,6 +85,34 @@ describe('sets-generator', () => {
       });
     });
 
+    it('self-epsilon', () => {
+      const setsGenerator = new SetsGenerator({
+        grammar: Grammar.fromString(`
+          %%
+          S : 'a' | B 'c';
+          B : B 'b' | /* empty */;
+        `),
+      });
+
+      expect(setsGenerator.firstOf(new GrammarSymbol('S')))
+        // No ε from B, since 'c' stops the sets.
+        .toEqual({"'a'": true, "'b'": true, "'c'": true});
+
+      expect(setsGenerator.firstOf(new GrammarSymbol(`B`))).toEqual({
+        // ε is dervied from #2 RHS, B -> 'b'
+        "'b'": true,
+        ε: true,
+      });
+
+      expect(setsGenerator.firstOf(new GrammarSymbol(`'a'`))).toEqual({
+        "'a'": true,
+      });
+
+      expect(setsGenerator.firstOf(new GrammarSymbol(`'b'`))).toEqual({
+        "'b'": true,
+      });
+    });
+
     it('RHS', () => {
       const grammar = Grammar.fromString(`
         %%
