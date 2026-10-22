@@ -26,12 +26,12 @@ struct Token {
   TokenType type;
   std::string value;
 
-  int startOffset;
-  int endOffset;
-  int startLine;
-  int endLine;
-  int startColumn;
-  int endColumn;
+  size_t startOffset;
+  size_t endOffset;
+  size_t startLine;
+  size_t endLine;
+  size_t startColumn;
+  size_t endColumn;
 };
 
 using SharedToken = std::shared_ptr<Token>;
@@ -204,7 +204,7 @@ class Tokenizer {
            << ":" << column << "\n\n";
 
     std::cerr << errMsg.str();
-    throw new std::runtime_error(errMsg.str().c_str());
+    throw std::runtime_error(errMsg.str().c_str());
   }
 
   /**
@@ -230,7 +230,7 @@ class Tokenizer {
     std::stringstream ss{matched};
     std::string lineStr;
     std::getline(ss, lineStr, '\n');
-    while (ss.tellg() > 0 && ss.tellg() <= len) {
+    while (ss.tellg() > 0 && ss.tellg() <= (std::streamoff)len) {
       currentLine_++;
       currentLineBeginOffset_ = tokenStartOffset_ + ss.tellg();
       std::getline(ss, lineStr, '\n');
@@ -266,7 +266,7 @@ class Tokenizer {
   /**
    * Cursor for current symbol.
    */
-  int cursor_;
+  size_t cursor_;
 
   /**
    * States.
@@ -276,19 +276,19 @@ class Tokenizer {
   /**
    * Line-based location tracking.
    */
-  int currentLine_;
-  int currentColumn_;
-  int currentLineBeginOffset_;
+  size_t currentLine_;
+  size_t currentColumn_;
+  size_t currentLineBeginOffset_;
 
   /**
    * Location data of a matched token.
    */
-  int tokenStartOffset_;
-  int tokenEndOffset_;
-  int tokenStartLine_;
-  int tokenEndLine_;
-  int tokenStartColumn_;
-  int tokenEndColumn_;
+  size_t tokenStartOffset_;
+  size_t tokenEndOffset_;
+  size_t tokenStartLine_;
+  size_t tokenEndLine_;
+  size_t tokenStartColumn_;
+  size_t tokenEndColumn_;
 };
 
 // ------------------------------------------------------------------
