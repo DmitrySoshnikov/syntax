@@ -156,7 +156,7 @@ export default class CanonicalCollection {
       const LHS = production.getLHS();
       const RHS = production.getRHS();
       const lastSymbol = RHS[RHS.length - 1];
-      const originalLHS = LHS.getOrignialSymbol();
+      const originalLHS = LHS.getOriginalSymbol();
       const finalSet = lastSymbol.getEndContext();
 
       if (!this._groupedFinalSets.hasOwnProperty(finalSet)) {
